@@ -19,8 +19,6 @@ add_message_files(
 )
 
 catkin_package(
-  INCLUDE_DIRS
-    include
 	CATKIN_DEPENDS std_msgs
 )
 
