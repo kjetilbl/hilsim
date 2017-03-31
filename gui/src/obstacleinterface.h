@@ -32,8 +32,6 @@ private slots:
 	void handleSpawnButton();
 
 private:
-	//QThread *updateHandlingThread;
-	//posUpdateHandler *myposUpdateHandler;
 	satelliteView *sv;
 	ros::Publisher cmdPub;
 	QPushButton *spawnObstacleButton;
