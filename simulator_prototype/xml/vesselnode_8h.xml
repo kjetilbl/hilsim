@@ -1,0 +1,169 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="vesselnode_8h" kind="file" language="C++">
+    <compoundname>vesselnode.h</compoundname>
+    <includes refid="vessel_8h" local="yes">vessel.h</includes>
+    <includedby refid="hil__simulator_8cpp" local="yes">src/hil_simulator.cpp</includedby>
+    <includedby refid="vesselnode_8cpp" local="yes">src/vesselnode.cpp</includedby>
+    <incdepgraph>
+      <node id="78">
+        <label>include/vesselnode.h</label>
+        <link refid="vesselnode.h"/>
+        <childnode refid="79" relation="include">
+        </childnode>
+      </node>
+      <node id="87">
+        <label>solver.h</label>
+        <link refid="solver_8h_source"/>
+        <childnode refid="81" relation="include">
+        </childnode>
+      </node>
+      <node id="83">
+        <label>tf/transform_broadcaster.h</label>
+      </node>
+      <node id="89">
+        <label>cmath</label>
+      </node>
+      <node id="86">
+        <label>nav_msgs/Odometry.h</label>
+      </node>
+      <node id="93">
+        <label>gps.h</label>
+        <link refid="gps_8h_source"/>
+        <childnode refid="88" relation="include">
+        </childnode>
+        <childnode refid="87" relation="include">
+        </childnode>
+      </node>
+      <node id="81">
+        <label>Eigen/Dense</label>
+      </node>
+      <node id="84">
+        <label>geometry_msgs/PoseStamped.h</label>
+      </node>
+      <node id="85">
+        <label>geometry_msgs/Twist.h</label>
+      </node>
+      <node id="92">
+        <label>imu.h</label>
+        <link refid="imu_8h_source"/>
+        <childnode refid="88" relation="include">
+        </childnode>
+      </node>
+      <node id="80">
+        <label>ros/ros.h</label>
+      </node>
+      <node id="82">
+        <label>math.h</label>
+      </node>
+      <node id="90">
+        <label>simulator_prototype/Gps.h</label>
+      </node>
+      <node id="91">
+        <label>mru.h</label>
+        <link refid="mru_8h_source"/>
+        <childnode refid="88" relation="include">
+        </childnode>
+      </node>
+      <node id="79">
+        <label>vessel.h</label>
+        <link refid="vessel_8h_source"/>
+        <childnode refid="80" relation="include">
+        </childnode>
+        <childnode refid="81" relation="include">
+        </childnode>
+        <childnode refid="82" relation="include">
+        </childnode>
+        <childnode refid="83" relation="include">
+        </childnode>
+        <childnode refid="84" relation="include">
+        </childnode>
+        <childnode refid="85" relation="include">
+        </childnode>
+        <childnode refid="86" relation="include">
+        </childnode>
+        <childnode refid="87" relation="include">
+        </childnode>
+        <childnode refid="88" relation="include">
+        </childnode>
+        <childnode refid="91" relation="include">
+        </childnode>
+        <childnode refid="92" relation="include">
+        </childnode>
+        <childnode refid="93" relation="include">
+        </childnode>
+        <childnode refid="94" relation="include">
+        </childnode>
+      </node>
+      <node id="94">
+        <label>speedsensor.h</label>
+        <link refid="speedsensor_8h_source"/>
+        <childnode refid="88" relation="include">
+        </childnode>
+        <childnode refid="80" relation="include">
+        </childnode>
+      </node>
+      <node id="88">
+        <label>sensor.h</label>
+        <link refid="sensor_8h_source"/>
+        <childnode refid="89" relation="include">
+        </childnode>
+        <childnode refid="81" relation="include">
+        </childnode>
+        <childnode refid="80" relation="include">
+        </childnode>
+        <childnode refid="85" relation="include">
+        </childnode>
+        <childnode refid="90" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <innerclass refid="class_vessel_node" prot="public">VesselNode</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>VESSELNODE_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>VESSELNODE_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;vessel.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6" refid="class_vessel_node" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_vessel_node" kindref="compound">VesselNode</ref>{</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_vessel_node" kindref="compound">VesselNode</ref>();</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><sp/><sp/><sp/><sp/>~<ref refid="class_vessel_node" kindref="compound">VesselNode</ref>();</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_vessel" kindref="compound">Vessel</ref><sp/>vessel;</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>step();</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>getDT();</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/>Vector6d<sp/>eta,<sp/>nu,<sp/>tau_control;</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>receiveThrust(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>geometry_msgs::Twist::ConstPtr<sp/>&amp;thrust_msg);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>logInfo();</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>publishState();</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/>tf::TransformBroadcaster<sp/>tf<sp/>=<sp/>tf::TransformBroadcaster();</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>tf_name<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;hil_sim&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/>ros::NodeHandle<sp/>log_handle;</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/>ros::Publisher<sp/>vel_pub<sp/>=</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>log_handle.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;log/velocity&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/>ros::Publisher<sp/>state_pub<sp/>=</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>log_handle.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;log/state&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/>ros::Publisher<sp/>thrust_pub<sp/>=</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>log_handle.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;log/thrust&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//<sp/>Subscriber<sp/>for<sp/>incoming<sp/>thrust<sp/>messages.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/>ros::NodeHandle<sp/>thrust_handle;</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/>ros::Subscriber<sp/>thrust_rec<sp/>=<sp/>thrust_handle.subscribe&lt;geometry_msgs::Twist&gt;(</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="stringliteral">&quot;input/thrust&quot;</highlight><highlight class="normal">,<sp/>0,<sp/>&amp;VesselNode::receiveThrust,<sp/></highlight><highlight class="keyword">this</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="include/vesselnode.h"/>
+  </compounddef>
+</doxygen>

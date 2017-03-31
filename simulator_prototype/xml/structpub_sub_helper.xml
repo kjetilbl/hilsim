@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="structpub_sub_helper" kind="struct" language="C++" prot="public">
+    <compoundname>pubSubHelper</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structpub_sub_helper_1a9ff07f43c4df37706418b77548236461" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int pubSubHelper::numRecMessages</definition>
+        <argsstring></argsstring>
+        <name>numRecMessages</name>
+        <initializer>= 0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="7" column="1" bodyfile="src/unittest.cpp" bodystart="7" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structpub_sub_helper_1ad078027647718453f1340be7d43332e8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void pubSubHelper::callback</definition>
+        <argsstring>(const geometry_msgs::Twist::ConstPtr &amp;msg)</argsstring>
+        <name>callback</name>
+        <param>
+          <type>const geometry_msgs::Twist::ConstPtr &amp;</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="8" column="1" bodyfile="src/unittest.cpp" bodystart="8" bodyend="8"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="src/unittest.cpp" line="6" column="1" bodyfile="src/unittest.cpp" bodystart="6" bodyend="9"/>
+    <listofallmembers>
+      <member refid="structpub_sub_helper_1ad078027647718453f1340be7d43332e8" prot="public" virt="non-virtual"><scope>pubSubHelper</scope><name>callback</name></member>
+      <member refid="structpub_sub_helper_1a9ff07f43c4df37706418b77548236461" prot="public" virt="non-virtual"><scope>pubSubHelper</scope><name>numRecMessages</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,71 @@
+\section{Sensor Class Reference}
+\label{class_sensor}\index{Sensor@{Sensor}}
+Inheritance diagram for Sensor\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_sensor}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void {\bfseries publish\+Data} (Vector6d v\+\_\+n, Vector3d gps\+\_\+info)\label{class_sensor_a45ddf880a759f03d22818e91860f0901}
+
+\item 
+void {\bfseries publish\+Data} (double u, double v)\label{class_sensor_a7fc20251253ec330e00725cf00688ee0}
+
+\item 
+void {\bfseries publish\+Data} (Vector6d imu\+\_\+data)\label{class_sensor_a5f103439ae3ed1cb84e8a35705a3c032}
+
+\item 
+void {\bfseries publish\+Data} (Vector6d nu, Vector6d eta)\label{class_sensor_af44389030d7336c5a24a87588bb31448}
+
+\item 
+void {\bfseries set\+Step\+Size} (double stepsize)\label{class_sensor_ae37c1cfa48a7f25497aae485f6f91265}
+
+\item 
+void {\bfseries set\+Frequency} (double \+\_\+frequency)\label{class_sensor_afe6b7b2849deccb1818da714de6c36ad}
+
+\item 
+void {\bfseries set\+Noise} ()\label{class_sensor_ac4b9625c973636b3f3c574bc7b2a922d}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+ros\+::\+Node\+Handle {\bfseries sensor\+\_\+handle}\label{class_sensor_a3b3c9b96c4ed4ff563181b74fc518b5c}
+
+\item 
+ros\+::\+Publisher {\bfseries gps\+\_\+pub} = sensor\+\_\+handle.\+advertise$<$simulator\+\_\+prototype\+::\+Gps$>$(\char`\"{}sensors/gps\char`\"{}, 0)\label{class_sensor_a811e9071506ad8925dba54b9e40ab5a2}
+
+\item 
+ros\+::\+Publisher {\bfseries mru\+\_\+velocity\+\_\+pub} = sensor\+\_\+handle.\+advertise$<$geometry\+\_\+msgs\+::\+Twist$>$(\char`\"{}sensors/mru/velocity\char`\"{}, 0)\label{class_sensor_a56727fc8fe63502e44d365297b5666ea}
+
+\item 
+ros\+::\+Publisher {\bfseries mru\+\_\+position\+\_\+pub} = sensor\+\_\+handle.\+advertise$<$geometry\+\_\+msgs\+::\+Twist$>$(\char`\"{}sensors/mru/position\char`\"{}, 0)\label{class_sensor_a08cb49aa8df3a84c5bb5546b1c11323e}
+
+\item 
+ros\+::\+Publisher {\bfseries imu\+\_\+pub} = sensor\+\_\+handle.\+advertise$<$geometry\+\_\+msgs\+::\+Twist$>$(\char`\"{}sensors/imu\char`\"{}, 0)\label{class_sensor_ab2f14e6d6c5a19338689e7af04fff45e}
+
+\item 
+ros\+::\+Publisher {\bfseries speed\+\_\+sensor\+\_\+pub} = sensor\+\_\+handle.\+advertise$<$geometry\+\_\+msgs\+::\+Twist$>$(\char`\"{}sensors/speed\+Sensor\char`\"{}, 0)\label{class_sensor_afc9a4388ae0a7d8bec357af261e9c4a8}
+
+\item 
+double {\bfseries dt}\label{class_sensor_ae6f4e03bbd96a9c020ee0b737c23a7bf}
+
+\item 
+double {\bfseries frequency}\label{class_sensor_a9cc770795c32650dc738d52e900c7c37}
+
+\item 
+double {\bfseries steps\+\_\+per\+\_\+data\+\_\+output}\label{class_sensor_a3409fcd46e7ba87534325b78b40a93d2}
+
+\item 
+double {\bfseries step}\label{class_sensor_a2a9811c9f9fc04523f98276fdc794219}
+
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/sensor.\+h\item 
+src/sensor.\+cpp\end{DoxyCompactItemize}

@@ -1,0 +1,7 @@
+bool paused
+float64 latitude
+float64 longitude
+float64 meanWindSpeed
+float64 meanWindDirection
+float64 meanCurrentSpeed
+float64 meanCurrentDirection

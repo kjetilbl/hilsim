@@ -1,0 +1,4 @@
+<launch>
+	<rosparam command="load" file="$(find simulator_prototype)/config/models/Jolner.yaml" />
+	<test test-name="Unit-Tests" pkg="simulator_prototype" type="simulator_prototype-test" name="UnitTest"/>
+</launch>

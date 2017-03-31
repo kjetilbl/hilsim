@@ -1,0 +1,6 @@
+<map id="Sensor" name="Sensor">
+<area shape="rect" id="node2" href="$class_g_p_s.html" title="GPS" alt="" coords="5,80,56,107"/>
+<area shape="rect" id="node3" href="$class_i_m_u.html" title="IMU" alt="" coords="81,80,127,107"/>
+<area shape="rect" id="node4" href="$class_m_r_u.html" title="MRU" alt="" coords="152,80,205,107"/>
+<area shape="rect" id="node5" href="$class_speed_sensor.html" title="SpeedSensor" alt="" coords="230,80,330,107"/>
+</map>
