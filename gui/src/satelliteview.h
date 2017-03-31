@@ -34,7 +34,6 @@ public:
 		positionMark->addData(x,y);
 	}
 	~markedPosition(){
-		qDebug() << "Removing marked position.";
 		owner->removePlottable(positionMark);
 	}
 	position getPos(){
@@ -58,7 +57,7 @@ public:
 	void deleteObstacle(string obstacleID);
 	void simTargetMoveTo( double x, double y, double psi = 0 );
 	void simTargetClearTrajectory();
-	position popMarkedPosition();
+	bool popMarkedPosition(position *pos);
 
 private slots:
 	void updatePlot();

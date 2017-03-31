@@ -93,7 +93,6 @@ void satelliteView::deleteObstacle(string obstacleID)
 	{
 		delete obstacles[obstacleID];
 		obstacles.erase(obstacleID);
-		qDebug() << obstacleID.c_str() << "erased from obstacles map.";
 	}
 	else
 	{
@@ -114,15 +113,17 @@ void satelliteView::simTargetClearTrajectory()
 	simTarget->clearTrajectory();
 }
 
-position satelliteView::popMarkedPosition()
+bool satelliteView::popMarkedPosition(position *pos)
 {
-	qDebug() << "popMarkedPosition(): SegFault between here..";
 	std::lock_guard<std::mutex> lock(mpMutex);
-	position pos = MPs.back()->getPos();
-	delete MPs.back();
-	MPs.pop_back();
-	qDebug() << "popMarkedPosition(): and here...?";
-	return pos;
+	if ( !MPs.empty() )
+	{
+		*pos = MPs.back()->getPos();
+		delete MPs.back();
+		MPs.pop_back();
+		return true;
+	}
+	return false;
 }
 
 void satelliteView::markPosition( QMouseEvent *event){
@@ -130,7 +131,6 @@ void satelliteView::markPosition( QMouseEvent *event){
 	int yPixel = event->pos().y();
 	double x = svWidget->xAxis->pixelToCoord(xPixel);
 	double y = svWidget->yAxis->pixelToCoord(yPixel);
-	qDebug() << "Mouse clicked at: [" << x << y << "]";
 	std::lock_guard<std::mutex> lock(mpMutex);
 	MPs.push_back(new markedPosition(svWidget, x, y));
 }

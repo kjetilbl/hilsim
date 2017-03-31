@@ -25,7 +25,7 @@ obstacleInterface::obstacleInterface(ros::NodeHandle nh, QGroupBox *interfaceWin
 {
 	cmdPub = nh.advertise<environment::obstacleCmd>("obstacleCommandTopic", 1000);
 
-	spawnObstacleButton = new QPushButton("Schmock!");
+	spawnObstacleButton = new QPushButton("Spawn Obstacles");
 	QVBoxLayout *vbox = new QVBoxLayout;
 	vbox->addWidget(spawnObstacleButton);
 	interfaceWindow->setLayout(vbox);
@@ -42,8 +42,11 @@ void obstacleInterface::requestNewObstacle(double x, double y, double psi)
 
 void obstacleInterface::handleSpawnButton()
 {
-	position newObstPos = sv->popMarkedPosition();
-	requestNewObstacle(newObstPos.x, newObstPos.y, 45);
+	position newObstPos;
+	while( sv->popMarkedPosition( &newObstPos ) == true )
+	{
+		requestNewObstacle(newObstPos.x, newObstPos.y, 45);
+	}
 }
 
 
