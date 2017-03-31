@@ -1,0 +1,162 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="sensor_8h" kind="file" language="C++">
+    <compoundname>sensor.h</compoundname>
+    <includes local="no">cmath</includes>
+    <includes local="no">Eigen/Dense</includes>
+    <includes local="yes">ros/ros.h</includes>
+    <includes local="yes">geometry_msgs/Twist.h</includes>
+    <includes local="yes">simulator_prototype/Gps.h</includes>
+    <includedby refid="gps_8h" local="yes">include/gps.h</includedby>
+    <includedby refid="imu_8h" local="yes">include/imu.h</includedby>
+    <includedby refid="mru_8h" local="yes">include/mru.h</includedby>
+    <includedby refid="speedsensor_8h" local="yes">include/speedsensor.h</includedby>
+    <includedby refid="vessel_8h" local="yes">include/vessel.h</includedby>
+    <includedby refid="sensor_8cpp" local="yes">src/sensor.cpp</includedby>
+    <incdepgraph>
+      <node id="32">
+        <label>cmath</label>
+      </node>
+      <node id="33">
+        <label>Eigen/Dense</label>
+      </node>
+      <node id="35">
+        <label>geometry_msgs/Twist.h</label>
+      </node>
+      <node id="34">
+        <label>ros/ros.h</label>
+      </node>
+      <node id="36">
+        <label>simulator_prototype/Gps.h</label>
+      </node>
+      <node id="31">
+        <label>include/sensor.h</label>
+        <link refid="sensor.h"/>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="40">
+        <label>include/vesselnode.h</label>
+        <link refid="vesselnode_8h_source"/>
+      </node>
+      <node id="38">
+        <label>include/gps.h</label>
+        <link refid="gps_8h_source"/>
+        <childnode refid="39" relation="include">
+        </childnode>
+      </node>
+      <node id="41">
+        <label>include/imu.h</label>
+        <link refid="imu_8h_source"/>
+        <childnode refid="39" relation="include">
+        </childnode>
+      </node>
+      <node id="42">
+        <label>include/mru.h</label>
+        <link refid="mru_8h_source"/>
+        <childnode refid="39" relation="include">
+        </childnode>
+      </node>
+      <node id="39">
+        <label>include/vessel.h</label>
+        <link refid="vessel_8h_source"/>
+        <childnode refid="40" relation="include">
+        </childnode>
+      </node>
+      <node id="43">
+        <label>include/speedsensor.h</label>
+        <link refid="speedsensor_8h_source"/>
+        <childnode refid="39" relation="include">
+        </childnode>
+      </node>
+      <node id="37">
+        <label>include/sensor.h</label>
+        <link refid="sensor.h"/>
+        <childnode refid="38" relation="include">
+        </childnode>
+        <childnode refid="41" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="class_sensor" prot="public">Sensor</innerclass>
+    <innernamespace refid="namespace_eigen">Eigen</innernamespace>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="sensor_8h_1a98c311f8f84d62784ec0499c9df9816d" prot="public" static="no">
+        <type>Matrix&lt; double, 6, 1 &gt;</type>
+        <definition>typedef Matrix&lt;double, 6, 1&gt; Vector6d</definition>
+        <argsstring></argsstring>
+        <name>Vector6d</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/sensor.h" line="12" column="1" bodyfile="include/sensor.h" bodystart="12" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>SENSOR_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SENSOR_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cmath&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;Eigen/Dense&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;ros/ros.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;geometry_msgs/Twist.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;simulator_prototype/Gps.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespace_eigen" kindref="compound">Eigen</ref>;</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/>Matrix&lt;double,<sp/>6,<sp/>1&gt;<sp/>Vector6d;</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight></codeline>
+<codeline lineno="14" refid="class_sensor" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_sensor" kindref="compound">Sensor</ref><sp/>{</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>publishData(Vector6d<sp/>v_n,<sp/>Vector3d<sp/>gps_info);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>publishData(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>u,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>v);</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>publishData(Vector6d<sp/>imu_data);</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>publishData(Vector6d<sp/>nu,<sp/>Vector6d<sp/>eta);</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>setStepSize(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>stepsize);</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>setFrequency(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>_frequency);</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>setNoise();</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/>ros::NodeHandle<sp/>sensor_handle;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/>ros::Publisher<sp/>gps_pub<sp/>=<sp/>sensor_handle.advertise&lt;simulator_prototype::Gps&gt;(</highlight><highlight class="stringliteral">&quot;sensors/gps&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/>ros::Publisher<sp/>mru_velocity_pub<sp/>=<sp/>sensor_handle.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;sensors/mru/velocity&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/>ros::Publisher<sp/>mru_position_pub<sp/>=<sp/>sensor_handle.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;sensors/mru/position&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/>ros::Publisher<sp/>imu_pub<sp/>=<sp/>sensor_handle.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;sensors/imu&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/>ros::Publisher<sp/>speed_sensor_pub<sp/>=<sp/>sensor_handle.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;sensors/speedSensor&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>dt,<sp/>frequency,<sp/>steps_per_data_output,<sp/>step;</highlight></codeline>
+<codeline lineno="38"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="include/sensor.h"/>
+  </compounddef>
+</doxygen>

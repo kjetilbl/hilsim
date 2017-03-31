@@ -1,0 +1,28 @@
+<launch>
+    <node pkg="rviz"
+        type="rviz"
+        name="rviz"
+        args="-d $(find simulator_prototype)/config/rviz/jolner.rviz" />
+        
+    <rosparam command="load" file="$(find simulator_prototype)/config/models/Jolner.yaml" />
+
+    <param name="hil/robot_description" textfile="$(find simulator_prototype)/config/models/Jolner.urdf" />
+
+    <node pkg="joy" name="joy_node" type="joy_node" respawn="false" output="screen">
+    </node>
+
+    <node pkg="ps3_joy_thrusters" name="Ps3Node" type="ps3_joy_thrusters" respawn="false" output="screen">
+    </node>
+    
+    <node pkg="simulator_prototype" type="hil_simulator_node" name="simulated_vessel" output="screen"/>
+
+    <!--node> name="vel_plot"
+        pkg="rqt_plot"
+        type="rqt_plot"
+        args="/hil_sim/log/velocity/linear/x /hil_sim/log/velocity/linear/y" <node-->
+
+    <!--node> pkg="rosbag" type="record" name="rosbag_record_run"
+       args="record -o $(find simulator_prototype)/logs/run.bag hil_sim/log/thrust hil_sim/log/state hil_sim/log/velocity hil_sim/sensors/imu"<node-->
+	
+     
+</launch>

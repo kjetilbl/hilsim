@@ -1,0 +1,9 @@
+-I/usr/include/qt4
+-I/usr/include/qt4/QtGui
+-I/usr/include/qt4/QtCore
+-D$<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG>
+-DQT_GUI_LIB
+-DQT_CORE_LIB
+-o
+/home/kjetil/Dropbox/master/simulator_ws/src/gui/src/moc_watchDog.cxx
+/home/kjetil/Dropbox/master/simulator_ws/src/gui/src/watchDog.h

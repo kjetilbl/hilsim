@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="solver_8h" kind="file" language="C++">
+    <compoundname>solver.h</compoundname>
+    <includes local="no">Eigen/Dense</includes>
+    <includedby refid="gps_8h" local="yes">include/gps.h</includedby>
+    <includedby refid="vessel_8h" local="yes">include/vessel.h</includedby>
+    <includedby refid="solver_8cpp" local="yes">src/solver.cpp</includedby>
+    <incdepgraph>
+      <node id="44">
+        <label>include/solver.h</label>
+        <link refid="solver.h"/>
+        <childnode refid="45" relation="include">
+        </childnode>
+      </node>
+      <node id="45">
+        <label>Eigen/Dense</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="49">
+        <label>include/vesselnode.h</label>
+        <link refid="vesselnode_8h_source"/>
+      </node>
+      <node id="46">
+        <label>include/solver.h</label>
+        <link refid="solver.h"/>
+        <childnode refid="47" relation="include">
+        </childnode>
+        <childnode refid="48" relation="include">
+        </childnode>
+      </node>
+      <node id="47">
+        <label>include/gps.h</label>
+        <link refid="gps_8h_source"/>
+        <childnode refid="48" relation="include">
+        </childnode>
+      </node>
+      <node id="48">
+        <label>include/vessel.h</label>
+        <link refid="vessel_8h_source"/>
+        <childnode refid="49" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="class_numerical_solver" prot="public">NumericalSolver</innerclass>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="solver_8h_1a98c311f8f84d62784ec0499c9df9816d" prot="public" static="no">
+        <type>Matrix&lt; double, 6, 1 &gt;</type>
+        <definition>typedef Matrix&lt;double, 6, 1&gt; Vector6d</definition>
+        <argsstring></argsstring>
+        <name>Vector6d</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/solver.h" line="8" column="1" bodyfile="include/solver.h" bodystart="8" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>SOLVER_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SOLVER_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;Eigen/Dense&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespace_eigen" kindref="compound">Eigen</ref>;</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/>Matrix&lt;double,<sp/>6,<sp/>1&gt;<sp/>Vector6d;</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight></codeline>
+<codeline lineno="10" refid="class_numerical_solver" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_numerical_solver" kindref="compound">NumericalSolver</ref><sp/>{</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//<sp/>Template<sp/>is<sp/>for<sp/>Ode45,<sp/>but<sp/>usable<sp/>for<sp/>other<sp/>solvers<sp/>as<sp/>well.<sp/>TODO:<sp/>Add</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//<sp/>functionality<sp/>for<sp/>choice<sp/>of<sp/>solver.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_numerical_solver" kindref="compound">NumericalSolver</ref>();</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/><sp/><sp/>~<ref refid="class_numerical_solver" kindref="compound">NumericalSolver</ref>();</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>initializeSolver(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>dt);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>epsilon,<sp/>t,<sp/>y,<sp/>h,<sp/>h_min,<sp/>h_max;</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>a21,<sp/>a31,<sp/>a32,<sp/>a41,<sp/>a42,<sp/>a43,<sp/>a51,<sp/>a52,<sp/>a53,<sp/>a54,<sp/>a61,<sp/>a62,<sp/>a63,<sp/>a64,</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/>a65,<sp/>a71,<sp/>a72,<sp/>a73,<sp/>a74,<sp/>a75,<sp/>a76,<sp/>c2,<sp/>c3,<sp/>c4,<sp/>c5,<sp/>c6,<sp/>c7,<sp/>b11,<sp/>b12,<sp/>b13,</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/>b14,<sp/>b15,<sp/>b16,<sp/>b17,<sp/>b21,<sp/>b22,<sp/>b23,<sp/>b24,<sp/>b25,<sp/>b26,<sp/>b27;</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/>Vector6d<sp/>k1v,<sp/>k2v,<sp/>k3v,<sp/>k4v,<sp/>k5v,<sp/>k6v,<sp/>k7v,<sp/>zv,<sp/>sv,<sp/>errv;</highlight></codeline>
+<codeline lineno="24"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="include/solver.h"/>
+  </compounddef>
+</doxygen>

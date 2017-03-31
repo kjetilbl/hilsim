@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="gps_8cpp" kind="file" language="C++">
+    <compoundname>gps.cpp</compoundname>
+    <includes refid="gps_8h" local="yes">gps.h</includes>
+    <incdepgraph>
+      <node id="99">
+        <label>src/gps.cpp</label>
+        <link refid="gps.cpp"/>
+        <childnode refid="100" relation="include">
+        </childnode>
+      </node>
+      <node id="107">
+        <label>solver.h</label>
+        <link refid="solver_8h_source"/>
+        <childnode refid="103" relation="include">
+        </childnode>
+      </node>
+      <node id="102">
+        <label>cmath</label>
+      </node>
+      <node id="100">
+        <label>gps.h</label>
+        <link refid="gps_8h_source"/>
+        <childnode refid="101" relation="include">
+        </childnode>
+        <childnode refid="107" relation="include">
+        </childnode>
+      </node>
+      <node id="103">
+        <label>Eigen/Dense</label>
+      </node>
+      <node id="105">
+        <label>geometry_msgs/Twist.h</label>
+      </node>
+      <node id="104">
+        <label>ros/ros.h</label>
+      </node>
+      <node id="106">
+        <label>simulator_prototype/Gps.h</label>
+      </node>
+      <node id="101">
+        <label>sensor.h</label>
+        <link refid="sensor_8h_source"/>
+        <childnode refid="102" relation="include">
+        </childnode>
+        <childnode refid="103" relation="include">
+        </childnode>
+        <childnode refid="104" relation="include">
+        </childnode>
+        <childnode refid="105" relation="include">
+        </childnode>
+        <childnode refid="106" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&quot;gps.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal">GPS::GPS()<sp/>{}</highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal">GPS::~GPS()<sp/>{}</highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>GPS::receiveStartCoordinates(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>latitude_in,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>longitude_in)<sp/>{</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/>latitude<sp/>=<sp/>latitude_in*(M_PI/180);</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><sp/><sp/>longitude<sp/>=<sp/>longitude_in*(M_PI/180);</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/>gps_position<sp/>&lt;&lt;<sp/>latitude,<sp/>longitude,<sp/>0,<sp/>0,<sp/>0,<sp/>0;</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/>solver.initializeSolver(dt);</highlight></codeline>
+<codeline lineno="12"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>GPS::updateCurvatures()<sp/>{</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/>r_mer<sp/>=<sp/>(r_e<sp/>*<sp/>(1<sp/>-<sp/>e<sp/>*<sp/>e))<sp/>/<sp/>pow(1<sp/>-<sp/>e<sp/>*<sp/>e<sp/>*<sp/>sin(latitude)<sp/>*<sp/>sin(latitude),<sp/>1.5);</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/>r_prime<sp/>=<sp/>r_e<sp/>/<sp/>pow(1<sp/>-<sp/>e<sp/>*<sp/>e<sp/>*<sp/>sin(latitude)<sp/>*<sp/>sin(latitude),<sp/>0.5);</highlight></codeline>
+<codeline lineno="17"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>GPS::calculateNextPosition(){</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/>A<sp/>&lt;&lt;<sp/>1<sp/>/<sp/>(r_mer<sp/>+<sp/>height),<sp/>0,<sp/>0,0,0,0,</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/>0,<sp/>1<sp/>/<sp/>((r_prime<sp/>+<sp/>height)<sp/>*<sp/>cos(latitude)),0,0,0,0,</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/>0,<sp/>0,<sp/>-1,<sp/>0,0,0,</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/>0,0,0,0,0,0,</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/>0,0,0,0,0,0,</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/>0,0,0,0,0,0;</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/>solver.k1v<sp/>=<sp/>solver.h*positionFunction(gps_position);</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/>solver.k2v<sp/>=<sp/>solver.h*positionFunction(gps_position<sp/>+<sp/>solver.a21*solver.k1v);</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/>solver.k3v<sp/>=<sp/>solver.h*positionFunction(gps_position<sp/>+<sp/>solver.a31*solver.k1v<sp/>+<sp/>solver.a32*solver.k2v);</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/>solver.k4v<sp/>=<sp/>solver.h*positionFunction(gps_position<sp/>+<sp/>solver.a41*solver.k1v<sp/>+<sp/>solver.a42*solver.k2v<sp/>+<sp/>solver.a43*solver.k3v);</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/>solver.k5v<sp/>=<sp/>solver.h*positionFunction(gps_position<sp/>+<sp/>solver.a51*solver.k1v<sp/>+<sp/>solver.a52*solver.k2v<sp/>+<sp/>solver.a53*solver.k3v<sp/>+<sp/>solver.a54*solver.k4v);</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/>solver.k6v<sp/>=<sp/>solver.h*positionFunction(gps_position<sp/>+<sp/>solver.a61*solver.k1v<sp/>+<sp/>solver.a62*solver.k2v<sp/>+<sp/>solver.a63*solver.k3v<sp/>+<sp/>solver.a64*solver.k4v<sp/>+<sp/>solver.a65*solver.k5v);</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/>solver.k7v<sp/>=<sp/>solver.h*positionFunction(gps_position<sp/>+<sp/>solver.a71*solver.k1v<sp/>+<sp/>solver.a73*solver.k3v<sp/>+<sp/>solver.a74*solver.k4v<sp/>+<sp/>solver.a75*solver.k5v<sp/>+<sp/>solver.a76*solver.k6v);</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/>gps_position<sp/>=<sp/>gps_position<sp/>+<sp/>solver.b11*solver.k1v<sp/>+<sp/>solver.b12*solver.k2v<sp/>+<sp/>solver.b13*solver.k3v<sp/>+<sp/>solver.b14*solver.k4v<sp/>+<sp/>solver.b15*solver.k5v<sp/>+<sp/>solver.b16*solver.k6v<sp/>+<sp/>solver.b17*solver.k7v;</highlight></codeline>
+<codeline lineno="34"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal">Vector6d<sp/>GPS::positionFunction(Vector6d<sp/>gps_position_in){</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/>Vector6d<sp/>gps_position_dot<sp/>=<sp/>A*v_n;</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>gps_position_dot;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal">Vector3d<sp/>GPS::getSpeedAndTrack(Vector6d<sp/>eta){</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/>Vector3d<sp/>gpsData;</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>speed<sp/>=<sp/>sqrt(v_n(0)*v_n(0)+v_n(1)*v_n(1)+v_n(2)*v_n(2));</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>bearing<sp/>=<sp/>(180/M_PI)*atan2(v_n(1),<sp/>v_n(0));</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(bearing&lt;0)</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/>bearing+=360;</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/>gpsData<sp/>&lt;&lt;<sp/>speed,<sp/>bearing,<sp/>v_n(5)*180/M_PI;</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>gpsData;</highlight></codeline>
+<codeline lineno="49"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>GPS::getHeading(Vector6d<sp/>eta){</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>temp_heading<sp/>=<sp/>eta(5)*180/M_PI;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">while</highlight><highlight class="normal">(temp_heading&lt;0<sp/>||<sp/>temp_heading<sp/>&gt;<sp/>360){</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(temp_heading&lt;0)</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>temp_heading+=360;</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(temp_heading&gt;360){</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/>temp_heading-=360;</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/>}</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/>heading=temp_heading;</highlight></codeline>
+<codeline lineno="61"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>GPS::publishGpsData(Vector6d<sp/>nu_n,<sp/>Vector6d<sp/>eta)<sp/>{</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//<sp/>Side<sp/>32<sp/>i<sp/>Kalman-boka</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/>v_n=nu_n;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/>getHeading(eta);</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/>Vector3d<sp/>gps_data<sp/>=<sp/>getSpeedAndTrack(eta);</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/>updateCurvatures();</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/>calculateNextPosition();<sp/><sp/></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/>gps_position(5)=heading;</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/>publishData(gps_position,<sp/>gps_data);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="src/gps.cpp"/>
+  </compounddef>
+</doxygen>
