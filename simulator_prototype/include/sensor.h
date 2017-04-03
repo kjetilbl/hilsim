@@ -28,6 +28,7 @@ protected:
   ros::Publisher mru_position_pub = sensor_handle.advertise<geometry_msgs::Twist>("sensors/mru/position", 0);
   ros::Publisher imu_pub = sensor_handle.advertise<geometry_msgs::Twist>("sensors/imu", 0);
   ros::Publisher speed_sensor_pub = sensor_handle.advertise<geometry_msgs::Twist>("sensors/speedSensor", 0);
+  ros::Publisher wind_sensor_pub = sensor_handle.advertise<geometry_msgs::Twist>("sensors/windSensor", 0);
 
   double dt, frequency, steps_per_data_output, step;
 };

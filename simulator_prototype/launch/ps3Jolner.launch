@@ -5,6 +5,7 @@
         args="-d $(find simulator_prototype)/config/rviz/jolner.rviz" />
         
     <rosparam command="load" file="$(find simulator_prototype)/config/models/Jolner.yaml" />
+    <rosparam command="load" file="$(find simulator_prototype)/config/SimulationParameters.yaml" />
 
     <param name="hil/robot_description" textfile="$(find simulator_prototype)/config/models/Jolner.urdf" />
 

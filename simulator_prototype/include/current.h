@@ -13,6 +13,7 @@ public:
 
 private:
 	ros::NodeHandle nh;
+	double V_total;
 	ros::Publisher current_pub =
 	  nh.advertise<geometry_msgs::Twist>("log/current", 0);
 };
