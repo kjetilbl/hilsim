@@ -10,7 +10,7 @@ Vessel::Vessel(){
 	initializeMatrices();
 	solver.initializeSolver(dt);
 	wind.setData(wind_speed, wind_direction, dt);
-	current.setData(1, 0, dt);
+	current.setData(current_speed, current_direction, dt);
 }
 
 Vessel::~Vessel() {}
@@ -39,6 +39,8 @@ void Vessel::initializeSensors(){
 	gps.setFrequency(gps_frequency);
 	speedSensor.setStepSize(dt);
 	speedSensor.setFrequency(speed_sensor_frequency);
+	windSensor.setStepSize(dt);
+	windSensor.setFrequency(wind_sensor_frequency);
 	mru.setStepSize(dt);
 	mru.setFrequency(mru_frequency);
 	imu.setStepSize(dt);
@@ -448,6 +450,7 @@ void Vessel::publishSensorData(){
 	imu.publishImuData(nu_dot , nu);
 	mru.publishMruData(nu, eta);
 	speedSensor.publishSpeedSensorData(nu(0), nu(1));
+	windSensor.publishWindSensorData(wind_speed, wind_direction);
 }
 
 double Vessel::getDT(){
@@ -785,6 +788,10 @@ bool Vessel::readParameters(ros::NodeHandle nh) {
 		parameterFail=true;
 	if (!nh.getParam("wind_direction", wind_direction))
 		parameterFail=true;
+	if (!nh.getParam("current_speed", current_speed))
+		parameterFail=true;
+	if (!nh.getParam("current_direction", current_direction))
+		parameterFail=true;
 	if (!nh.getParam("A_Fw", A_Fw))
 		parameterFail=true;
 	if (!nh.getParam("A_Lw", A_Lw))
@@ -837,6 +844,8 @@ bool Vessel::readParameters(ros::NodeHandle nh) {
 	if (!nh.getParam("imu_frequency", imu_frequency))
 		parameterFail=true;
 	if (!nh.getParam("speed_sensor_frequency", speed_sensor_frequency))
+		parameterFail=true;
+	if (!nh.getParam("wind_sensor_frequency", wind_sensor_frequency))
 		parameterFail=true;
 	if (!nh.getParam("start_latitude", start_latitude))
 		parameterFail=true;

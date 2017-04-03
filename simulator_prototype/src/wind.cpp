@@ -32,21 +32,29 @@ void Wind::updateGustSpeed(){
 }
 
 void Wind::getData(double &V_in, double &beta_in){
-	updateSpeed();
-	updateDirection();
-	updateGustSpeed();
-	V_gust = maintainSaturation(V_gust, 0, max_V_deviation);
-	V = maintainSaturation(V, 0, max_V_deviation);
-	double V_total = V+V_gust+mean_V;
-	
-	V_in = calculateWindSpeedAtHeight(V_total, 1);
-	beta = maintainSaturation(beta, 0, max_beta_deviation);
-	beta_in = beta+mean_beta;
+	if(mean_V==0){
+		V_in = 0;
+		V_gust = 0;
+		V_total = 0;
+		V = 0;
+		beta = 0;
+		beta_in = 0;
+	}else{
+		updateSpeed();
+		updateDirection();
+		updateGustSpeed();
+		V_gust = maintainSaturation(V_gust, 0, max_V_deviation);
+		V = maintainSaturation(V, 0, max_V_deviation);
+		V_total = V+V_gust+mean_V;
+		V_in = calculateWindSpeedAtHeight(V_total, 1);
+		beta = maintainSaturation(beta, 0, max_beta_deviation);
+		beta_in = beta+mean_beta;
+		
+	}
 	geometry_msgs::Twist wind_msg;
 	wind_msg.linear.x = V_gust;
 	wind_msg.linear.y = V_total;
 	wind_msg.linear.z = V;
 	wind_msg.angular.z = beta;
-
 	wind_pub.publish(wind_msg);
 }
