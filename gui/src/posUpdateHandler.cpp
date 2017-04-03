@@ -85,11 +85,7 @@ void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::Const
 		double x = updateMsg->x;
 		double y = updateMsg->y;
 		double psi = updateMsg->psi;
-
-		qDebug() << "Will set position of" << ID.c_str();
 		sv->setPosition(ID, x, y, psi);
-		qDebug() << "Finished setting position of" << ID.c_str();
-
 		map<string, watchDog*>::iterator it = obstWDs.find(ID);
 		if( it == obstWDs.end() ) //Could not find obstacle
 		{
@@ -110,10 +106,7 @@ void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::Const
 		obstWDs[ID]->quit();
 		obstWDs[ID]->wait();
 		obstWDs.erase(ID);
-
-		qDebug() << "Will delete from sv" << ID.c_str();
 		sv->deleteObstacle(ID);
-		qDebug() << "Finished deleting from sv" << ID.c_str();
 	}
 }
 
