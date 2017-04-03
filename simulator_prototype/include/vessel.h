@@ -12,6 +12,7 @@
 #include "current.h"
 #include "actuatormodel.h"
 #include "speedsensor.h"
+#include "windsensor.h"
 
 using namespace Eigen;
 typedef Matrix<double, 1, 2> Vector2dH;
@@ -76,6 +77,7 @@ private:
   GPS gps;
   MRU mru;
   SpeedSensor speedSensor;
+  WindSensor windSensor;
 
   Current current;
   Wind wind;
@@ -160,7 +162,7 @@ private:
   double surge_max;
 
   // Update frequency for onboard sensors.
-  double gps_frequency, mru_frequency, imu_frequency, speed_sensor_frequency;
+  double gps_frequency, mru_frequency, imu_frequency, speed_sensor_frequency, wind_sensor_frequency;
 
   // Starting position in lat/long
   double start_latitude, start_longitude;

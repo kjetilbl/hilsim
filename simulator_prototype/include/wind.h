@@ -14,7 +14,7 @@ private:
 	double calculateWindSpeedAtHeight(double U_10, double z);
 	void updateGustSpeed();
 	double generateRandomGust();
-	double V_gust;
+	double V_gust, V_total;
 	ros::NodeHandle nh;
 	ros::Publisher wind_pub =
 	  nh.advertise<geometry_msgs::Twist>("log/wind", 0);

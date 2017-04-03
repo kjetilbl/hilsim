@@ -39,7 +39,7 @@ include_directories(
   	${GTEST_INCLUDE_DIRS}
 )
 
-add_executable(hil_simulator_node src/hil_simulator.cpp src/vessel.cpp src/imu.cpp src/gps.cpp src/sensor.cpp src/mru.cpp src/speedsensor.cpp src/solver.cpp src/vesselnode.cpp src/actuatormodel.cpp src/weather.cpp src/wind.cpp src/current.cpp)
+add_executable(hil_simulator_node src/hil_simulator.cpp src/vessel.cpp src/imu.cpp src/gps.cpp src/sensor.cpp src/mru.cpp src/speedsensor.cpp src/solver.cpp src/vesselnode.cpp src/actuatormodel.cpp src/weather.cpp src/wind.cpp src/current.cpp src/windsensor.cpp)
 target_link_libraries(hil_simulator_node ${catkin_LIBRARIES})
 ##add_dependencies(hil_simulator_node simulator_prototype_gen_messages_cpp)
 
