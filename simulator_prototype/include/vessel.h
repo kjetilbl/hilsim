@@ -117,6 +117,11 @@ private:
   Vector3d x_44, x_24, x_42;
   Vector2d x_26, x_46, x_62, x_64;
 
+  Matrix2d A_6_w, A_3_w, A_5_w, A_1_w, A_2_w, A_4_w;
+  Vector2d B_6_w, x_6_w, B_3_w, x_3_w, B_5_w, x_5_w, B_1_w, x_1_w, B_2_w, x_2_w, B_4_w, x_4_w;
+  double omega_e_w, omega_0_w, lambda_w, sigma_w, K_6_w, K_3_w, K_5_w, K_1_w, K_2_w, K_4_w, omega_5, omega_3, omega_6, omega_1, omega_2, omega_4;
+
+
   // Step size for solver
   double dt;
 
@@ -129,6 +134,8 @@ private:
   void calculateNonlinearSurge();
 
   void calculateCrossFlowDrag();
+
+  void getWaveYawMoment();
   // Receives thrust messages
   //void receiveThrust(const geometry_msgs::Twist::ConstPtr &thrust_msg);
 

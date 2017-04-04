@@ -2,6 +2,7 @@
 
 
 
+<<<<<<< HEAD
 
 void obstacleControl(int argc, char *argv[])
 {
@@ -16,6 +17,8 @@ void obstacleControl(int argc, char *argv[])
 	}
 }
 
+=======
+>>>>>>> 6c89fbd16b6318df98e7bcd588faf3cb012e65ac
 obstacleHandler::obstacleHandler(ros::NodeHandle nh)
 {
 	n = nh;
