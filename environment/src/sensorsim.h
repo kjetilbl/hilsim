@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <string>
 #include <map>
+#include <mutex>
 
 #include "gps.h"
 
@@ -24,20 +25,21 @@ public:
 	~sensorSim();
 
 private slots:
-	void publish_AIS();
-	void publish_detected_target_msg();
+	void print_USV_AIS_msg();
+	void print_detected_targets();
 
 private:
 	void run();
-	void gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg);
-	void position_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
+	void USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg);
+	void obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
 
+	mutex m;
 	ros::NodeHandle nh;
 	QTimer *AIStimer;
 	QTimer *DTtimer;
+	map<string, gpsData> obstPositions;
 
-	gpsData USVpos;
-	map<string, gpsData> obstPositions; // TODO gpsData inneholder time, bruk denne til å disregarde gamle updates.
+	navData USVnavData;
 };
 
 

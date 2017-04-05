@@ -1,6 +1,17 @@
 
 #include "sensorsim.h"
 #include "simulator_messages/Gps.h"
+#include <QTime>
+#include "stdint.h"
+#include <math.h>
+
+#define ASCII_CHAR_OFFSET 	48
+#define SIX_BIT_MASK 		0b00111111
+#define FIVE_BIT_MASK 		0b00011111
+#define FOUR_BIT_MASK 		0b00001111
+#define THREE_BIT_MASK 		0b00000111
+#define TWO_BIT_MASK 		0b00000011
+#define ONE_BIT_MASK 		0b00000001
 
 //----------------------------------------------------------------------------------------
 //----------------------------------------sensorSim----------------------------------------
@@ -20,32 +31,88 @@ sensorSim::~sensorSim()
 
 void sensorSim::run()
 {
-	ros::Subscriber gpsUpdateSub = nh.subscribe("sensors/gps", 1000, &sensorSim::gps_parser, this);
+	USVnavData = navData(316001245, 123.8777500, 49.2002817, 19.6, 235.0);
+	ros::Subscriber USVupdateSub = nh.subscribe("sensors/gps", 1000, &sensorSim::USV_gps_parser, this);
+	ros::Subscriber obstUpdateSub = nh.subscribe("obstUpdateTopic", 1000, &sensorSim::obstacle_update_parser, this);
 
 	AIStimer = new QTimer();
 	DTtimer = new QTimer();
-	QObject::connect( AIStimer, SIGNAL(timeout()), this, SLOT(publish_AIS()) );
-	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(publish_detected_target_msg()) );
-	AIStimer->start(1000);
-	//DTtimer->start(1000);
+	QObject::connect( AIStimer, SIGNAL(timeout()), this, SLOT(print_USV_AIS_msg()) );
+	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(print_detected_targets()) );
+	AIStimer->start(2000);
+	DTtimer->start(1000);
 	qDebug() << "Sensor simulator running...";
 	QThread::exec();
 }
 
 
-void sensorSim::publish_AIS()
+void sensorSim::print_USV_AIS_msg()
 {
-	qDebug() << "Publish new AIS message.";
+	std::lock_guard<std::mutex> lock(m);
+	USVnavData.set_time(QTime::currentTime());
+	qDebug() << "\n---------------------Publish USV AIS message---------------------";
+	USVnavData.printData();
+	string AISmsg = USVnavData.get_AIS_class_A_position_report();
+	qDebug() << "\nAIS message: " << AISmsg.c_str();
+	qDebug() << "-------------------------------------------------------------------\n";
 }
 
-void sensorSim::publish_detected_target_msg()
+
+void sensorSim::print_detected_targets()
 {
-	qDebug() << "Publish new detected target message.";
+	std::lock_guard<std::mutex> lock(m);
+	if ( !obstPositions.empty() )
+		qDebug() << "Printing all detected obstacles:";
+	
+	vector<string> outdatedObstacles;
+
+	// Print obstacle position ifno and find outdated obstacles
+	for( auto const& obst : obstPositions )
+	{
+		QTime now = QTime::currentTime();
+		if( obst.second.time.msecsTo(now) > 1000)
+		{
+			string obstID = obst.first;
+			outdatedObstacles.push_back(obstID);
+		}
+		else
+		{
+			qDebug() << obst.first.c_str() << ":";
+			obst.second.print();
+			qDebug() << "------------------------";
+		}
+	}
+
+	// Delete old obstacles
+	for ( auto const& ID : outdatedObstacles ) 
+	{
+    	obstPositions.erase(ID);
+		qDebug() << "Erased " << ID.c_str() << "from map";
+		qDebug() << "-------------------------";
+	}
 }
 
 
-void sensorSim::gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg)
+void sensorSim::USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg)
 {
-	USVpos = gpsData(USVgpsMsg->longitude, USVgpsMsg->latitude, USVgpsMsg->heading, USVgpsMsg->headingRate, USVgpsMsg->speed, USVgpsMsg->altitude);
-	qDebug() << "Received new gps msg. Coord: " << USVgpsMsg->latitude << USVgpsMsg->longitude;
+	std::lock_guard<std::mutex> lock(m);
+	USVnavData.set_position_accuracy(HIGH);
+	USVnavData.set_nav_status(UNDERWAY_USING_ENGINE);
+	USVnavData.set_position(USVgpsMsg->longitude, USVgpsMsg->latitude);
+	USVnavData.set_track(USVgpsMsg->heading);
+	USVnavData.set_COG(USVgpsMsg->heading);
+	USVnavData.set_ROT(USVgpsMsg->headingRate);
+	USVnavData.set_SOG(USVgpsMsg->speed);
+	USVnavData.set_time(QTime::currentTime());
+}
+
+void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg)
+{
+	std::lock_guard<std::mutex> lock(m);
+	if( obstUpdateMsg->msgType == "position_update" )
+	{
+		string ID = obstUpdateMsg->obstacleID;
+		obstPositions[ID] = gpsData(obstUpdateMsg->x, obstUpdateMsg->y, obstUpdateMsg->psi);		
+	}
+
 }

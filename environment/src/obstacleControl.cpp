@@ -87,7 +87,7 @@ void obstacle::run()
 void obstacle::sendUpdateMsg()
 {
 		environment::obstacleUpdate posUpdate = getUpdateMsg();
-		ROS_INFO("Sending update from %s", posUpdate.obstacleID.c_str());
+		//ROS_INFO("Sending update from %s", posUpdate.obstacleID.c_str());
 		posUpdatePub.publish(posUpdate);
 		ros::spinOnce();
 }
