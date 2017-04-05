@@ -36,22 +36,6 @@ enum specialManeuverIndicator
 	ENGAGED_IN_SPECIAL_MANEUVER = 2
 };
 
-class gpsData
-{
-public:
-	double longitude;
-	double latitude;
-	double heading;
-	double headingRate;
-	double speed;
-	double altitude;
-	QTime time;
-	gpsData(double Longitude, double Latitude, double Heading = 0, double HeadingRate = 0, double Speed = 0, double Altitude = 0, QTime Time = QTime::currentTime());
-	gpsData();
-	void print() const;
-
-private:
-};
 
 
 class navData
@@ -96,6 +80,24 @@ private:
 	double track;
 	QTime time;
 	specialManeuverIndicator SMI;
+};
+
+
+class gpsData
+{
+public:
+	double longitude;
+	double latitude;
+	double heading;
+	double headingRate;
+	double speed;
+	double altitude;
+	QTime time;
+	gpsData(double Longitude, double Latitude, double Heading = 0, double HeadingRate = 0, double Speed = 0, double Altitude = 0, QTime Time = QTime::currentTime());
+	gpsData();
+	void print() const;
+
+private:
 };
 
 #endif // GPS_H

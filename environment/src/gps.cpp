@@ -2,11 +2,11 @@
 #include <QDebug>
 
 #define ASCII_CHAR_OFFSET 	48
-#define SIX_BIT_MASK 	0b00111111
-#define FIVE_BIT_MASK 	0b00011111
-#define FOUR_BIT_MASK 	0b00001111
-#define TWO_BIT_MASK 	0b00000011
-#define ONE_BIT_MASK 	0b00000001
+#define SIX_BIT_MASK 		0b00111111
+#define FIVE_BIT_MASK 		0b00011111
+#define FOUR_BIT_MASK 		0b00001111
+#define TWO_BIT_MASK 		0b00000011
+#define ONE_BIT_MASK 		0b00000001
 
 int sign(double x)
 {
@@ -15,47 +15,6 @@ int sign(double x)
 	return 0;
 }
 
-gpsData::gpsData(double Longitude, double Latitude, double Heading, double HeadingRate, double Speed, double Altitude, QTime Time)
-{
-	longitude = Longitude;
-	latitude = Latitude;
-	heading = Heading;
-	headingRate = HeadingRate;
-	speed = Speed;
-	altitude = Altitude;
-	time = Time;
-}
-
-gpsData::gpsData()
-{
-	longitude = 0;
-	latitude = 0;
-	heading = 0;
-	headingRate = 0;
-	speed = 0;
-	altitude = 0;
-	time = QTime::currentTime();
-}
-
-void gpsData::print() const
-{
-	string s = "";
-	s += "Time:\t\t";
-	s += time.toString().toUtf8().constData();
-	s += "\nLong:\t\t";
-	s += to_string(longitude);
-	s += "\nLat:\t\t";
-	s += to_string(latitude);
-	s += "\nHeading:\t";
-	s += to_string(heading);
-	s += "\nHdgRate:\t";
-	s += to_string(headingRate);
-	s += "\nSpeed:\t\t";
-	s += to_string(speed);
-	s += "\nAltitude:\t";
-	s += to_string(altitude);
-	qDebug() << s.c_str();
-}
 
 navData::navData(uint32_t userID, double longitd, double latitd, double SOGmeterPrSec, double trackDeg)
 {
@@ -318,5 +277,50 @@ void navData::printData() const
 			break;
 	}
 
+	qDebug() << s.c_str();
+}
+
+
+
+
+gpsData::gpsData(double Longitude, double Latitude, double Heading, double HeadingRate, double Speed, double Altitude, QTime Time)
+{
+	longitude = Longitude;
+	latitude = Latitude;
+	heading = Heading;
+	headingRate = HeadingRate;
+	speed = Speed;
+	altitude = Altitude;
+	time = Time;
+}
+
+gpsData::gpsData()
+{
+	longitude = 0;
+	latitude = 0;
+	heading = 0;
+	headingRate = 0;
+	speed = 0;
+	altitude = 0;
+	time = QTime::currentTime();
+}
+
+void gpsData::print() const
+{
+	string s = "";
+	s += "Time:\t\t";
+	s += time.toString().toUtf8().constData();
+	s += "\nLong:\t\t";
+	s += to_string(longitude);
+	s += "\nLat:\t\t";
+	s += to_string(latitude);
+	s += "\nHeading:\t";
+	s += to_string(heading);
+	s += "\nHdgRate:\t";
+	s += to_string(headingRate);
+	s += "\nSpeed:\t\t";
+	s += to_string(speed);
+	s += "\nAltitude:\t";
+	s += to_string(altitude);
 	qDebug() << s.c_str();
 }
