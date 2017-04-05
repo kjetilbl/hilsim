@@ -38,32 +38,36 @@ Vector6d GPS::positionFunction(Vector6d gps_position_in){
   return gps_position_dot;
 }
 
-Vector3d GPS::getSpeedAndTrack(Vector6d eta){
+double GPS::getTrack(){
+  double track = (180/M_PI)*atan2(v_n(1), v_n(0));
+  if(track<0)
+    track+=360;
+  return track;
+}
+double GPS::getSpeed(){
   Vector3d gpsData;
   double speed = sqrt(v_n(0)*v_n(0)+v_n(1)*v_n(1)+v_n(2)*v_n(2));
-  double bearing = (180/M_PI)*atan2(v_n(1), v_n(0));
-  if(bearing<0)
-    bearing+=360;
-  gpsData << speed, bearing, v_n(5)*180/M_PI;
-  return gpsData;
+  return speed;
+}
+double GPS::getHeadingRate(){
+  return v_n(5)*180/M_PI;
 }
 
-void GPS::getHeading(Vector6d eta){
+double GPS::getHeading(Vector6d eta){
   double temp_heading = eta(5)*180/M_PI;
   double sign = temp_heading/(std::abs(temp_heading));
   while(temp_heading<0 || temp_heading > 360){
     temp_heading+=-sign*360;
   }
-  heading=temp_heading;
+  return temp_heading;
 }
 
 void GPS::publishGpsData(Vector6d nu_n, Vector6d eta) {
   v_n=nu_n;
   getHeading(eta);
-  Vector3d gps_data = getSpeedAndTrack(eta);
   updateCurvatures();
   calculateNextPosition();  
-  gps_position(5)=heading;
+  gps_position(5)=getHeading(eta);
   if(step == steps_per_data_output){
     step=0;
     simulator_messages::Gps gpsMessage;
@@ -72,10 +76,10 @@ void GPS::publishGpsData(Vector6d nu_n, Vector6d eta) {
     gpsMessage.latitude = gps_position(0)*(180/M_PI);
     gpsMessage.longitude = gps_position(1)*(180/M_PI);
     gpsMessage.altitude = gps_position(2);
-    gpsMessage.track = gps_data(1);
-    gpsMessage.speed = gps_data(0);
+    gpsMessage.track = getTrack();
+    gpsMessage.speed = getSpeed();
     gpsMessage.heading = gps_position(5);
-    gpsMessage.headingRate = gps_data(2);
+    gpsMessage.headingRate = getHeadingRate();
     gps_pub.publish(gpsMessage);
 
     // Publishes lat, long and heading in one extra ROS-message, using a standard message. Used only for plotting in Matlab.

@@ -30,13 +30,15 @@ private:
 
   Matrix6d A;
 
-  void getHeading(Vector6d eta);
+  double getHeading(Vector6d eta);
 
   void updateCurvatures();
 
   void calculateNextPosition();
 
-  Vector3d getSpeedAndTrack(Vector6d eta);
+  double getSpeed();
+  double getTrack();
+  double getHeadingRate();
 
   Vector6d positionFunction(Vector6d position_in);
 

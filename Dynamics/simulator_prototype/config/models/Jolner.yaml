@@ -158,9 +158,18 @@ A_Fw: 0
 A_Lw: 0
 s_H: 0
 s_L: 0
-CD_t: 	0
+CD_t: 0
 CD_l_af_0: 0
 CD_l_af_pi: 0
 delta: 0
 kappa: 0
+
+#Wave Parameters
+K_1_w: 20
+K_2_w: 30
+K_3_w: 2000
+K_4_w: 50
+K_5_w: 100
+K_6_w: 20
+
 

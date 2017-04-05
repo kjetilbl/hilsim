@@ -305,61 +305,6 @@ void Vessel::calculateCrossFlowDrag(){
 	
 }
 
-/*void Vessel::getWaveYawMoment(){
-	lambda_w = 0.1017;
-	omega_0_w = 0.7;
-	omega_e_w = 0.7;
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	double stdDev = 1;
-	static std::normal_distribution<> d1(0, stdDev);
-	omega_3 = d1(gen);
-	omega_2 = omega_3;
-	omega_1 = omega_3;
-	omega_4 = omega_3;
-	omega_5 = omega_3;
-	omega_6 = omega_3;
-	K_6_w = (m_11*9.81)/120;
-	A_6_w << 0, 	1,
-			-omega_e_w*omega_e_w, -2*lambda_w*omega_e_w;
-	B_6_w << 0, K_6_w;
-	x_6_w = x_6_w+dt*(A_6_w*x_6_w+B_6_w*omega_6);
-
-
-	K_3_w = m_11*9.81;
-	A_3_w << 0, 	1,
-			-omega_e_w*omega_e_w, -2*lambda_w*omega_e_w;
-	B_3_w << 0, K_3_w;
-	x_3_w = x_3_w+dt*(A_3_w*x_3_w+B_3_w*omega_3);
-
-	K_5_w = K_3_w/5;
-	A_5_w << 0, 	1,
-			-omega_e_w*omega_e_w, -2*lambda_w*omega_e_w;
-	B_5_w << 0, K_5_w;
-	x_5_w = x_5_w+dt*(A_5_w*x_5_w+B_5_w*omega_5);
-
-	K_1_w = K_3_w/10;
-	A_1_w << 0, 	1,
-			-omega_e_w*omega_e_w, -2*lambda_w*omega_e_w;
-	B_1_w << 0, K_1_w;
-	x_1_w = x_1_w+dt*(A_1_w*x_1_w+B_1_w*omega_1);
-
-
-	K_2_w = K_3_w/8;
-	A_2_w << 0, 	1,
-			-omega_e_w*omega_e_w, -2*lambda_w*omega_e_w;
-	B_2_w << 0, K_2_w;
-	x_2_w = x_2_w+dt*(A_2_w*x_2_w+B_2_w*omega_2);
-
-	K_4_w = K_3_w/6;
-	A_4_w << 0, 	1,
-			-omega_e_w*omega_e_w, -2*lambda_w*omega_e_w;
-	B_4_w << 0, K_4_w;
-	x_4_w = x_4_w+dt*(A_4_w*x_4_w+B_4_w*omega_4);
-
-	tau_waves << x_1_w(1)*-std::abs(cos(eta(5))), x_2_w(1)*-std::abs(sin(eta(5))), x_3_w(1), x_4_w(1)*sin(eta(5)), x_5_w(1)*cos(eta(5)), x_6_w(1);
-}*/
-
 void Vessel::updateMatrices(){
 	double u, v, w, p, q, r, phi, theta, psi;
 	u = nu_r(0);

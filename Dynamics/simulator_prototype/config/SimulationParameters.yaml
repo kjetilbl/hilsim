@@ -3,7 +3,7 @@ wind_direction: 90 #Mean wind direction, going to, in degrees, North = 0
 current_speed: 0 #Mean current speed in m/s
 current_direction: 90 #Mean current direction, going to, in degrees, North = 0
 wave_height: 0 #Significant wave height
-wave_direction: 45 #Mean direction of waves, going to, in degrees, North = 0
+wave_direction: 90 #Mean direction of waves, going to, in degrees, North = 0
 
 dt: 0.05
 gps_frequency: 20

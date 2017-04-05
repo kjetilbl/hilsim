@@ -50,7 +50,7 @@ void Waves::getForces(Vector6d &tau_waves_in, double psi, double U){
 	F_K = getForceOneDOF(B_4, x_4, omega_rand);
 	F_M = getForceOneDOF(B_5, x_5, omega_rand);
 	F_N = getForceOneDOF(B_6, x_6, omega_rand);
-	tau_waves_in << F_X*-std::abs(cos(gamma)), F_Y*-std::abs(sin(gamma)), F_Z, F_K*sin(gamma), F_N*cos(gamma), F_M;
+	tau_waves_in << F_X*-std::abs(cos(gamma)), F_Y*-std::abs(sin(gamma)), F_Z, F_K*sin(gamma), F_M*cos(gamma), F_N;
 }
 
 double Waves::getForceOneDOF(Vector2d B_i, Vector2d &x_i, double omega_rand){
