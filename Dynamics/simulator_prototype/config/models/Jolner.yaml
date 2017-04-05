@@ -1,0 +1,175 @@
+#Mass matrix M_rb[6x6]
+m_11: 114 # kg
+m_12: 0 #kg
+m_13: 0 #kg
+m_14: 0 #kg
+m_15: 11.4 #kg
+m_16: 0 #kg
+
+m_21: 0 #kg
+m_22: 114 #kg
+m_23: 0 #kg
+m_24: -11.4 #kg
+m_25: 0 #kg
+m_26: -22.8 #kg
+
+m_31: 0 # kg
+m_32: 0 #kg
+m_33: 114 #kg
+m_34: 0 #kg
+m_35: 22.8 #kg
+m_36: 0 #kg
+
+m_41: 0 # kg
+m_42: 11.4 #kg
+m_43: 0 #kg
+m_44: 5.1224 #kg
+m_45: 0 #kg
+m_46: 0 #kg
+
+m_51: 11.4 # kg
+m_52: 0 #kg
+m_53: 22.8 #kg
+m_54: 0 #kg
+m_55: 23.3797 #kg
+m_56: 0 #kg
+
+m_61: 0 # kg
+m_62: -22.8 #kg
+m_63: 0 #kg
+m_64: 0 #kg
+m_65: 0 #kg
+m_66: 22.9995 #kg
+
+#Added mass matrix M_a[6x6]
+X_u_dot: 10.0199 # kg
+X_v_dot: 0 #kg
+X_w_dot: 0 #kg
+X_p_dot: 0 #kg
+X_q_dot: 0 #kg
+X_r_dot: 0 #kg
+
+Y_u_dot: 0 # kg
+Y_v_dot: 40.4330 #kg
+Y_w_dot: 0 #kg
+Y_p_dot: 5.5241 #kg
+Y_q_dot: 0 #kg
+Y_r_dot: 2.0920 #kg
+
+Z_u_dot: 0 # kg
+Z_v_dot: 0 #kg
+Z_w_dot: 312.7172 #kg
+Z_p_dot: 0 #kg
+Z_q_dot: 19.5178 #kg
+Z_r_dot: 0 #kg
+
+K_u_dot: 0 # kg
+K_v_dot: 4.4060 #kg
+K_w_dot: 0 #kg
+K_p_dot: 2.5503 #kg
+K_q_dot: 0 #kg
+K_r_dot: 0.2378 #kg
+
+M_u_dot: 0 # kg
+M_v_dot: 0 #kg
+M_w_dot: 39.7160 #kg
+M_p_dot: 0 #kg
+M_q_dot: 44.4638 #kg
+M_r_dot: 0 #kg
+
+N_u_dot: 0 # kg
+N_v_dot: 1.8879 #kg
+N_w_dot: 0 #kg
+N_p_dot: 0.1278 #kg
+N_q_dot: 0 #kg
+N_r_dot: 6.1952 #kg
+
+# Center of gravity
+x_g: 0.0
+y_g: 0.0
+
+# Linear damping terms
+X_u: -12.7619
+X_v: 0.0
+Y_v: -51.5682
+Y_r: -39.85
+N_v: 1.72
+N_r: -13.1855
+K_p: -0.2107
+K_r: 0
+Z_q: 0
+Z_w: 0
+M_q: 0
+M_r: 0
+
+C_rb_26: 54.5733 
+C_rb_35: -54.5733
+C_rb_46: 3.1517
+C_a_26: 0.0019
+C_a_35: -0.0149
+C_a_46: 0.0002
+C_a_55: -0.0019
+C_a_66: 0.000079
+
+# Restoring forces
+Z_z: -14538
+Z_theta: 205.15
+K_phi: -248
+M_z: 205.01
+M_theta: -2210
+
+# Nonlinear damping terms
+X_uu: -3.84
+X_uuu: -18.66
+X_vv: 0
+X_vvv: 0
+Y_vv: -133
+Y_vvv: -206
+Y_rr: -21.75
+Y_rrr: 0.0
+Y_rv: -3.85
+Y_vr: -4.05
+N_rr:  -6.3935
+N_rrr: 0
+N_vv: 0
+N_vvv: 0.0
+N_rv: 0.82
+N_vr: 0.5
+M_qq: 0
+
+K_thruster: 0.000013
+T_n: 0.1
+T_alpha: 0.2
+T_beta: 0.05
+n_min: 0
+n_max: 3000
+l_y_1: 0.1505 #Y-coordinate of right thruster
+l_y_2: -0.1505 # Y-coordinate of left thruster
+l_x_1: -0.825 #X-coordinate of right thruster
+l_x_2: -0.825 # X-coordinate of left thruster
+C_d_2d: 0.65
+T: 0.2
+X_uu_c: -1143
+surge_max: 130
+L_pp: 1.65
+
+#Wind Parameters
+A_Fw: 0
+A_Lw: 0
+s_H: 0
+s_L: 0
+CD_t: 0
+CD_l_af_0: 0
+CD_l_af_pi: 0
+delta: 0
+kappa: 0
+
+#Wave Parameters
+K_1_w: 20
+K_2_w: 30
+K_3_w: 2000
+K_4_w: 50
+K_5_w: 100
+K_6_w: 20
+
+

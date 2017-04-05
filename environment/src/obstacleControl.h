@@ -12,6 +12,7 @@
 
 using namespace std;
 
+void obstacleControl(int argc, char *argv[]);
 
 class obstacleHandler
 {
