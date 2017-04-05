@@ -1,0 +1,243 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="class_weather" kind="class" language="C++" prot="public">
+    <compoundname>Weather</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="class_weather_1acc253d38bec71dddfb4ae92af380c6e5" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::wind_angle</definition>
+        <argsstring></argsstring>
+        <name>wind_angle</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="17" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1ab304533a7f025f1a2f3c112038255110" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::current_angle</definition>
+        <argsstring></argsstring>
+        <name>current_angle</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="17" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1a3bf8124bffb9977bb431cca94a9dcc6e" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::wind_speed</definition>
+        <argsstring></argsstring>
+        <name>wind_speed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="17" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1a850d28701912b9ab5c38dbe25ceb4374" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::current_speed</definition>
+        <argsstring></argsstring>
+        <name>current_speed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="17" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1a16c656d234ae82390ae3d6b0b2c3d25f" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::wind_mean_speed</definition>
+        <argsstring></argsstring>
+        <name>wind_mean_speed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="17" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1a9ba4efa510c11bd8d9ea841a8f59597e" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::wind_mean_angle</definition>
+        <argsstring></argsstring>
+        <name>wind_mean_angle</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="18" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1ae7433f63d352a8716e954553090b0b03" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::current_mean_speed</definition>
+        <argsstring></argsstring>
+        <name>current_mean_speed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="18" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1a9df9824cd69668a46db8ee9c15e9d843" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::current_mean_angle</definition>
+        <argsstring></argsstring>
+        <name>current_mean_angle</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="18" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1a42a7e1a8cd76e584e40b9e8f40ba5fb2" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::wind_std_dev</definition>
+        <argsstring></argsstring>
+        <name>wind_std_dev</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="18" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_weather_1ad10c40b130367299a700e43c716ba991" prot="public" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Weather::current_std_dev</definition>
+        <argsstring></argsstring>
+        <name>current_std_dev</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="19" column="1" bodyfile="include/weather.h" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_weather_1a48d1098ede2e0cf3fc61102cb551bc5e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Weather::SetWindData</definition>
+        <argsstring>(double mean_wind_speed_in, double mean_wind_angle_in, double height)</argsstring>
+        <name>SetWindData</name>
+        <param>
+          <type>double</type>
+          <declname>mean_wind_speed_in</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>mean_wind_angle_in</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>height</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="21" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_weather_1a4b2bc213fef6bf759426f783a0a91aec" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Weather::SetCurrentData</definition>
+        <argsstring>(double mean_current_speed_in, double mean_current_angle_in)</argsstring>
+        <name>SetCurrentData</name>
+        <param>
+          <type>double</type>
+          <declname>mean_current_speed_in</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>mean_current_angle_in</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="24" column="1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_weather_1a912a7d668973dc7128d43180b065d31b" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>Weather::SetMeanWindSpeedAtHeight</definition>
+        <argsstring>(double U_10, double z)</argsstring>
+        <name>SetMeanWindSpeedAtHeight</name>
+        <param>
+          <type>double</type>
+          <declname>U_10</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>z</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="28" column="1" bodyfile="src/weather.cpp" bodystart="7" bodyend="10"/>
+      </memberdef>
+      <memberdef kind="function" id="class_weather_1af7755fb5a742199286447c0d3af4be72" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>Weather::UpdateWindSpeed</definition>
+        <argsstring>()</argsstring>
+        <name>UpdateWindSpeed</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/weather.h" line="30" column="1" bodyfile="src/weather.cpp" bodystart="12" bodyend="12"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="include/weather.h" line="13" column="1" bodyfile="include/weather.h" bodystart="13" bodyend="31"/>
+    <listofallmembers>
+      <member refid="class_weather_1ab304533a7f025f1a2f3c112038255110" prot="public" virt="non-virtual"><scope>Weather</scope><name>current_angle</name></member>
+      <member refid="class_weather_1a9df9824cd69668a46db8ee9c15e9d843" prot="public" virt="non-virtual"><scope>Weather</scope><name>current_mean_angle</name></member>
+      <member refid="class_weather_1ae7433f63d352a8716e954553090b0b03" prot="public" virt="non-virtual"><scope>Weather</scope><name>current_mean_speed</name></member>
+      <member refid="class_weather_1a850d28701912b9ab5c38dbe25ceb4374" prot="public" virt="non-virtual"><scope>Weather</scope><name>current_speed</name></member>
+      <member refid="class_weather_1ad10c40b130367299a700e43c716ba991" prot="public" virt="non-virtual"><scope>Weather</scope><name>current_std_dev</name></member>
+      <member refid="class_weather_1a4b2bc213fef6bf759426f783a0a91aec" prot="public" virt="non-virtual"><scope>Weather</scope><name>SetCurrentData</name></member>
+      <member refid="class_weather_1a912a7d668973dc7128d43180b065d31b" prot="private" virt="non-virtual"><scope>Weather</scope><name>SetMeanWindSpeedAtHeight</name></member>
+      <member refid="class_weather_1a48d1098ede2e0cf3fc61102cb551bc5e" prot="public" virt="non-virtual"><scope>Weather</scope><name>SetWindData</name></member>
+      <member refid="class_weather_1af7755fb5a742199286447c0d3af4be72" prot="private" virt="non-virtual"><scope>Weather</scope><name>UpdateWindSpeed</name></member>
+      <member refid="class_weather_1acc253d38bec71dddfb4ae92af380c6e5" prot="public" virt="non-virtual"><scope>Weather</scope><name>wind_angle</name></member>
+      <member refid="class_weather_1a9ba4efa510c11bd8d9ea841a8f59597e" prot="public" virt="non-virtual"><scope>Weather</scope><name>wind_mean_angle</name></member>
+      <member refid="class_weather_1a16c656d234ae82390ae3d6b0b2c3d25f" prot="public" virt="non-virtual"><scope>Weather</scope><name>wind_mean_speed</name></member>
+      <member refid="class_weather_1a3bf8124bffb9977bb431cca94a9dcc6e" prot="public" virt="non-virtual"><scope>Weather</scope><name>wind_speed</name></member>
+      <member refid="class_weather_1a42a7e1a8cd76e584e40b9e8f40ba5fb2" prot="public" virt="non-virtual"><scope>Weather</scope><name>wind_std_dev</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

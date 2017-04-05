@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="imu_8h" kind="file" language="C++">
+    <compoundname>imu.h</compoundname>
+    <includes refid="sensor_8h" local="yes">sensor.h</includes>
+    <includedby refid="vessel_8h" local="yes">include/vessel.h</includedby>
+    <includedby refid="imu_8cpp" local="yes">src/imu.cpp</includedby>
+    <incdepgraph>
+      <node id="13">
+        <label>cmath</label>
+      </node>
+      <node id="14">
+        <label>Eigen/Dense</label>
+      </node>
+      <node id="16">
+        <label>geometry_msgs/Twist.h</label>
+      </node>
+      <node id="11">
+        <label>include/imu.h</label>
+        <link refid="imu.h"/>
+        <childnode refid="12" relation="include">
+        </childnode>
+      </node>
+      <node id="15">
+        <label>ros/ros.h</label>
+      </node>
+      <node id="17">
+        <label>simulator_prototype/Gps.h</label>
+      </node>
+      <node id="12">
+        <label>sensor.h</label>
+        <link refid="sensor_8h_source"/>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="20">
+        <label>include/vesselnode.h</label>
+        <link refid="vesselnode_8h_source"/>
+      </node>
+      <node id="18">
+        <label>include/imu.h</label>
+        <link refid="imu.h"/>
+        <childnode refid="19" relation="include">
+        </childnode>
+      </node>
+      <node id="19">
+        <label>include/vessel.h</label>
+        <link refid="vessel_8h_source"/>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="class_i_m_u" prot="public">IMU</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>IMU_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IMU_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;sensor.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6" refid="class_i_m_u" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_i_m_u" kindref="compound">IMU</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="class_sensor" kindref="compound">Sensor</ref><sp/>{</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><sp/><sp/><ref refid="class_i_m_u" kindref="compound">IMU</ref>();</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/>~<ref refid="class_i_m_u" kindref="compound">IMU</ref>();</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/></highlight><highlight class="comment">//<sp/>Publishes<sp/>the<sp/>IMU-data<sp/>to<sp/>a<sp/>sensor-topic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>publishImuData(Vector6d<sp/>nu_dot,<sp/>Vector6d<sp/>nu);</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/></highlight></codeline>
+<codeline lineno="17"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="include/imu.h"/>
+  </compounddef>
+</doxygen>

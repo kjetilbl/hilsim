@@ -1,0 +1,15 @@
+wind_speed: 0 #Mean wind speed in m/s at 10 metres above the surface
+wind_direction: 90 #Mean wind direction, going to, in degrees, North = 0
+current_speed: 0 #Mean current speed in m/s
+current_direction: 90 #Mean current direction, going to, in degrees, North = 0
+wave_height: 0 #Significant wave height
+wave_direction: 45 #Mean direction of waves, going to, in degrees, North = 0
+
+dt: 0.05
+gps_frequency: 20
+mru_frequency: 100
+imu_frequency: 100
+speed_sensor_frequency: 20
+wind_sensor_frequency: 50
+start_latitude: 59.4377744115633
+start_longitude: 10.4716511800410

@@ -1,0 +1,351 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="unittest_8cpp" kind="file" language="C++">
+    <compoundname>unittest.cpp</compoundname>
+    <includes local="no">ros/ros.h</includes>
+    <includes refid="vessel_8h" local="yes">vessel.h</includes>
+    <includes local="no">gtest/gtest.h</includes>
+    <includes local="no">Eigen/Dense</includes>
+    <incdepgraph>
+      <node id="176">
+        <label>solver.h</label>
+        <link refid="solver_8h_source"/>
+        <childnode refid="170" relation="include">
+        </childnode>
+      </node>
+      <node id="172">
+        <label>tf/transform_broadcaster.h</label>
+      </node>
+      <node id="178">
+        <label>cmath</label>
+      </node>
+      <node id="175">
+        <label>nav_msgs/Odometry.h</label>
+      </node>
+      <node id="182">
+        <label>gps.h</label>
+        <link refid="gps_8h_source"/>
+        <childnode refid="177" relation="include">
+        </childnode>
+        <childnode refid="176" relation="include">
+        </childnode>
+      </node>
+      <node id="167">
+        <label>src/unittest.cpp</label>
+        <link refid="unittest.cpp"/>
+        <childnode refid="168" relation="include">
+        </childnode>
+        <childnode refid="169" relation="include">
+        </childnode>
+        <childnode refid="184" relation="include">
+        </childnode>
+        <childnode refid="170" relation="include">
+        </childnode>
+      </node>
+      <node id="170">
+        <label>Eigen/Dense</label>
+      </node>
+      <node id="173">
+        <label>geometry_msgs/PoseStamped.h</label>
+      </node>
+      <node id="174">
+        <label>geometry_msgs/Twist.h</label>
+      </node>
+      <node id="181">
+        <label>imu.h</label>
+        <link refid="imu_8h_source"/>
+        <childnode refid="177" relation="include">
+        </childnode>
+      </node>
+      <node id="184">
+        <label>gtest/gtest.h</label>
+      </node>
+      <node id="168">
+        <label>ros/ros.h</label>
+      </node>
+      <node id="171">
+        <label>math.h</label>
+      </node>
+      <node id="179">
+        <label>simulator_prototype/Gps.h</label>
+      </node>
+      <node id="180">
+        <label>mru.h</label>
+        <link refid="mru_8h_source"/>
+        <childnode refid="177" relation="include">
+        </childnode>
+      </node>
+      <node id="169">
+        <label>vessel.h</label>
+        <link refid="vessel_8h_source"/>
+        <childnode refid="168" relation="include">
+        </childnode>
+        <childnode refid="170" relation="include">
+        </childnode>
+        <childnode refid="171" relation="include">
+        </childnode>
+        <childnode refid="172" relation="include">
+        </childnode>
+        <childnode refid="173" relation="include">
+        </childnode>
+        <childnode refid="174" relation="include">
+        </childnode>
+        <childnode refid="175" relation="include">
+        </childnode>
+        <childnode refid="176" relation="include">
+        </childnode>
+        <childnode refid="177" relation="include">
+        </childnode>
+        <childnode refid="180" relation="include">
+        </childnode>
+        <childnode refid="181" relation="include">
+        </childnode>
+        <childnode refid="182" relation="include">
+        </childnode>
+        <childnode refid="183" relation="include">
+        </childnode>
+      </node>
+      <node id="183">
+        <label>speedsensor.h</label>
+        <link refid="speedsensor_8h_source"/>
+        <childnode refid="177" relation="include">
+        </childnode>
+        <childnode refid="168" relation="include">
+        </childnode>
+      </node>
+      <node id="177">
+        <label>sensor.h</label>
+        <link refid="sensor_8h_source"/>
+        <childnode refid="178" relation="include">
+        </childnode>
+        <childnode refid="170" relation="include">
+        </childnode>
+        <childnode refid="168" relation="include">
+        </childnode>
+        <childnode refid="174" relation="include">
+        </childnode>
+        <childnode refid="179" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <innerclass refid="structpub_sub_helper" prot="public">pubSubHelper</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="unittest_8cpp_1a34681309f7d5fffe3428318a7609a7b2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TEST</definition>
+        <argsstring>(Vessel, parameterLoad)</argsstring>
+        <name>TEST</name>
+        <param>
+          <type><ref refid="class_vessel" kindref="compound">Vessel</ref></type>
+        </param>
+        <param>
+          <type>parameterLoad</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="11" column="1" bodyfile="src/unittest.cpp" bodystart="11" bodyend="15"/>
+      </memberdef>
+      <memberdef kind="function" id="unittest_8cpp_1afef951db9c969901ec825b0f1fe215c2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TEST</definition>
+        <argsstring>(Vessel, initializeMatrices)</argsstring>
+        <name>TEST</name>
+        <param>
+          <type><ref refid="class_vessel" kindref="compound">Vessel</ref></type>
+        </param>
+        <param>
+          <type>initializeMatrices</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="17" column="1" bodyfile="src/unittest.cpp" bodystart="17" bodyend="23"/>
+      </memberdef>
+      <memberdef kind="function" id="unittest_8cpp_1a644f1b279d1adce4fe706750f9d43ba0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TEST</definition>
+        <argsstring>(Vessel, setGetState)</argsstring>
+        <name>TEST</name>
+        <param>
+          <type><ref refid="class_vessel" kindref="compound">Vessel</ref></type>
+        </param>
+        <param>
+          <type>setGetState</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="25" column="1" bodyfile="src/unittest.cpp" bodystart="25" bodyend="33"/>
+      </memberdef>
+      <memberdef kind="function" id="unittest_8cpp_1a84ce98b8802b3e4c0aafa310ae5c9b15" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TEST</definition>
+        <argsstring>(Vessel, getDT)</argsstring>
+        <name>TEST</name>
+        <param>
+          <type><ref refid="class_vessel" kindref="compound">Vessel</ref></type>
+        </param>
+        <param>
+          <type>getDT</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="35" column="1" bodyfile="src/unittest.cpp" bodystart="35" bodyend="35"/>
+      </memberdef>
+      <memberdef kind="function" id="unittest_8cpp_1a821e915cd03d4c610b5d4bfe56886a78" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TEST</definition>
+        <argsstring>(Basic, publishSubscribe)</argsstring>
+        <name>TEST</name>
+        <param>
+          <type>Basic</type>
+        </param>
+        <param>
+          <type>publishSubscribe</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="37" column="1" bodyfile="src/unittest.cpp" bodystart="37" bodyend="50"/>
+      </memberdef>
+      <memberdef kind="function" id="unittest_8cpp_1a88bcd9650a3ff6cd6f094a1d3ad0c0a7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TEST</definition>
+        <argsstring>(Vessel, receiveThrust)</argsstring>
+        <name>TEST</name>
+        <param>
+          <type><ref refid="class_vessel" kindref="compound">Vessel</ref></type>
+        </param>
+        <param>
+          <type>receiveThrust</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="52" column="1" bodyfile="src/unittest.cpp" bodystart="52" bodyend="66"/>
+      </memberdef>
+      <memberdef kind="function" id="unittest_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int main</definition>
+        <argsstring>(int argc, char **argv)</argsstring>
+        <name>main</name>
+        <param>
+          <type>int</type>
+          <declname>argc</declname>
+        </param>
+        <param>
+          <type>char **</type>
+          <declname>argv</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/unittest.cpp" line="68" column="1" bodyfile="src/unittest.cpp" bodystart="68" bodyend="74"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;ros/ros.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;vessel.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;gtest/gtest.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;Eigen/Dense&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6" refid="structpub_sub_helper" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal"><ref refid="structpub_sub_helper" kindref="compound">pubSubHelper</ref><sp/>{</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numRecMessages<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>callback(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>geometry_msgs::Twist::ConstPtr<sp/>&amp;msg)<sp/>{<sp/>numRecMessages++;<sp/>}</highlight></codeline>
+<codeline lineno="9"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal">TEST(<ref refid="class_vessel" kindref="compound">Vessel</ref>,<sp/>parameterLoad)<sp/>{</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/>ros::NodeHandle<sp/>testHandle;</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/><ref refid="class_vessel" kindref="compound">Vessel</ref><sp/>testVessel;</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/>EXPECT_FALSE(testVessel.readParameters(testHandle));</highlight></codeline>
+<codeline lineno="15"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal">TEST(<ref refid="class_vessel" kindref="compound">Vessel</ref>,<sp/>initializeMatrices)<sp/>{</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><ref refid="class_vessel" kindref="compound">Vessel</ref><sp/>testVessel;</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/>ros::NodeHandle<sp/>testHandle;</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/>testVessel.readParameters(testHandle);</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/>testVessel.initializeMatrices();</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/>ASSERT_NE(testVessel.M_det,<sp/>0);</highlight></codeline>
+<codeline lineno="23"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal">TEST(<ref refid="class_vessel" kindref="compound">Vessel</ref>,<sp/>setGetState)<sp/>{</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/>Vector6d<sp/>newState<sp/>=<sp/>Vector6d::Zero();</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/>Vector6d<sp/>testState;</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/>testState<sp/>&lt;&lt;<sp/>1,<sp/>2,<sp/>3,<sp/>4,<sp/>5,<sp/>6;</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><ref refid="class_vessel" kindref="compound">Vessel</ref><sp/>testVessel;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/>testVessel.setState(newState,<sp/>newState);</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/>testVessel.getState(testState,<sp/>testState);</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/>EXPECT_EQ(newState,<sp/>testState);</highlight></codeline>
+<codeline lineno="33"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal">TEST(<ref refid="class_vessel" kindref="compound">Vessel</ref>,<sp/>getDT)<sp/>{<sp/><ref refid="class_vessel" kindref="compound">Vessel</ref><sp/>testVessel;<sp/>}</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal">TEST(Basic,<sp/>publishSubscribe)<sp/>{</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/>ros::NodeHandle<sp/>nh;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><ref refid="structpub_sub_helper" kindref="compound">pubSubHelper</ref><sp/>h;</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/>ros::Publisher<sp/>pub<sp/>=<sp/>nh.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;testPub&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/>ros::Subscriber<sp/>sub<sp/>=<sp/>nh.subscribe(</highlight><highlight class="stringliteral">&quot;testPub&quot;</highlight><highlight class="normal">,<sp/>0,<sp/>&amp;pubSubHelper::callback,<sp/>&amp;h);</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/>EXPECT_EQ(pub.getNumSubscribers(),<sp/>1);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/>EXPECT_EQ(sub.getNumPublishers(),<sp/>1);</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/>geometry_msgs::Twist<sp/>msg;</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/>pub.publish(msg);</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/>ros::Rate<sp/>delayTime(1<sp/>/<sp/>0.1);</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/>delayTime.sleep();</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/>ros::spinOnce();</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/>EXPECT_EQ(h.numRecMessages,<sp/>1);</highlight></codeline>
+<codeline lineno="50"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal">TEST(<ref refid="class_vessel" kindref="compound">Vessel</ref>,<sp/>receiveThrust)<sp/>{</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><ref refid="class_vessel" kindref="compound">Vessel</ref><sp/>testVessel;</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/>ros::NodeHandle<sp/>nh;</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/>ros::Publisher<sp/>pub<sp/>=<sp/>nh.advertise&lt;geometry_msgs::Twist&gt;(</highlight><highlight class="stringliteral">&quot;hil_sim/thrust&quot;</highlight><highlight class="normal">,<sp/>0);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/>geometry_msgs::Twist<sp/>newThrust;</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>test_val<sp/>=<sp/>123;</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/>newThrust.linear.x<sp/>=<sp/>test_val;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/>pub.publish(newThrust);</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/>ros::Rate<sp/>delayTime(1<sp/>/<sp/>0.1);</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/>delayTime.sleep();</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/>ros::spinOnce();</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/>Vector6d<sp/>returnedThrust<sp/>=<sp/>testVessel.getThrust();</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/>EXPECT_EQ(returnedThrust(0),<sp/>test_val);</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/>EXPECT_NE(returnedThrust(1),<sp/>test_val);</highlight></codeline>
+<codeline lineno="66"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>main(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>argc,<sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>**argv)<sp/>{</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/>ros::init(argc,<sp/>argv,<sp/></highlight><highlight class="stringliteral">&quot;GTestNode&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/>ros::start();</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/>testing::InitGoogleTest(&amp;argc,<sp/>argv);</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/>ros::NodeHandle<sp/>nh;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>RUN_ALL_TESTS();</highlight></codeline>
+<codeline lineno="74"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="src/unittest.cpp"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.11">
+  <compounddef id="class_m_r_u" kind="class" language="C++" prot="public">
+    <compoundname>MRU</compoundname>
+    <basecompoundref refid="class_sensor" prot="public" virt="non-virtual">Sensor</basecompoundref>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_m_r_u_1a65a290afabb2a4d15e59daea8436fa67" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>MRU::MRU</definition>
+        <argsstring>()</argsstring>
+        <name>MRU</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/mru.h" line="9" column="1" bodyfile="src/mru.cpp" bodystart="3" bodyend="3"/>
+      </memberdef>
+      <memberdef kind="function" id="class_m_r_u_1a9a5161752ac51eea5d29228e881b1c8a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>MRU::~MRU</definition>
+        <argsstring>()</argsstring>
+        <name>~MRU</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/mru.h" line="10" column="1" bodyfile="src/mru.cpp" bodystart="4" bodyend="4"/>
+      </memberdef>
+      <memberdef kind="function" id="class_m_r_u_1ac3926b4ce79a4ddc075597bf8a20114e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void MRU::publishMruData</definition>
+        <argsstring>(Vector6d nu, Vector6d eta)</argsstring>
+        <name>publishMruData</name>
+        <param>
+          <type>Vector6d</type>
+          <declname>nu</declname>
+        </param>
+        <param>
+          <type>Vector6d</type>
+          <declname>eta</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/mru.h" line="13" column="1" bodyfile="src/mru.cpp" bodystart="6" bodyend="8"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="9">
+        <label>Sensor</label>
+        <link refid="class_sensor"/>
+      </node>
+      <node id="8">
+        <label>MRU</label>
+        <link refid="class_m_r_u"/>
+        <childnode refid="9" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="11">
+        <label>Sensor</label>
+        <link refid="class_sensor"/>
+      </node>
+      <node id="10">
+        <label>MRU</label>
+        <link refid="class_m_r_u"/>
+        <childnode refid="11" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="include/mru.h" line="6" column="1" bodyfile="include/mru.h" bodystart="6" bodyend="17"/>
+    <listofallmembers>
+      <member refid="class_sensor_1ae6f4e03bbd96a9c020ee0b737c23a7bf" prot="public" virt="non-virtual"><scope>MRU</scope><name>dt</name></member>
+      <member refid="class_sensor_1a9cc770795c32650dc738d52e900c7c37" prot="public" virt="non-virtual"><scope>MRU</scope><name>frequency</name></member>
+      <member refid="class_sensor_1a811e9071506ad8925dba54b9e40ab5a2" prot="public" virt="non-virtual"><scope>MRU</scope><name>gps_pub</name></member>
+      <member refid="class_sensor_1ab2f14e6d6c5a19338689e7af04fff45e" prot="public" virt="non-virtual"><scope>MRU</scope><name>imu_pub</name></member>
+      <member refid="class_m_r_u_1a65a290afabb2a4d15e59daea8436fa67" prot="public" virt="non-virtual"><scope>MRU</scope><name>MRU</name></member>
+      <member refid="class_sensor_1a08cb49aa8df3a84c5bb5546b1c11323e" prot="public" virt="non-virtual"><scope>MRU</scope><name>mru_position_pub</name></member>
+      <member refid="class_sensor_1a56727fc8fe63502e44d365297b5666ea" prot="public" virt="non-virtual"><scope>MRU</scope><name>mru_velocity_pub</name></member>
+      <member refid="class_sensor_1a45ddf880a759f03d22818e91860f0901" prot="public" virt="non-virtual"><scope>MRU</scope><name>publishData</name></member>
+      <member refid="class_sensor_1a7fc20251253ec330e00725cf00688ee0" prot="public" virt="non-virtual"><scope>MRU</scope><name>publishData</name></member>
+      <member refid="class_sensor_1a5f103439ae3ed1cb84e8a35705a3c032" prot="public" virt="non-virtual"><scope>MRU</scope><name>publishData</name></member>
+      <member refid="class_sensor_1af44389030d7336c5a24a87588bb31448" prot="public" virt="non-virtual"><scope>MRU</scope><name>publishData</name></member>
+      <member refid="class_m_r_u_1ac3926b4ce79a4ddc075597bf8a20114e" prot="public" virt="non-virtual"><scope>MRU</scope><name>publishMruData</name></member>
+      <member refid="class_sensor_1a3b3c9b96c4ed4ff563181b74fc518b5c" prot="public" virt="non-virtual"><scope>MRU</scope><name>sensor_handle</name></member>
+      <member refid="class_sensor_1afe6b7b2849deccb1818da714de6c36ad" prot="public" virt="non-virtual"><scope>MRU</scope><name>setFrequency</name></member>
+      <member refid="class_sensor_1ac4b9625c973636b3f3c574bc7b2a922d" prot="public" virt="non-virtual"><scope>MRU</scope><name>setNoise</name></member>
+      <member refid="class_sensor_1ae37c1cfa48a7f25497aae485f6f91265" prot="public" virt="non-virtual"><scope>MRU</scope><name>setStepSize</name></member>
+      <member refid="class_sensor_1afc9a4388ae0a7d8bec357af261e9c4a8" prot="public" virt="non-virtual"><scope>MRU</scope><name>speed_sensor_pub</name></member>
+      <member refid="class_sensor_1a2a9811c9f9fc04523f98276fdc794219" prot="public" virt="non-virtual"><scope>MRU</scope><name>step</name></member>
+      <member refid="class_sensor_1a3409fcd46e7ba87534325b78b40a93d2" prot="public" virt="non-virtual"><scope>MRU</scope><name>steps_per_data_output</name></member>
+      <member refid="class_m_r_u_1a9a5161752ac51eea5d29228e881b1c8a" prot="public" virt="non-virtual"><scope>MRU</scope><name>~MRU</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

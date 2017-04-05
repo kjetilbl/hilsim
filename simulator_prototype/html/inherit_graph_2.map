@@ -1,7 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$class_sensor.html" title="Sensor" alt="" coords="5,81,68,108"/>
-<area shape="rect" id="node2" href="$class_g_p_s.html" title="GPS" alt="" coords="141,5,191,32"/>
-<area shape="rect" id="node3" href="$class_i_m_u.html" title="IMU" alt="" coords="143,56,189,83"/>
-<area shape="rect" id="node4" href="$class_m_r_u.html" title="MRU" alt="" coords="139,107,193,133"/>
-<area shape="rect" id="node5" href="$class_speed_sensor.html" title="SpeedSensor" alt="" coords="116,157,216,184"/>
-</map>
