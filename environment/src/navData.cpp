@@ -1,4 +1,4 @@
-#include "gps.h"
+#include "navData.h"
 #include <QDebug>
 
 #define ASCII_CHAR_OFFSET 	48

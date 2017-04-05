@@ -1,20 +1,6 @@
 #include "obstacleControl.h"
 
 
-
-void obstacleControl(int argc, char *argv[])
-{
-	ros::init(argc, argv, "obstacleControl");
-	ros::NodeHandle n;
-	
-	obstacle testObstacle(n, "Mario", 1, 2, 3);
-	ros::Rate loop_rate(2);
-	while(1)
-	{
-		loop_rate.sleep();
-	}
-}
-
 obstacleHandler::obstacleHandler(ros::NodeHandle nh)
 {
 	n = nh;
@@ -100,7 +86,6 @@ void obstacle::run()
 void obstacle::sendUpdateMsg()
 {
 		environment::obstacleUpdate posUpdate = getUpdateMsg();
-		//ROS_INFO("Sending update from %s", posUpdate.obstacleID.c_str());
 		posUpdatePub.publish(posUpdate);
 		ros::spinOnce();
 }

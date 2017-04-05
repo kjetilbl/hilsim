@@ -1,5 +1,5 @@
-#ifndef GPS_H
-#define GPS_H
+#ifndef NAVDATA_H
+#define NAVDATA_H
 
 #include <QTime>
 #include <string>
@@ -100,5 +100,5 @@ public:
 private:
 };
 
-#endif // GPS_H
+#endif // NAVDATA_H
 

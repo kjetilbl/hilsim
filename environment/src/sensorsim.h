@@ -9,7 +9,7 @@
 #include <map>
 #include <mutex>
 
-#include "gps.h"
+#include "navData.h"
 
 #include "ros/ros.h"
 #include "environment/obstacleUpdate.h"
@@ -33,13 +33,13 @@ private:
 	void USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg);
 	void obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
 
+	navData USVnavData;
+
 	mutex m;
 	ros::NodeHandle nh;
 	QTimer *AIStimer;
 	QTimer *DTtimer;
 	map<string, gpsData> obstPositions;
-
-	navData USVnavData;
 };
 
 
