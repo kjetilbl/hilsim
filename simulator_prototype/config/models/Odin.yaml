@@ -165,3 +165,11 @@ CD_l_af_pi: 0.60
 delta: 0.60
 kappa: 1.1
 
+#Wave Parameters
+K_1_w: 5900
+K_2_w: 7400
+K_3_w: 59000
+K_4_w: 9500
+K_5_w: 11500
+K_6_w: 200
+

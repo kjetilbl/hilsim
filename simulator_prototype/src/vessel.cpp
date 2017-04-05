@@ -5,12 +5,14 @@ Vessel::Vessel(){
 	initializeStateVectors();	
 	ros::NodeHandle nh;
 	readParameters(nh);
+	K_wave << K_1_w, K_2_w, K_3_w, K_4_w, K_5_w, K_6_w;
 	actuators.initializeActuatorModel(K_thruster, T_alpha, T_beta, T_n, l_x_1, l_x_2, l_y_1, l_y_2, dt, n_max, n_min, alpha_max);
 	initializeSensors();
 	initializeMatrices();
 	solver.initializeSolver(dt);
 	wind.setData(wind_speed, wind_direction, dt);
 	current.setData(current_speed, current_direction, dt);
+	waves.setData(wave_height, wave_direction, dt, K_wave);
 }
 
 Vessel::~Vessel() {}
@@ -28,6 +30,7 @@ void Vessel::initializeStateVectors(){
 	tau_control = Vector6d::Zero();
 	tau_total = Vector6d::Zero();
 	x_6_w =  Vector2d::Zero();
+
 }
 
 void Vessel::setGpsCoordinates(double _lat, double _long){
@@ -302,13 +305,13 @@ void Vessel::calculateCrossFlowDrag(){
 	
 }
 
-void Vessel::getWaveYawMoment(){
+/*void Vessel::getWaveYawMoment(){
 	lambda_w = 0.1017;
-	omega_0_w = 1.1;
-	omega_e_w = 1.1;
+	omega_0_w = 0.7;
+	omega_e_w = 0.7;
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	double stdDev = 2;
+	double stdDev = 1;
 	static std::normal_distribution<> d1(0, stdDev);
 	omega_3 = d1(gen);
 	omega_2 = omega_3;
@@ -316,7 +319,7 @@ void Vessel::getWaveYawMoment(){
 	omega_4 = omega_3;
 	omega_5 = omega_3;
 	omega_6 = omega_3;
-	K_6_w = 500;
+	K_6_w = (m_11*9.81)/120;
 	A_6_w << 0, 	1,
 			-omega_e_w*omega_e_w, -2*lambda_w*omega_e_w;
 	B_6_w << 0, K_6_w;
@@ -355,7 +358,7 @@ void Vessel::getWaveYawMoment(){
 	x_4_w = x_4_w+dt*(A_4_w*x_4_w+B_4_w*omega_4);
 
 	tau_waves << x_1_w(1)*-std::abs(cos(eta(5))), x_2_w(1)*-std::abs(sin(eta(5))), x_3_w(1), x_4_w(1)*sin(eta(5)), x_5_w(1)*cos(eta(5)), x_6_w(1);
-}
+}*/
 
 void Vessel::updateMatrices(){
 	double u, v, w, p, q, r, phi, theta, psi;
@@ -442,13 +445,15 @@ void Vessel::step(){
 	calculateNextNu();
 	publishSensorData();
 	calculateEnvironmentalForces();
-	getWaveYawMoment();
+	//getWaveYawMoment();
 	//std::cout << nu_r << std::endl;
 }
 
 void Vessel::calculateEnvironmentalForces(){
 	calculateWindForces();
 	calculateCurrentForces();
+	if(wave_height!=0)
+		waves.getForces(tau_waves, eta(5), nu(0));
 }
 
 void Vessel::calculateCurrentForces(){
@@ -473,32 +478,37 @@ void Vessel::getRelativeWindParameters(double &speed, double &direction){
 }
 
 void Vessel::calculateWindForces(){
-	wind.getData(wind_speed, wind_direction);
-	getRelativeWindParameters(wind_speed, wind_direction);
-	double gamma_w = wind_direction;
-	while(std::abs(gamma_w)>M_PI){
-		if(gamma_w>M_PI)
-			gamma_w=gamma_w-2*M_PI;
-		if(gamma_w<-M_PI)
-			gamma_w=gamma_w+2*M_PI; 
+	if(A_Lw == 0 || A_Fw == 0){
+		tau_wind << 0,0,0,0,0,0;
+	}else{
+		wind.getData(wind_speed, wind_direction);
+		getRelativeWindParameters(wind_speed, wind_direction);
+		double gamma_w = wind_direction;
+		while(std::abs(gamma_w)>M_PI){
+			if(gamma_w>M_PI)
+				gamma_w=gamma_w-2*M_PI;
+			if(gamma_w<-M_PI)
+				gamma_w=gamma_w+2*M_PI; 
+		}
+		double rho_a = 1.204;
+		double q = 0.5*rho_a*wind_speed*wind_speed;
+		double CD_l_af;
+		if(std::abs(gamma_w)<M_PI/2)
+			CD_l_af = CD_l_af_0;
+		else
+			CD_l_af = CD_l_af_pi;
+		double CD_l = CD_l_af;
+		double C_X = -CD_l*(A_Lw/A_Fw)*(cos(gamma_w)/(1-0.5*delta*(1-CD_l/CD_t)*sin(2*gamma_w)*sin(2*gamma_w)));
+		double C_Y = CD_t*(sin(gamma_w)/(1-0.5*delta*(1-CD_l/CD_t)*sin(2*gamma_w)*sin(2*gamma_w)));
+		double C_K = kappa*C_Y;
+		double C_N;
+		if(gamma_w<0)
+			C_N = C_Y*((s_L/L_pp)-0.18*(-gamma_w-M_PI/2));
+		else
+			C_N = C_Y*((s_L/L_pp)-0.18*(gamma_w-M_PI/2));
+		tau_wind << q*C_X*A_Fw, q*C_Y*A_Lw, 0, q*C_K*A_Lw*s_H, 0, q*C_N*A_Lw*L_pp;
 	}
-	double rho_a = 1.204;
-	double q = 0.5*rho_a*wind_speed*wind_speed;
-	double CD_l_af;
-	if(std::abs(gamma_w)<M_PI/2)
-		CD_l_af = CD_l_af_0;
-	else
-		CD_l_af = CD_l_af_pi;
-	double CD_l = CD_l_af;
-	double C_X = -CD_l*(A_Lw/A_Fw)*(cos(gamma_w)/(1-0.5*delta*(1-CD_l/CD_t)*sin(2*gamma_w)*sin(2*gamma_w)));
-	double C_Y = CD_t*(sin(gamma_w)/(1-0.5*delta*(1-CD_l/CD_t)*sin(2*gamma_w)*sin(2*gamma_w)));
-	double C_K = kappa*C_Y;
-	double C_N;
-	if(gamma_w<0)
-		C_N = C_Y*((s_L/L_pp)-0.18*(-gamma_w-M_PI/2));
-	else
-		C_N = C_Y*((s_L/L_pp)-0.18*(gamma_w-M_PI/2));
-	tau_wind << q*C_X*A_Fw, q*C_Y*A_Lw, 0, q*C_K*A_Lw*s_H, 0, q*C_N*A_Lw*L_pp;
+	
 }
 
 void Vessel::publishSensorData(){
@@ -868,6 +878,23 @@ bool Vessel::readParameters(ros::NodeHandle nh) {
 	if (!nh.getParam("kappa", kappa))
 		parameterFail=true;
 
+	//Wave parameters
+	if (!nh.getParam("wave_height", wave_height))
+		parameterFail=true;
+	if (!nh.getParam("wave_direction", wave_direction))
+		parameterFail=true;
+	if (!nh.getParam("K_1_w", K_1_w))
+		parameterFail=true;
+	if (!nh.getParam("K_2_w", K_2_w))
+		parameterFail=true;
+	if (!nh.getParam("K_3_w", K_3_w))
+		parameterFail=true;
+	if (!nh.getParam("K_4_w", K_4_w))
+		parameterFail=true;
+	if (!nh.getParam("K_5_w", K_5_w))
+		parameterFail=true;
+	if (!nh.getParam("K_6_w", K_6_w))
+		parameterFail=true;
 
 	// Thruster parameters
 	if (!nh.getParam("K_thruster", K_thruster))

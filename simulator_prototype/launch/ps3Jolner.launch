@@ -17,13 +17,8 @@
     
     <node pkg="simulator_prototype" type="hil_simulator_node" name="simulated_vessel" output="screen"/>
 
-    <!--node> name="vel_plot"
-        pkg="rqt_plot"
-        type="rqt_plot"
-        args="/hil_sim/log/velocity/linear/x /hil_sim/log/velocity/linear/y" <node-->
-
-    <!--node> pkg="rosbag" type="record" name="rosbag_record_run"
-       args="record -o $(find simulator_prototype)/logs/run.bag hil_sim/log/thrust hil_sim/log/state hil_sim/log/velocity hil_sim/sensors/imu"<node-->
+    <node pkg="rosbag" type="record" name="rosbag_record_run"
+       args="record -o $(find simulator_prototype)/logs/run.bag /log/wind /log/state" />
 	
      
 </launch>

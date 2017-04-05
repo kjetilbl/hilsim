@@ -122,11 +122,7 @@ void posUpdateHandler::gpsParser(const simulator_messages::Gps::ConstPtr& gpsMsg
 		firstContact = false;
 	}
 
-<<<<<<< HEAD
 	sv->simTargetMoveTo(gpsMsg->latitude, gpsMsg->longitude, gpsMsg->heading);
-=======
-	sv->simTargetMoveTo(gpsMsg->longitude, gpsMsg->latitude, gpsMsg->heading);
->>>>>>> 6c89fbd16b6318df98e7bcd588faf3cb012e65ac
 	headingPlot->updateValues(gpsMsg->heading, gpsMsg->heading - 1);
 	velocityPlot->updateValues(gpsMsg->speed, gpsMsg->speed - 0.5);
 	//qDebug() << "Received new gps msg. Coord: " << gpsMsg->latitude << gpsMsg->longitude;

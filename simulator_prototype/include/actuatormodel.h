@@ -1,6 +1,6 @@
 #ifndef ACTUATORMODEL_H
 #define ACTUATORMODEL_H
-
+#include "ros/ros.h"
 #include <Eigen/Dense>
 #include <math.h>
 
