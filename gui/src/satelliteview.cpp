@@ -31,7 +31,7 @@ satelliteView::satelliteView(QCustomPlot *satelliteViewWidget)
 
 	connect(svWidget, SIGNAL(mousePress(QMouseEvent*)), SLOT(markPosition( QMouseEvent *)));
 
-	simTarget = new USV("USV_Odin", svWidget, 0, 0);
+	simTarget = new USV("USV_Odin", svWidget, 59.438, 10.472);
 	simTarget->makePlottable();
 	
 }
