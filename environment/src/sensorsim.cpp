@@ -51,10 +51,8 @@ void sensorSim::print_USV_AIS_msg()
 	std::lock_guard<std::mutex> lock(m);
 	USVnavData.set_time(QTime::currentTime());
 	qDebug() << "\n---------------------Publish USV AIS message---------------------";
-	USVnavData.printData();
-	string AISmsg = USVnavData.get_AIS_class_A_position_report();
-	qDebug() << "\nAIS message: " << AISmsg.c_str();
-	qDebug() << "-------------------------------------------------------------------\n";
+	USVnavData.print_data();
+	qDebug() << "-----------------------------------------------------------------\n";
 }
 
 
@@ -66,7 +64,7 @@ void sensorSim::print_detected_targets()
 	
 	vector<string> outdatedObstacles;
 
-	// Print obstacle position ifno and find outdated obstacles
+	// Print obstacle position info and find outdated obstacles
 	for( auto const& obst : obstPositions )
 	{
 		QTime now = QTime::currentTime();
@@ -109,10 +107,10 @@ void sensorSim::USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMs
 void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg)
 {
 	std::lock_guard<std::mutex> lock(m);
-	if( obstUpdateMsg->msgType == "position_update" )
+	if( obstUpdateMsg->msgDescriptor == "position_update" )
 	{
-		string ID = obstUpdateMsg->obstacleID;
-		obstPositions[ID] = gpsData(obstUpdateMsg->x, obstUpdateMsg->y, obstUpdateMsg->psi);		
+		string ID = obstUpdateMsg->objectID;
+		obstPositions[ID] = gpsData(obstUpdateMsg->longitude, obstUpdateMsg->latitude, obstUpdateMsg->heading);		
 	}
 
 }

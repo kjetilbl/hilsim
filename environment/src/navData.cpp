@@ -156,7 +156,7 @@ int32_t get_AIS_communication_state(int8_t syncState, int8_t slotTimeOut, QTime 
 }
 
 
-string navData::get_AIS_class_A_position_report()
+string navData::get_AIS_class_A_position_report() const
 {
 	uint8_t msgID = 1;
 	uint8_t repeatIndicator = 0;
@@ -225,7 +225,7 @@ string navData::get_AIS_class_A_position_report()
 }
 
 
-void navData::printData() const
+void navData::print_data() const
 {
 	string s = "";
 	s += "Time:\t\t\t";
@@ -276,6 +276,8 @@ void navData::printData() const
 			s += "UNDEFINED";
 			break;
 	}
+	s += "\nAIS message:\t\t";
+	s += get_AIS_class_A_position_report();
 
 	qDebug() << s.c_str();
 }

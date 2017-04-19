@@ -11,12 +11,14 @@ SET(environment_SOURCES
 	src/obstacleControl.cpp
 	src/sensorsim.cpp
 	src/navData.cpp
+	src/gpsTools.cpp
 	)
 
 SET(environment_HEADERS 
 	src/obstacleControl.h
 	src/sensorsim.h
 	src/navData.h
+	src/gpsTools.h
 	)
 
 QT4_WRAP_CPP(environment_HEADERS_MOC ${environment_HEADERS})

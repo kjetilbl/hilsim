@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QThread>
 #include <QDebug>
+
 #include <string>
 #include <map>
 #include <mutex>
@@ -44,4 +45,3 @@ private:
 
 
 #endif // SENSORSIM_H
-

@@ -1,19 +1,26 @@
 #ifndef SATELLITEVIEW_H
 #define SATELLITEVIEW_H
 
+#include "../environment/src/gpsTools.h"
+
 #include "../qcustomplot.h"
 #include <QTimer>
 #include <QObject>
+#include <QPushButton>
+#include <QLabel>
+
+
 #include <mutex>
 #include <string>
 #include <map>
 
 using namespace std;
 
-
+class simObject;
 class target;
 class USV;
 class obstacle;
+
 
 struct position {
 	double x;
@@ -34,6 +41,7 @@ public:
 		positionMark->addData(x,y);
 	}
 	~markedPosition(){
+		// TODO: sørge for at bare en tråd aksesserer owner plot widget omgangen. Ooooh vanskelig...
 		owner->removePlottable(positionMark);
 	}
 	position getPos(){
@@ -52,9 +60,10 @@ class satelliteView : public QObject
 	Q_OBJECT
 public:
 	satelliteView( QCustomPlot *satelliteViewWidget );
-	void addObstacle( string obstacleID, double x, double y, double psi = 0 );
+	void addSimObject( string obstacleID, string objectDescriptor, double x, double y, double psi = 0 );
+	void removeSimObject(string obstacleID);
+	bool doesExist( string simObjectID );
 	void setPosition( string obstacleID, double x, double y, double psi = 0 );
-	void deleteObstacle(string obstacleID);
 	void simTargetMoveTo( double x, double y, double psi = 0 );
 	void simTargetClearTrajectory();
 	bool popMarkedPosition(position *pos);
@@ -62,12 +71,21 @@ public:
 private slots:
 	void updatePlot();
 	void markPosition( QMouseEvent *event );
+	void zoomIn();
+	void zoomOut();
 
 private:
-	mutex mpMutex;
+	QPushButton *zoomInButton;
+	QPushButton *zoomOutButton;
+	QFrame *rangeReference;
+	int mapRangeInMeters = 400;
+	QLabel *rangeDescriptor;
+	void initialize_buttons();
+	void update_range_descriptor();
+	mutex m;
 	vector<markedPosition*> MPs;
 	USV *simTarget;
-	map<string, obstacle*> obstacles;
+	map<string, simObject*> activeSimObjects;
 	QCustomPlot *svWidget;
 	QTimer plotTimer;
 };
@@ -94,7 +112,7 @@ public:
 protected:
 	void trajectoryInit();
 	bool readyToPlot = false;
-	mutex positionMutex;
+	mutex m;
 	string ID;
 	position pos;
 	QCustomPlot *ownerSVWidget;
@@ -114,6 +132,14 @@ class obstacle : public simObject
 {
 public:
 	obstacle(string obstID, QCustomPlot *satelliteViewWidget, double X = 0, double Y = 0, double Psi = 0);
+	void makePlottable();
+};
+
+
+class ship : public simObject
+{
+public:
+	ship(string shipID, QCustomPlot *satelliteViewWidget, double longitude = 0, double latitude = 0, double heading = 0);
 	void makePlottable();
 };
 

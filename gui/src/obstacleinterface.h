@@ -4,11 +4,12 @@
 #include <QGroupBox>
 #include <QPushButton>
 #include <QObject>
-#include <string>
-#include <thread>
 #include <QThread>
 #include <QTimer>
 #include <QDebug>
+
+#include <string>
+#include <thread>
 
 #include "satelliteview.h"
 

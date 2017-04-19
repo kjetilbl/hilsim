@@ -47,8 +47,8 @@ public:
 			double SOGmeterPrSec = 0,
 			double trackDeg = 0);
 
-	string get_AIS_class_A_position_report();
-	void printData() const;
+	string get_AIS_class_A_position_report() const;
+	void print_data() const;
 	
 	void set_nav_status(navStatus ns);
 	navStatus get_nav_status() {return status;};

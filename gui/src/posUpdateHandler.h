@@ -48,7 +48,6 @@ public:
 
 private:
 	QThread *WDthread;
-	//QTimer *WDtimer;
 	void run();
 	map<string, watchDog*> obstWDs;
 	satelliteView *sv;
