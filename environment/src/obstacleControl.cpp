@@ -1,11 +1,23 @@
 #include "obstacleControl.h"
 
-obstacleHandler::obstacleHandler(ros::NodeHandle nh)
-{
-	n = nh;
-	cmdSub = nh.subscribe("obstacleCommandTopic", 1000, &obstacleHandler::command_parser, this);
+obstacleHandler::obstacleHandler(ros::NodeHandle nh, QThread *parent ) : QThread(parent) {
+	this->n = nh;
+	this->cmdSub = nh.subscribe("obstacleCommandTopic", 1000, &obstacleHandler::command_parser, this);
 }
 
+obstacleHandler::~obstacleHandler(){
+	qDebug() << "Destroy obstacleHandler.";
+	for(auto const& simObjectPtr: agents){
+		simObjectPtr->quit();
+		simObjectPtr->wait();
+		delete simObjectPtr;
+	}
+	if( simObjectsThread != NULL ){
+		simObjectsThread->quit();
+		simObjectsThread->wait();
+		delete simObjectsThread;		
+	}
+}
 
 void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& cmd)
 {
@@ -13,15 +25,11 @@ void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& c
 	if(cmd->cmdSpecifier == "spawn")
 	{
 		// string ID = "fixed_obstacle_" + to_string(obstIterator++);
-		static bool first = true;
-		if ( first == true )
+		if ( simObjectsThread == NULL ) // first instance
 		{
 			simObjectsThread = new QThread();
 			simObjectsThread->start();
-			first = false;
-			qDebug() << "simObjectsThread started...";
 		}
-
 
 		double longitude = cmd->x;
 		double latitude = cmd->y;
@@ -40,77 +48,59 @@ void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& c
 
 void obstacleHandler::run()
 {
-
+	qDebug() << "obstacleHandler running...";
 	ros::spin();
+	//QThread::exec();
+	qDebug() << "obstacleHandler finished...";
 }
 
 simObject::simObject( const simObject& other )
 {
-	n = other.n;
-	cmdSub = n.subscribe("obstacleCommandTopic", 1000, &simObject::command_parser, this);
-	posUpdatePub = n.advertise<environment::obstacleUpdate>("obstUpdateTopic", 1000);
+	this->n = other.n;
+	this->cmdSub = n.subscribe("obstacleCommandTopic", 1000, &simObject::command_parser, this);
+	this->posUpdatePub = n.advertise<environment::obstacleUpdate>("obstUpdateTopic", 1000);
 
-	ID = other.ID;
-	longitude = other.longitude;
-	latitude = other.latitude;
-	psi = other.psi;
+	this->ID = other.ID;
+	this->longitude = other.longitude;
+	this->latitude = other.latitude;
+	this->psi = other.psi;
 }
 
 simObject::simObject(ros::NodeHandle nh, string obstID, double Longitude, double Latitude, double Psi, QThread *parent) : QThread(parent)
 {
-	n = nh;
-	cmdSub = n.subscribe("obstacleCommandTopic", 1000, &simObject::command_parser, this);
-	posUpdatePub = n.advertise<environment::obstacleUpdate>("obstUpdateTopic", 1000);
+	this->n = nh;
+	this->cmdSub = n.subscribe("obstacleCommandTopic", 1000, &simObject::command_parser, this);
+	this->posUpdatePub = n.advertise<environment::obstacleUpdate>("obstUpdateTopic", 1000);
 
-	ID = obstID;
-	longitude = Longitude;
-	latitude = Latitude;
-	psi = Psi;
+	this->ID = obstID;
+	this->longitude = Longitude;
+	this->latitude = Latitude;
+	this->psi = Psi;
 
 }
 
 void simObject::initiate_pos_report_broadcast()
 {
-	posReportTimer = new QTimer(0);
+	this->posReportTimer = new QTimer(0);
 	QObject::connect( posReportTimer, SIGNAL(timeout()), this, SLOT(publish_position_report()) );
-	posReportTimer->start(50);
+	this->posReportTimer->start(50);
 }
 
 void simObject::run()
 {
-	//awrgargaergaergaregaerharehwgwagalgkjb|||\\------------
-	/* TODO: posreporttimer starter ikke. Vil ha timer-basert run. Planen er å gjøre
-	run() virtual, slik at subklasser kan lage egne run()s. Disse skal bruke timere for
-	å sende AIS og position reports med ulike intervaller. 
-	*/
-
 	QThread::exec();
-/*	
-	ros::Rate loop_rate(24);
-	while(true){
-		move();
-
-		loop_rate.sleep();
-
-		lock_guard<mutex> lock(m);
-		if(stop == true)
-		{
-			break;
-		}
-	}
-	ROS_INFO("Will terminate simObject %s", ID.c_str());*/
 }
 
 void simObject::publish_position_report()
 {
 	environment::obstacleUpdate posUpdate = make_position_update_msg();
-	posUpdatePub.publish(posUpdate);
+	this->posUpdatePub.publish(posUpdate);
 	ros::spinOnce();
 }
 
 void simObject::command_parser(const environment::obstacleCmd::ConstPtr& cmd)
 {
-	ROS_INFO("%s received a new command!", ID.c_str()); // Forbeholdt terminate-kommando
+	ROS_INFO("%s received a new command!", this->ID.c_str()); // Forbeholdt terminate-kommando
 }
 
 
@@ -131,34 +121,34 @@ environment::obstacleUpdate simObject::make_position_update_msg()
 void simObject::set_position(double Longitude, double Latitude, double Psi)
 {
 	lock_guard<mutex> lock(m);
-	longitude = Longitude;
-	latitude = Latitude;
-	psi  = Psi;
+	this->longitude = Longitude;
+	this->latitude = Latitude;
+	this->psi  = Psi;
 }
 
 double simObject::get_longitude()
 {
 	lock_guard<mutex> lock(m);
-	return longitude;
+	return this->longitude;
 }
 
 double simObject::get_latitude()
 {
 	lock_guard<mutex> lock(m);
-	return latitude;
+	return this->latitude;
 }
 
 double simObject::get_heading()
 {
 	lock_guard<mutex> lock(m);
-	return psi;
+	return this->psi;
 }
 
 
 fixedObstacle::fixedObstacle( ros::NodeHandle nh, string obstID, double Longitude, double Latitude, double Psi, QThread *parent ) 
 							: simObject( nh, obstID, Longitude, Latitude, Psi, parent )
 {
-	objectDescriptor = "fixed_obstacle";
+	this->objectDescriptor = "fixed_obstacle";
 }
 
 
@@ -177,12 +167,12 @@ activeSimObject::activeSimObject( ros::NodeHandle nh, uint32_t mmsiNumber, doubl
 void activeSimObject::broadcast_AIS_msg()
 {
 	navData nd( this->get_MMSI(), this->get_longitude(), this->get_latitude(), this->get_SOG() );
-	nd.set_nav_status( get_status() );
-	nd.set_ROT( get_ROT() );
-	nd.set_position_accuracy( get_pos_accuracy() );
+	nd.set_nav_status( this->get_status() );
+	nd.set_ROT( this->get_ROT() );
+	nd.set_position_accuracy( this->get_pos_accuracy() );
 	nd.set_COG( this->get_heading() );
 
-	string AISmsg = nd.get_AIS_class_A_position_report();
+	string AISmsg = nd.get_AIS_class_A_position_report(); // Should be broadcast
 	qDebug() << "---------------------Publish" << this->ID.c_str() << "AIS message--------------------- ";
 	nd.print_data();
 	qDebug() << "-----------------------------------------------------------------------------";
@@ -190,62 +180,62 @@ void activeSimObject::broadcast_AIS_msg()
 
 void activeSimObject::set_MMSI(uint32_t ID){
 	lock_guard<mutex> lock(activeObjMutex);
-	MMSI = ID;
+	this->MMSI = ID;
 }
 
 uint32_t activeSimObject::get_MMSI(){
 	lock_guard<mutex> lock(activeObjMutex);
-	return MMSI;
+	return this->MMSI;
 }
 
 void activeSimObject::set_status(navStatus newStatus){
 	lock_guard<mutex> lock(activeObjMutex);
-	status = newStatus;
+	this->status = newStatus;
 }
 
 navStatus activeSimObject::get_status(){
 	lock_guard<mutex> lock(activeObjMutex);
-	return status;
+	return this->status;
 }
 
 void activeSimObject::set_ROT(double rot){
 	lock_guard<mutex> lock(activeObjMutex);
-	ROT = rot;
+	this->ROT = rot;
 }
 
 
 double activeSimObject::get_ROT(){
 	lock_guard<mutex> lock(activeObjMutex);
-	return ROT;
+	return this->ROT;
 }
 
 void activeSimObject::set_SOG(double sog){
 	lock_guard<mutex> lock(activeObjMutex);
-	SOG = sog;
+	this->SOG = sog;
 }
 
 double activeSimObject::get_SOG(){
 	lock_guard<mutex> lock(activeObjMutex);
-	return SOG;
+	return this->SOG;
 }
 
 void activeSimObject::set_pos_accuracy(posAccuracy accuracy){
 	lock_guard<mutex> lock(activeObjMutex);
-	positionAccuracy = accuracy;
+	this->positionAccuracy = accuracy;
 }
 
 posAccuracy activeSimObject::get_pos_accuracy()
 {
 	lock_guard<mutex> lock(activeObjMutex);
-	return positionAccuracy;
+	return this->positionAccuracy;
 }
 
-void activeSimObject::initiate_AIS_broadcast(){
-	AIStimer = new QTimer(0);
-	QObject::connect( AIStimer, SIGNAL(timeout()), this, SLOT(broadcast_AIS_msg()) );
-	AIStimer->start(2000);
-	qDebug() << "Started AIS brodcast." << AIStimer->isActive();
-
+void activeSimObject::initiate_AIS_broadcast(uint16_t intervalMs){
+	if( AIStimer == NULL ){
+		AIStimer = new QTimer(0);
+		QObject::connect( AIStimer, SIGNAL(timeout()), this, SLOT(broadcast_AIS_msg()) );
+	}
+	this->AIStimer->start(intervalMs);
 }
 
 
@@ -273,9 +263,7 @@ void ship::move()
 	double nextLat = currentLatitude + speed*cos(currentHeading)*dt*latitude_degs_pr_meter();
 	double nextLong = currentLongitude + speed*sin(currentHeading)*dt*longitude_degs_pr_meter(currentLatitude);
 
-	qDebug() << "Next:" << speed << dt << nextLong << nextLat;
-
-	set_position( nextLong, nextLat, currentHeading );
+	this->set_position( nextLong, nextLat, currentHeading );
 }
 
 void ship::run()
@@ -283,9 +271,9 @@ void ship::run()
 	this->moveIntervalMs = 100; // ms
 	this->moveTimer = new QTimer(0);
 	QObject::connect( moveTimer, SIGNAL(timeout()), this, SLOT(move()) );
-	moveTimer->start(moveIntervalMs);
+	this->moveTimer->start(moveIntervalMs);
 
-	this->initiate_AIS_broadcast();
+	this->initiate_AIS_broadcast(2000);
 	this->initiate_pos_report_broadcast();
 
 	QThread::exec();

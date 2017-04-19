@@ -28,11 +28,17 @@ int main(int argc, char *argv[])
     sensorSimulator->start();
 
     // Start simulation of obstacles:
-	thread obstacleControl = thread(&obstacleHandler::run, obstacleHandler(nh));
+    QThread *obstacleThread = new QThread();
+    obstacleHandler *oh = new obstacleHandler(nh);
+    oh->moveToThread(obstacleThread);
+    QObject::connect(obstacleThread, SIGNAL(finished()), oh, SLOT(deleteLater()) );
+    obstacleThread->start();
+    oh->start();
+	//thread obstacleControl = thread(&obstacleHandler::run, obstacleHandler(nh));
 
 	qDebug() << "Ocean environment initialized...";
 
-	obstacleControl.join();
+	//obstacleControl.join();
 	
     return a.exec();
 }

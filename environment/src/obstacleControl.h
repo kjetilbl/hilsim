@@ -22,17 +22,19 @@ using namespace std;
 
 class simObject;
 
-class obstacleHandler
+class obstacleHandler : public QThread
 {
+	Q_OBJECT
 public:
-	obstacleHandler(ros::NodeHandle nh);
+	obstacleHandler(ros::NodeHandle nh, QThread *parent = 0);
+	~obstacleHandler();
 	void run();
 
 private:
 	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);
 	ros::NodeHandle n;
 	ros::Subscriber cmdSub;
-	QThread *simObjectsThread = new QThread();
+	QThread *simObjectsThread = NULL;
 	vector<simObject*> agents = vector<simObject*>(0);
 };
 
@@ -57,7 +59,7 @@ protected:
 	string ID;
 
 private:
-	QTimer *posReportTimer;
+	QTimer *posReportTimer = NULL;
 	mutex m;
 	bool stop = false;
 	bool running = false;
@@ -108,14 +110,13 @@ protected:
 	double get_SOG();
 	void set_pos_accuracy(posAccuracy accuracy);
 	posAccuracy get_pos_accuracy();
-
-	void initiate_AIS_broadcast();
+	void initiate_AIS_broadcast(uint16_t intervalMs);
 
 
 private:
 	mutex activeObjMutex;
 
-	QTimer *AIStimer;
+	QTimer *AIStimer = NULL;
 	uint32_t MMSI;
 	navStatus status;
 	double ROT;
@@ -136,7 +137,7 @@ public:
 
 private:
 	void run();
-	QTimer *moveTimer;
+	QTimer *moveTimer = NULL;
 	uint16_t moveIntervalMs;
 
 private slots:
