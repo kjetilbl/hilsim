@@ -25,11 +25,7 @@ private:
 	void logInfo();
 
 	void publishState();
-
-	void publishObstacle1State();
-
-	void publishObstacle2State();
-
+	
 	void receiveForcesAndMoments(const geometry_msgs::Twist::ConstPtr &thrust_msg);
 
 	void receiveActuatorInfo(const simulator_messages::ActuatorMessage::ConstPtr &actuator_msg);
