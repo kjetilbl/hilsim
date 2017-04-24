@@ -15,6 +15,7 @@ SET(gui_SOURCES
 	src/satelliteview.cpp
 	src/obstacleinterface.cpp
 	src/posUpdateHandler.cpp
+	../environment/src/gpsTools.cpp
 	)
 SET(gui_FORMS 
 	src/mainwindow.ui
@@ -27,6 +28,7 @@ SET(gui_HEADERS
 	src/obstacleinterface.h
 	src/watchDog.h
 	src/posUpdateHandler.h
+	../environment/src/gpsTools.h
 	)
 
 QT4_WRAP_CPP(gui_HEADERS_MOC ${gui_HEADERS})

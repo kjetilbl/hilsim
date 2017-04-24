@@ -25,13 +25,14 @@ void watchDog::kick()
 void watchDog::timoutHandler()
 {
 	environment::obstacleUpdate WDtimeoutWarning;
-	WDtimeoutWarning.msgType = "wd_timeout";
-	WDtimeoutWarning.obstacleID = obstID;
+	WDtimeoutWarning.msgDescriptor = "wd_timeout";
+	WDtimeoutWarning.objectID = obstID;
 	pub.publish(WDtimeoutWarning);
 }
 
 void watchDog::run()
 {
+	// TODO: bruke egen topic og msg til dette...
 	pub = nh.advertise<environment::obstacleUpdate>("obstUpdateTopic", 1000);
 
 	timer = new QTimer();
@@ -78,16 +79,25 @@ void posUpdateHandler::run()
 
 void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::ConstPtr& updateMsg)
 {	
-	string ID = updateMsg->obstacleID;
+	string ID = updateMsg->objectID;
 
-	if(updateMsg->msgType == "position_update")
+	if(updateMsg->msgDescriptor == "position_update")
 	{
-		double x = updateMsg->x;
-		double y = updateMsg->y;
-		double psi = updateMsg->psi;
-		sv->setPosition(ID, x, y, psi);
+		double longitude = updateMsg->longitude;
+		double latitude = updateMsg->latitude;
+		double heading = updateMsg->heading;
+		
+		if( sv->doesExist(ID) )
+		{
+			sv->setPosition(ID, longitude, latitude, heading);
+		}else
+		{
+			string objectDescriptor = updateMsg->objectDescriptor;
+			sv->addSimObject(ID, objectDescriptor, longitude, latitude, heading);
+		}
+		
 		map<string, watchDog*>::iterator it = obstWDs.find(ID);
-		if( it == obstWDs.end() ) //Could not find obstacle
+		if( it == obstWDs.end() ) // Could not find watchDog for this simObject
 		{
 			obstWDs[ID] = new watchDog(nh, ID);
 			obstWDs[ID]->moveToThread(WDthread);
@@ -99,14 +109,14 @@ void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::Const
 			obstWDs[ID]->kick();
 		}
 	}
-	else if(updateMsg->msgType == "wd_timeout")
+	else if(updateMsg->msgDescriptor == "wd_timeout")
 	{
-		qDebug() << "Timout detected for obstacle" << updateMsg->obstacleID.c_str();
+		qDebug() << "Timout detected for obstacle" << updateMsg->objectID.c_str();
 
 		obstWDs[ID]->quit();
 		obstWDs[ID]->wait();
 		obstWDs.erase(ID);
-		sv->deleteObstacle(ID);
+		sv->removeSimObject(ID);
 	}
 }
 
@@ -122,9 +132,8 @@ void posUpdateHandler::gpsParser(const simulator_messages::Gps::ConstPtr& gpsMsg
 		firstContact = false;
 	}
 
-	sv->simTargetMoveTo(gpsMsg->latitude, gpsMsg->longitude, gpsMsg->heading);
+	sv->simTargetMoveTo(gpsMsg->longitude, gpsMsg->latitude, gpsMsg->heading);
 	headingPlot->updateValues(gpsMsg->heading, gpsMsg->heading - 1);
 	velocityPlot->updateValues(gpsMsg->speed, gpsMsg->speed - 0.5);
-	//qDebug() << "Received new gps msg. Coord: " << gpsMsg->latitude << gpsMsg->longitude;
 }
 

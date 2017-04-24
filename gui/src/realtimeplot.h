@@ -7,6 +7,10 @@
 
 using namespace std;
 
+
+
+
+// TODO: legge inn mutex her, aksesseres både av posupdateHandler og timeout slot.
 class realtimePlot : public QObject
 {
 	Q_OBJECT
