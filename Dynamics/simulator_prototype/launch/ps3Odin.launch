@@ -18,7 +18,7 @@
     <node pkg="simulator_prototype" type="hil_simulator_node" name="simulated_vessel" output="screen"/>
 
     <node pkg="rosbag" type="record" name="rosbag_record_run"
-       args="record -o $(find simulator_prototype)/logs/run.bag /log/wind /log/state" />
+       args="record -o $(find simulator_prototype)/logs/run.bag /log/state /log/current" />
 	
      
 </launch>

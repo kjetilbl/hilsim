@@ -19,6 +19,8 @@ void VesselNode::step(){
 		vessel.getState(eta, nu);
 		logInfo();
 		publishState();
+		//publishObstacle1State();
+		//publishObstacle2State();
 	}else{
 
 	}	
@@ -36,6 +38,41 @@ void VesselNode::publishState(){
     transform.setRotation(q);
     tf.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", tf_name));
 }
+
+void VesselNode::publishObstacle1State(){
+	tf::Transform transform;
+	static double t = 0;
+	static double x = 0;
+	static double y = 0;
+	static double z = 0;
+	t+=dt;
+	x = 10*cos(0.3*t);
+	y = 10*sin(0.3*t);
+	z=0;
+	transform.setOrigin(tf::Vector3(x, -y, -z));
+	tf::Quaternion q;
+	q.setRPY(0, 0, -0.3*t-1.57);
+	transform.setRotation(q);
+	tf.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "obstacle_1"));
+}
+
+void VesselNode::publishObstacle2State(){
+	tf::Transform transform;
+	static double t = 0;
+	static double x = 0;
+	static double y = 0;
+	static double z = 0;
+	t+=dt;
+	x = -30*cos(0.05*t);
+	y = 30*sin(0.05*t);
+	z=0;
+	transform.setOrigin(tf::Vector3(x, -y, -z));
+	tf::Quaternion q;
+	q.setRPY(0, 0, 0.05*t-1.57);
+	transform.setRotation(q);
+	tf.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "obstacle_3"));
+}
+
 
 void VesselNode::receiveEnvironmentMessage(const simulator_messages::Environment::ConstPtr &environment_msg){
 	vessel.setGpsCoordinates(environment_msg->latitude, environment_msg->longitude);

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<robot name="hil_sim">
-  <link name="hil_sim">
+<robot name="simulated_vessel">
+  <link name="simulated_vessel">
     <visual>
       <origin rpy="0 -1.570796326 -1.570796326" xyz="-5.5 -1.75 -0.7"/>
       <geometry>

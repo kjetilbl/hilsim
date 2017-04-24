@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot name="obstacle_3">
+  <link name="obstacle_3">
+    <visual>
+      <origin rpy="0 0 -1.570796326" xyz="-5.5 -1.75 -2"/>
+      <geometry>
+        <mesh filename="file:///home/Ship.stl" scale="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="white">
+        <color rgba="0.5 0.1 0.1 1"/>
+      </material>
+    </visual>
+  </link>
+</robot>

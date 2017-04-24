@@ -26,6 +26,10 @@ private:
 
 	void publishState();
 
+	void publishObstacle1State();
+
+	void publishObstacle2State();
+
 	void receiveForcesAndMoments(const geometry_msgs::Twist::ConstPtr &thrust_msg);
 
 	void receiveActuatorInfo(const simulator_messages::ActuatorMessage::ConstPtr &actuator_msg);
@@ -35,7 +39,7 @@ private:
 	double time_since_last_message, dt;
 
 	tf::TransformBroadcaster tf = tf::TransformBroadcaster();
-  	std::string tf_name = "hil_sim";
+  	std::string tf_name = "simulated_vessel";
   	ros::NodeHandle log_handle;
 	ros::Publisher vel_pub =
 	  log_handle.advertise<geometry_msgs::Twist>("log/velocity", 0);

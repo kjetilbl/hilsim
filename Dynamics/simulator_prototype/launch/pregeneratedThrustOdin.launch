@@ -9,6 +9,9 @@
     <rosparam command="load" file="$(find simulator_prototype)/config/SimulationParameters.yaml" />
 
     <param name="hil/robot_description" textfile="$(find simulator_prototype)/config/models/Odin.urdf" />
+    <param name="hil/obstacle_description1" textfile="$(find simulator_prototype)/config/models/Obstacle1.urdf" />
+    <param name="hil/obstacle_description2" textfile="$(find simulator_prototype)/config/models/Obstacle2.urdf" />
+    <param name="hil/obstacle_description3" textfile="$(find simulator_prototype)/config/models/Obstacle3.urdf" />
 
     <node pkg="txt_to_actuator_info" name="actuator_node" type="txt_to_actuator_info" respawn="false" output="screen">
     </node>
