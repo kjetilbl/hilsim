@@ -19,8 +19,8 @@ void VesselNode::step(){
 		vessel.getState(eta, nu);
 		logInfo();
 		publishState();
-		//publishObstacle1State();
-		//publishObstacle2State();
+		publishObstacle1State();
+		publishObstacle2State();
 	}else{
 
 	}	
