@@ -13,16 +13,12 @@ using namespace std;
 
 static void quit_application(int sig)
 {
-    qDebug() << "\n-----------------------------------------------";
-	qDebug() << "Quit Environment Application";
 	qApp->quit();
 }
 
 int main(int argc, char *argv[])
 {
-
 	QApplication a(argc, argv);
-
 
 	ros::init(argc, argv, "obstacleControl");
 	ros::NodeHandle nh;
@@ -42,7 +38,6 @@ int main(int argc, char *argv[])
     QObject::connect(obstacleThread, SIGNAL(finished()), oh, SLOT(deleteLater()) );
     obstacleThread->start();
     oh->start();
-	//thread obstacleControl = thread(&obstacleHandler::run, obstacleHandler(nh));
 
 	qDebug() << "Environment Simulator initialized...";
 
@@ -61,6 +56,5 @@ int main(int argc, char *argv[])
     sensorThread->wait();
 
     qDebug() << "Environment Simulator finished with exit code" << exitCode;
-    qDebug() << "-----------------------------------------------";
     return exitCode;
 }

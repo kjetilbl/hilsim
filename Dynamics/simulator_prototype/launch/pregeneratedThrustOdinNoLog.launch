@@ -9,12 +9,15 @@
     <rosparam command="load" file="$(find simulator_prototype)/config/SimulationParameters.yaml" />
 
     <param name="hil/robot_description" textfile="$(find simulator_prototype)/config/models/Odin.urdf" />
+    <param name="hil/obstacle_description3" textfile="$(find simulator_prototype)/config/models/Obstacle3.urdf" />
 
     <node pkg="txt_to_actuator_info" name="actuator_node" type="txt_to_actuator_info" respawn="false" output="screen">
     </node>
     
     <node pkg="simulator_prototype" type="hil_simulator_node" name="simulated_vessel" output="screen"/>
 
+    <node pkg="environment" type="environment" name="environment_node" output="screen"/>
+    <node pkg="gui" type="gui" name="gui_node" output="screen"/>
 	
      
 </launch>

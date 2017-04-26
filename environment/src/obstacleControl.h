@@ -30,9 +30,10 @@ class obstacleHandler : public QThread
 public:
 	obstacleHandler(ros::NodeHandle nh, QThread *parent = 0);
 	~obstacleHandler();
-	void run();
 
 private:
+	void run();
+	void spawn_ships();
 	gpsPoint mapOrigin;
 	void get_origin_from_sim_params(ros::NodeHandle nh);
 	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);

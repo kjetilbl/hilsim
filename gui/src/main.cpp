@@ -4,8 +4,6 @@
 
 static void quit_application(int sig)
 {
-    qDebug() << "\n---------------------------------------";
-	qDebug() << "Quit GUI Application";
 	qApp->quit();
 }
 
@@ -15,7 +13,6 @@ int main(int argc, char *argv[])
 
     MainWindow *w = new MainWindow(argc, argv);
     w->show();
-    qDebug() << "GUI running..";
 
     signal(SIGINT, quit_application);
 
@@ -25,7 +22,6 @@ int main(int argc, char *argv[])
     delete w;
 
     qDebug() << "GUI finished with exit code" << exitCode;
-    qDebug() << "---------------------------------------";
 
     return exitCode;
 }

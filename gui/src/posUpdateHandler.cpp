@@ -73,7 +73,6 @@ posUpdateHandler::~posUpdateHandler(){
 		WDthread->quit();
 		WDthread->wait();
 	}
-	qDebug() << "posUpdateHandler destructed...";
 }
 
 
@@ -86,11 +85,7 @@ void posUpdateHandler::run()
 	
 	ros::AsyncSpinner spinner(1);
 	spinner.start();
-	
-	qDebug() << "posUpdateHandler running...";
-	QThread::exec();
-	qDebug() << "posUpdateHandler finished...";
-}
+	QThread::exec();}
 
 
 void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::ConstPtr& updateMsg)

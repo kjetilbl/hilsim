@@ -7,7 +7,6 @@ obstacleHandler::obstacleHandler(ros::NodeHandle nh, QThread *parent ) : QThread
 }
 
 obstacleHandler::~obstacleHandler(){
-	qDebug() << "obstacleHandler destructed...";
 	testShip->quit();
 	testShip->wait();
 	delete testShip;
@@ -30,7 +29,7 @@ void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& c
 	if(cmd->cmdSpecifier == "spawn")
 	{
 		// string ID = "fixed_obstacle_" + to_string(obstIterator++);
-		if ( simObjectsThread == NULL ) // first instance
+		if ( simObjectsThread == NULL )
 		{
 			simObjectsThread = new QThread();
 			simObjectsThread->start();
@@ -55,17 +54,19 @@ void obstacleHandler::run()
 {
 	simObjectsThread = new QThread();
 	simObjectsThread->start();
+
+	spawn_ships();
+
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
+	QThread::exec();
+}
+
+void obstacleHandler::spawn_ships(){
 	testShip = new ship(n, 0, mapOrigin.longitude, mapOrigin.latitude, 0);
 	testShip->moveToThread(simObjectsThread);
 	QObject::connect(simObjectsThread, SIGNAL(finished()), testShip, SLOT(deleteLater()) );
 	testShip->start();
-
-	ros::AsyncSpinner spinner(1);
-	spinner.start();
-
-	qDebug() << "obstacleHandler running...";
-	QThread::exec();
-	qDebug() << "obstacleHandler finished executing...";
 }
 
 void obstacleHandler::get_origin_from_sim_params(ros::NodeHandle nh){
@@ -100,7 +101,6 @@ simObject::simObject(ros::NodeHandle nh, string obstID, double Longitude, double
 
 simObject::~simObject(){
 	delete posReportTimer;
-	qDebug() << "simObject destructed...";
 }
 
 void simObject::initiate_pos_report_broadcast()
