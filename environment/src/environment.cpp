@@ -7,14 +7,22 @@
 
 #include "obstacleControl.h"
 #include "sensorsim.h"
-
+#include <signal.h>
 
 using namespace std;
+
+static void quit_application(int sig)
+{
+    qDebug() << "\n-----------------------------------------------";
+	qDebug() << "Quit Environment Application";
+	qApp->quit();
+}
 
 int main(int argc, char *argv[])
 {
 
 	QApplication a(argc, argv);
+
 
 	ros::init(argc, argv, "obstacleControl");
 	ros::NodeHandle nh;
@@ -36,9 +44,23 @@ int main(int argc, char *argv[])
     oh->start();
 	//thread obstacleControl = thread(&obstacleHandler::run, obstacleHandler(nh));
 
-	qDebug() << "Ocean environment initialized...";
+	qDebug() << "Environment Simulator initialized...";
 
-	//obstacleControl.join();
+    signal(SIGINT, quit_application);
 	
-    return a.exec();
+    int exitCode = a.exec();
+
+    oh->quit();
+    oh->wait();
+    sensorSimulator->quit();
+    sensorSimulator->wait();
+
+    obstacleThread->quit();
+    obstacleThread->wait();
+    sensorThread->quit();
+    sensorThread->wait();
+
+    qDebug() << "Environment Simulator finished with exit code" << exitCode;
+    qDebug() << "-----------------------------------------------";
+    return exitCode;
 }

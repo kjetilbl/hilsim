@@ -53,7 +53,6 @@ posUpdateHandler::posUpdateHandler(ros::NodeHandle n, satelliteView *Sv, realtim
 	nh = n;
 	headingPlot = hdngPlot;
 	velocityPlot = velPlot;
-	qDebug() << "posUpdateHandler initialized" << QThread::currentThreadId();
 }
 
 posUpdateHandler::posUpdateHandler(const posUpdateHandler& other)
@@ -61,7 +60,20 @@ posUpdateHandler::posUpdateHandler(const posUpdateHandler& other)
 	sv = other.sv;
 	obstUpdateSub = other.obstUpdateSub;
 	gpsSub = other.gpsSub;
-	qDebug() << "posUpdateHandler copied.";
+}
+
+posUpdateHandler::~posUpdateHandler(){
+	for( auto const& wd : obstWDs ){
+		wd.second->quit();
+		wd.second->wait();
+		delete wd.second;
+	}
+
+	if( WDthread != NULL ){
+		WDthread->quit();
+		WDthread->wait();
+	}
+	qDebug() << "posUpdateHandler destructed...";
 }
 
 
@@ -71,8 +83,12 @@ void posUpdateHandler::run()
 	WDthread->start();
 	obstUpdateSub = nh.subscribe("obstUpdateTopic", 1000, &posUpdateHandler::obstUpdateParser, this);
 	gpsSub = nh.subscribe("sensors/gps", 1000, &posUpdateHandler::gpsParser, this);
-	qDebug() << "posUpdateHandler running from thread" << QThread::currentThreadId();
-	ros::spin();
+	
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
+	
+	qDebug() << "posUpdateHandler running...";
+	QThread::exec();
 	qDebug() << "posUpdateHandler finished...";
 }
 
@@ -111,8 +127,6 @@ void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::Const
 	}
 	else if(updateMsg->msgDescriptor == "wd_timeout")
 	{
-		qDebug() << "Timout detected for obstacle" << updateMsg->objectID.c_str();
-
 		obstWDs[ID]->quit();
 		obstWDs[ID]->wait();
 		obstWDs.erase(ID);

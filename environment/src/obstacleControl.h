@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "navData.h"
+#include "gpsTools.h"
 
 #include <QTimer>
 #include <QObject>
@@ -14,13 +15,14 @@
 #include <QMainWindow>
 
 #include "ros/ros.h"
+#include <tf/transform_broadcaster.h>
 #include "environment/obstacleUpdate.h"
 #include "environment/obstacleCmd.h"
-#include "gpsTools.h"
 
 using namespace std;
 
 class simObject;
+class ship;
 
 class obstacleHandler : public QThread
 {
@@ -31,7 +33,10 @@ public:
 	void run();
 
 private:
+	gpsPoint mapOrigin;
+	void get_origin_from_sim_params(ros::NodeHandle nh);
 	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);
+	ship *testShip;
 	ros::NodeHandle n;
 	ros::Subscriber cmdSub;
 	QThread *simObjectsThread = NULL;
@@ -44,12 +49,13 @@ class simObject : public QThread
 public:
 	simObject( const simObject& other );
 	simObject( ros::NodeHandle nh, string obstID, double Longitude, double Latitude, double Psi, QThread *parent );
-	~simObject(){qDebug() << "simObject destroyed...";};
+	~simObject();
 	void set_position(double Longitude, double Latitude, double Psi);
 	double get_longitude();
 	double get_latitude();
 	double get_heading();
 	void initiate_pos_report_broadcast();
+	tf::TransformBroadcaster rvizBroadcast = tf::TransformBroadcaster();
 
 protected:
 	virtual void run();

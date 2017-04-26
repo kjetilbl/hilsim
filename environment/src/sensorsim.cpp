@@ -27,7 +27,7 @@ sensorSim::~sensorSim()
 {
 	delete AIStimer;
 	delete DTtimer;
-	qDebug() << "Destroy sensorSim...";
+	qDebug() << "sensorSim destructed...";
 }
 
 void sensorSim::run()
@@ -44,6 +44,7 @@ void sensorSim::run()
 	DTtimer->start(1000);
 	qDebug() << "Sensor simulator running...";
 	QThread::exec();
+	qDebug() << "Sensor simulator finished executing...";
 }
 
 

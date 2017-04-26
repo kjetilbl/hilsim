@@ -33,6 +33,25 @@ satelliteView::satelliteView(QCustomPlot *satelliteViewWidget)
 	simTarget->makePlottable();
 }
 
+satelliteView::~satelliteView(){
+	delete zoomInButton;
+	delete zoomOutButton;
+	delete rangeReference;
+	delete rangeDescriptor;
+	
+	while ( !MPs.empty() )
+	{
+		delete MPs.back();
+		MPs.pop_back();
+	}
+
+	delete simTarget;
+
+	for( auto const& aso : activeSimObjects ){
+		delete aso.second;
+	}
+}
+
 void satelliteView::updatePlot()
 {
 	std::lock_guard<std::mutex> lock(m);

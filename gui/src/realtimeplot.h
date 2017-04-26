@@ -16,6 +16,7 @@ class realtimePlot : public QObject
 	Q_OBJECT
 public:
 	realtimePlot(QCustomPlot *plotWidget);
+	~realtimePlot(){};
 	void title(const QString plotTitle);
 	void ylabel(const QString label);
 	void updateValues(double measured, double ref);

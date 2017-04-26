@@ -3,10 +3,15 @@
 obstacleHandler::obstacleHandler(ros::NodeHandle nh, QThread *parent ) : QThread(parent) {
 	this->n = nh;
 	this->cmdSub = nh.subscribe("obstacleCommandTopic", 1000, &obstacleHandler::command_parser, this);
+	get_origin_from_sim_params(nh);
 }
 
 obstacleHandler::~obstacleHandler(){
-	qDebug() << "Destroy obstacleHandler.";
+	qDebug() << "obstacleHandler destructed...";
+	testShip->quit();
+	testShip->wait();
+	delete testShip;
+
 	for(auto const& simObjectPtr: agents){
 		simObjectPtr->quit();
 		simObjectPtr->wait();
@@ -15,13 +20,13 @@ obstacleHandler::~obstacleHandler(){
 	if( simObjectsThread != NULL ){
 		simObjectsThread->quit();
 		simObjectsThread->wait();
-		delete simObjectsThread;		
+		delete simObjectsThread;
 	}
 }
 
 void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& cmd)
 {
-	static int obstIterator = 0;
+	static int obstIterator = 1;
 	if(cmd->cmdSpecifier == "spawn")
 	{
 		// string ID = "fixed_obstacle_" + to_string(obstIterator++);
@@ -48,10 +53,24 @@ void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& c
 
 void obstacleHandler::run()
 {
+	simObjectsThread = new QThread();
+	simObjectsThread->start();
+	testShip = new ship(n, 0, mapOrigin.longitude, mapOrigin.latitude, 0);
+	testShip->moveToThread(simObjectsThread);
+	QObject::connect(simObjectsThread, SIGNAL(finished()), testShip, SLOT(deleteLater()) );
+	testShip->start();
+
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
+
 	qDebug() << "obstacleHandler running...";
-	ros::spin();
-	//QThread::exec();
-	qDebug() << "obstacleHandler finished...";
+	QThread::exec();
+	qDebug() << "obstacleHandler finished executing...";
+}
+
+void obstacleHandler::get_origin_from_sim_params(ros::NodeHandle nh){
+	nh.getParam("start_longitude", mapOrigin.longitude);
+	nh.getParam("start_latitude", mapOrigin.latitude);
 }
 
 simObject::simObject( const simObject& other )
@@ -77,6 +96,11 @@ simObject::simObject(ros::NodeHandle nh, string obstID, double Longitude, double
 	this->latitude = Latitude;
 	this->psi = Psi;
 
+}
+
+simObject::~simObject(){
+	delete posReportTimer;
+	qDebug() << "simObject destructed...";
 }
 
 void simObject::initiate_pos_report_broadcast()
@@ -247,7 +271,7 @@ ship::ship( ros::NodeHandle nh, uint32_t mmsiNumber, double Longitude, double La
 	this->set_MMSI(mmsiNumber);
 	this->set_status(UNDERWAY_USING_ENGINE);
 	this->set_ROT(0);
-	this->set_SOG(5);
+	this->set_SOG(2);
 	this->set_pos_accuracy(HIGH);
 }
 
@@ -260,10 +284,30 @@ void ship::move()
 	double speed = this->get_SOG(); 				// ms
 	double dt = (double)this->moveIntervalMs/1000; 	// s
 
-	double nextLat = currentLatitude + speed*cos(currentHeading)*dt*latitude_degs_pr_meter();
-	double nextLong = currentLongitude + speed*sin(currentHeading)*dt*longitude_degs_pr_meter(currentLatitude);
+
+	// sin() deg/rad?????
+	double dE = speed*sin(currentHeading)*dt; // East
+	double dN = speed*cos(currentHeading)*dt; // North
+
+	double nextLat = currentLatitude + dN*latitude_degs_pr_meter();
+	double nextLong = currentLongitude + dE*longitude_degs_pr_meter(currentLatitude);
 
 	this->set_position( nextLong, nextLat, currentHeading );
+
+	tf::Transform transform;
+	static double x = 0;
+	static double y = 0;
+	static double z = 0;
+	
+	// rviz coordinates:
+	x += dN;
+	y += dE;
+	transform.setOrigin(tf::Vector3(x, -y, -z));
+	tf::Quaternion q;
+	q.setRPY(0, 0, -deg2rad(currentHeading));
+	transform.setRotation(q);
+	rvizBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "obstacle_3"));
+
 }
 
 void ship::run()
