@@ -53,6 +53,7 @@ posUpdateHandler::posUpdateHandler(ros::NodeHandle n, satelliteView *Sv, realtim
 	nh = n;
 	headingPlot = hdngPlot;
 	velocityPlot = velPlot;
+	rviz = new rvizInterface(n);
 }
 
 posUpdateHandler::posUpdateHandler(const posUpdateHandler& other)
@@ -106,6 +107,8 @@ void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::Const
 			string objectDescriptor = updateMsg->objectDescriptor;
 			sv->addSimObject(ID, objectDescriptor, longitude, latitude, heading);
 		}
+
+		rviz->set_object(ID, gpsPoint3DOF{longitude, latitude, heading});
 		
 		map<string, watchDog*>::iterator it = obstWDs.find(ID);
 		if( it == obstWDs.end() ) // Could not find watchDog for this simObject

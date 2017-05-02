@@ -9,7 +9,7 @@ double deg2rad(double degrees){
 double distance(gpsPoint a, gpsPoint b)
 {
 	// https://en.wikipedia.org/wiki/Haversine_formula
-	// Cannot guarantee accuracy > 0.5%
+	// Cannot guarantee accuracy better than 0.5%
 	
 	double deg2rad = M_PI/180;
 	double h = pow(sin((b.latitude - a.latitude)*deg2rad/2), 2) + cos(a.latitude*deg2rad)*cos(b.latitude*deg2rad)*pow(sin((b.longitude - a.longitude)*deg2rad/2), 2);

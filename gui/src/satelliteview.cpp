@@ -66,7 +66,7 @@ void satelliteView::updatePlot()
 		aso.second->updateTrajectory();
 	}
 
-	position plotCenter = simTarget->getPosition();
+	position plotCenter = position{10.472, 59.438};// simTarget->getPosition();
 
 	double xrange = mapRangeInMeters*longitude_degs_pr_meter(plotCenter.y);
 	double yrange = mapRangeInMeters*latitude_degs_pr_meter();

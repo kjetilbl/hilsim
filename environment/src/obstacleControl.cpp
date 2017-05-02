@@ -63,10 +63,13 @@ void obstacleHandler::run()
 }
 
 void obstacleHandler::spawn_ships(){
-	testShip = new ship(n, 0, mapOrigin.longitude, mapOrigin.latitude, 0);
-	testShip->moveToThread(simObjectsThread);
-	QObject::connect(simObjectsThread, SIGNAL(finished()), testShip, SLOT(deleteLater()) );
-	testShip->start();
+	for(int i =  0; i < 1; i++){
+		ship* newShip = new ship(n, i, mapOrigin.longitude, mapOrigin.latitude, 45*i);
+		newShip->moveToThread(simObjectsThread);
+		QObject::connect(simObjectsThread, SIGNAL(finished()), newShip, SLOT(deleteLater()) );
+		newShip->start();
+		agents.push_back( newShip );
+	}
 }
 
 void obstacleHandler::get_origin_from_sim_params(ros::NodeHandle nh){
@@ -281,33 +284,17 @@ void ship::move()
 	double currentLongitude = this->get_longitude();
 	double currentLatitude = this->get_latitude();
 	double currentHeading = this->get_heading();
-	double speed = this->get_SOG(); 				// ms
-	double dt = (double)this->moveIntervalMs/1000; 	// s
+	double speed = this->get_SOG(); 					// ms
+	double dt = ((double)this->moveIntervalMs)/1000; 	// s
 
 
-	// sin() deg/rad?????
-	double dE = speed*sin(currentHeading)*dt; // East
-	double dN = speed*cos(currentHeading)*dt; // North
+	double dE = speed*sin(deg2rad(currentHeading))*dt; // East
+	double dN = speed*cos(deg2rad(currentHeading))*dt; // North
 
 	double nextLat = currentLatitude + dN*latitude_degs_pr_meter();
 	double nextLong = currentLongitude + dE*longitude_degs_pr_meter(currentLatitude);
 
 	this->set_position( nextLong, nextLat, currentHeading );
-
-	tf::Transform transform;
-	static double x = 0;
-	static double y = 0;
-	static double z = 0;
-	
-	// rviz coordinates:
-	x += dN;
-	y += dE;
-	transform.setOrigin(tf::Vector3(x, -y, -z));
-	tf::Quaternion q;
-	q.setRPY(0, 0, -deg2rad(currentHeading));
-	transform.setRotation(q);
-	rvizBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "obstacle_3"));
-
 }
 
 void ship::run()

@@ -7,6 +7,12 @@ struct gpsPoint {
 	double latitude;
 };
 
+struct gpsPoint3DOF{
+	double longitude;
+	double latitude;
+	double heading;
+};
+
 double deg2rad(double degrees);
 
 double distance(gpsPoint a, gpsPoint b);

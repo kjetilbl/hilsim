@@ -9,6 +9,7 @@
 
 #include "satelliteview.h"
 #include "realtimeplot.h"
+#include "RVIZ_Interface.h"
 
 #include "/opt/ros/kinetic/include/ros/ros.h"
 #include "std_msgs/String.h"
@@ -49,6 +50,7 @@ public:
 	void run();
 
 private:
+	rvizInterface *rviz;
 	QThread *WDthread = NULL;
 	map<string, watchDog*> obstWDs;
 	satelliteView *sv;

@@ -4,7 +4,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="55 -55 15"/>
       <geometry>
-        <mesh filename="file:///home/uss_deplorables_small.stl" scale="0.1 0.1 0.1"/>
+        <mesh filename="file:///home/uss_deplorables.stl" scale="0.1 0.1 0.1"/>
       </geometry>
       <material name="white">
         <color rgba="0.2 0.2 0.2 1"/>
