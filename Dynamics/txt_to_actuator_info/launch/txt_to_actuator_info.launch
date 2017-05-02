@@ -1,5 +1,5 @@
 <launch>        
-    <param name="path_name" value="$(find txt_to_actuator_info)/Output.txt" />
+    <param name="path_name" value="$(find txt_to_actuator_info)/Output3.txt" />
     <node pkg="txt_to_actuator_info" name="actuator_pub" type="txt_to_actuator_info" respawn="false" output="screen">
     </node>
 </launch>

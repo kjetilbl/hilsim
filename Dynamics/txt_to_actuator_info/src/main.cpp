@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 	ROS_INFO("Started Odin actuator data node");
 	
     //ros::Duration(5).sleep(); // Wait for RViz to start
-    ros::Rate loopRate(10);
+    ros::Rate loopRate(100);
     simulator_messages::ActuatorMessage actuators;
     geometry_msgs::Twist actuators2;
     ros::NodeHandle nh_;
