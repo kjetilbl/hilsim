@@ -4,7 +4,7 @@
     <visual>
       <origin rpy="0 -1.570796326 -1.570796326" xyz="-5.5 -1.75 -0.2"/>
       <geometry>
-        <mesh filename="file:///home/OdinDecimated.stl" scale="0.0003 0.0003 0.0003"/>
+        <mesh filename="file:///home/OdinDecimated.stl" scale="0.0015 0.0015 0.0015"/>
       </geometry>
       <material name="white">
         <color rgba="0.05 0.6 0.6 1"/>

@@ -27,7 +27,6 @@ sensorSim::~sensorSim()
 {
 	delete AIStimer;
 	delete DTtimer;
-	qDebug() << "Destroy sensorSim...";
 }
 
 void sensorSim::run()
@@ -42,7 +41,6 @@ void sensorSim::run()
 	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(print_detected_targets()) );
 	AIStimer->start(2000);
 	DTtimer->start(1000);
-	qDebug() << "Sensor simulator running...";
 	QThread::exec();
 }
 

@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <thread>
+#include <QThread>
 
 #include "../qcustomplot.h"
 #include "realtimeplot.h"
@@ -28,8 +30,9 @@ private:
 	realtimePlot *velocityPlot;
 	satelliteView *sv;
 	obstacleInterface *obstInterface;
-	posUpdateHandler *puh;
+	std::thread *posUpdateThread;
 	QThread *puhThread;
+	posUpdateHandler *puh;
 };
 
 #endif // MAINWINDOW_H

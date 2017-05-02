@@ -60,6 +60,7 @@ class satelliteView : public QObject
 	Q_OBJECT
 public:
 	satelliteView( QCustomPlot *satelliteViewWidget );
+	~satelliteView();
 	void addSimObject( string obstacleID, string objectDescriptor, double x, double y, double psi = 0 );
 	void removeSimObject(string obstacleID);
 	bool doesExist( string simObjectID );

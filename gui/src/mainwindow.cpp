@@ -5,8 +5,6 @@
 #include <QScreen>
 #include <QMessageBox>
 #include <QMetaEnum>
-#include <QThread>
-#include <thread>
 #include <unistd.h>
 
 #include "/opt/ros/kinetic/include/ros/ros.h"
@@ -41,16 +39,24 @@ MainWindow::MainWindow(int argc, char *argv[], QWidget *parent) :
 	obstInterface = new obstacleInterface(nh, ui->obstInterfaceWindow, sv);
 
 	puhThread = new QThread(this);
-    this->puh = new posUpdateHandler(nh, sv, headingPlot, velocityPlot);
-    this->puh->moveToThread(puhThread);
-    connect(puhThread, SIGNAL(finished()), this->puh, SLOT(deleteLater()) );
+    puh = new posUpdateHandler(nh, sv, headingPlot, velocityPlot);
+    puh->moveToThread(puhThread);
+    QObject::connect(puhThread, SIGNAL(finished()), puh, SLOT(deleteLater()));
     puhThread->start();
     puh->start();
 }
 
 
-//TODO: fullføre destruktor: kanskje årsak til qthread still running...
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete headingPlot;
+    delete velocityPlot;
+    delete sv;
+    delete obstInterface;
+	puh->quit();
+	puh->wait();
+	puhThread->quit();
+	puhThread->wait();
+	delete puhThread ;
 }

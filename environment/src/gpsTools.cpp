@@ -2,6 +2,10 @@
 #include <math.h>  
 #include <QDebug>
 
+double deg2rad(double degrees){
+	return degrees*M_PI/180;
+}
+
 double distance(gpsPoint a, gpsPoint b)
 {
 	// https://en.wikipedia.org/wiki/Haversine_formula

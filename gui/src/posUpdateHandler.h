@@ -25,6 +25,7 @@ public:
 	watchDog(ros::NodeHandle n, string obstacleID, int msec = 200, QThread *parent = 0);
 	~watchDog();
 	void kick();
+	void run();
 
 private slots:
 	void timoutHandler();
@@ -35,7 +36,6 @@ private:
 	string obstID;
 	QTimer *timer;
 	int timeoutInterval;
-	void run();
 };
 
 
@@ -45,10 +45,11 @@ class posUpdateHandler : public QThread
 public:
 	posUpdateHandler(const posUpdateHandler& other);
 	posUpdateHandler(ros::NodeHandle n, satelliteView *Sv, realtimePlot *hdngPlot, realtimePlot *velPlot);
+	~posUpdateHandler();
+	void run();
 
 private:
-	QThread *WDthread;
-	void run();
+	QThread *WDthread = NULL;
 	map<string, watchDog*> obstWDs;
 	satelliteView *sv;
 

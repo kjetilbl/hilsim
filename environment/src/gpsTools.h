@@ -7,6 +7,8 @@ struct gpsPoint {
 	double latitude;
 };
 
+double deg2rad(double degrees);
+
 double distance(gpsPoint a, gpsPoint b);
 
 double latitude_degs_pr_meter();
