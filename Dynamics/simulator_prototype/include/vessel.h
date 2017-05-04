@@ -65,6 +65,9 @@ public:
 
   void setGpsCoordinates(double _lat, double _long);
 
+  Vector4d getActuatorPositions();
+
+  double getLength();
 
   double M_det;
 

@@ -25,6 +25,12 @@ ActuatorModel::~ActuatorModel(){
 
 }
 
+Vector6d ActuatorModel::getActuatorState(){
+	Vector6d actuator_state;
+	actuator_state << n_1/n_max, n_2/n_max, alpha_1, alpha_2, beta_1, beta_2;
+	return actuator_state;
+}
+
 void ActuatorModel::calculateForcesAndMoments(){
 	A << 	cos(alpha_1)*beta_1,					cos(alpha_2)*beta_2,
 			sin(alpha_1)*beta_1, 					sin(alpha_2)*beta_2,

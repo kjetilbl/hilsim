@@ -14,6 +14,7 @@ public:
 	~ActuatorModel();
 	void initializeActuatorModel(double _K, double _T_alpha, double _T_beta, double _T_n, double _l_x_1, double _l_x_2, double _l_y_1, double _l_y_2, double _dt, double _n_max, double _n_min, double _alpha_max);
 	void getForcesAndMoments(Vector6d &_tau_control, Vector6d desired_actuator_states);
+	Vector6d getActuatorState();
 
 private:
 	// Thruster states
