@@ -3,6 +3,8 @@
 
 VesselNode::VesselNode(){
 	dt = getDT();
+	actuator_positions = vessel.getActuatorPositions();
+	initializeActuatorMarkers();
 }
 VesselNode::~VesselNode(){
 
@@ -15,6 +17,7 @@ void VesselNode::step(){
 			tau_control << 0, 0, 0, 0, 0, 0;
 		}
 		vessel.setThrust(tau_control);
+		publishActuatorMarkers();
 		vessel.step();
 		vessel.getState(eta, nu);
 		logInfo();
@@ -68,6 +71,80 @@ geometry_msgs::Twist VesselNode::vectorToGeometryMsg(Vector6d vector_in){
 	geometry_msg.angular.y = vector_in(4);
 	geometry_msg.angular.z = vector_in(5);
 	return geometry_msg;
+}
+
+void VesselNode::initializeActuatorMarkers(){
+	actuator_1_marker.header.frame_id = tf_name;
+    actuator_1_marker.header.stamp = ros::Time::now();
+	actuator_2_marker.header.frame_id = tf_name;
+    actuator_2_marker.header.stamp = ros::Time::now();
+
+    // Set the namespace and id for this marker.  This serves to create a unique ID
+    // Any marker sent with the same namespace and id will overwrite the old one
+    actuator_1_marker.ns = "Actuator 1 Visualization";
+    actuator_1_marker.id = 0; 
+	actuator_2_marker.ns = "Actuator 2 Visualization";
+    actuator_2_marker.id = 1; 
+    Vector6d actuator_states = vessel.actuators.getActuatorState();
+    // Set the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
+    actuator_1_marker.type = visualization_msgs::Marker::ARROW;
+ 	actuator_2_marker.type = visualization_msgs::Marker::ARROW;
+
+    // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
+    actuator_1_marker.action = visualization_msgs::Marker::ADD;
+	actuator_2_marker.action = visualization_msgs::Marker::ADD;
+
+    // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
+    actuator_1_marker.pose.position.x = actuator_positions(0);
+    actuator_1_marker.pose.position.y = actuator_positions(1);
+    actuator_1_marker.pose.position.z = 0;
+    actuator_1_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI - actuator_states(3));
+
+	actuator_2_marker.pose.position.x = actuator_positions(2);
+    actuator_2_marker.pose.position.y = actuator_positions(3);
+    actuator_2_marker.pose.position.z = 0;
+    actuator_2_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI - actuator_states(2));
+
+    double L_pp = vessel.getLength();
+    actuator_1_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(1)));
+    actuator_1_marker.scale.y = L_pp*0.02;
+    actuator_1_marker.scale.z = L_pp*0.02;
+
+	actuator_2_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(0)));
+    actuator_2_marker.scale.y = L_pp*0.02;
+    actuator_2_marker.scale.z = L_pp*0.02;
+
+    actuator_1_marker.color.r = 1.0f;
+    actuator_1_marker.color.g = 0.1f;
+    actuator_1_marker.color.b = 0.1f;
+    actuator_1_marker.color.a = 1.0;
+
+	actuator_2_marker.color.r = 0.1f;
+    actuator_2_marker.color.g = 1.0f;
+    actuator_2_marker.color.b = 0.1f;
+    actuator_2_marker.color.a = 1.0;
+
+
+    actuator_1_marker.lifetime = ros::Duration();
+	actuator_2_marker.lifetime = ros::Duration();
+}
+
+void VesselNode::publishActuatorMarkers(){
+    actuator_1_marker.header.stamp = ros::Time::now();
+    actuator_2_marker.header.stamp = ros::Time::now();
+
+    Vector6d actuator_states = vessel.actuators.getActuatorState();
+
+    actuator_1_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI - actuator_states(3));
+    actuator_2_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI - actuator_states(2));
+
+    double L_pp = vessel.getLength();
+
+    actuator_1_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(1)));
+	actuator_2_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(0)));
+
+	marker_pub.publish(actuator_1_marker);
+	marker_pub.publish(actuator_2_marker);
 }
 
 void VesselNode::receiveForcesAndMoments(const geometry_msgs::Twist::ConstPtr &thrust_msg){

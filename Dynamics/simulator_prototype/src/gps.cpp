@@ -58,8 +58,10 @@ double GPS::getHeading(Vector6d eta){
   double sign = temp_heading/(std::abs(temp_heading));
   while(temp_heading<0 || temp_heading > 360){
     temp_heading+=-sign*360;
+    
   }
   return temp_heading;
+
 }
 
 void GPS::publishGpsData(Vector6d nu_n, Vector6d eta) {
@@ -67,7 +69,7 @@ void GPS::publishGpsData(Vector6d nu_n, Vector6d eta) {
   getHeading(eta);
   updateCurvatures();
   calculateNextPosition();  
-  gps_position(5)=getHeading(eta);
+  gps_position(5)=getHeading(eta);  
   if(step == steps_per_data_output){
     step=0;
     simulator_messages::Gps gpsMessage;

@@ -87,6 +87,7 @@ N_r_dot: 13204.24 #kg
 # Center of gravity
 x_g: 0.0
 y_g: 0.0
+z_g: 0.2
 
 # Linear damping terms
 X_u: -265.26
@@ -139,15 +140,15 @@ M_qq: 0
 
 K_thruster: 0.0025
 T_n: 0.4
-T_alpha: 0.2
+T_alpha: 1
 T_beta: 0.1
 n_min: 400
 n_max: 2000
 alpha_max: 27
-l_y_1: 0.57 #Y-coordinate of right thruster
-l_y_2: -0.57 # Y-coordinate of left thruster
-l_x_1: -4.5 #X-coordinate of right thruster
-l_x_2: -4.5 # X-coordinate of left thruster
+l_y_1: 0.5 #Y-coordinate of right thruster
+l_y_2: -0.5 # Y-coordinate of left thruster
+l_x_1: -5.1 #X-coordinate of right thruster
+l_x_2: -5.1 # X-coordinate of left thruster
 C_d_2d: 0.65
 T: 0.7
 X_uu_c: -21487.33

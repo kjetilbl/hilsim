@@ -60,6 +60,16 @@ Vector6d Vessel::getThrust(){
 	return tau_control;
 }
 
+Vector4d Vessel::getActuatorPositions(){
+	Vector4d actuator_positions;
+	actuator_positions << l_x_1, l_y_1, l_x_2, l_y_2;
+	return actuator_positions;
+}
+
+double Vessel::getLength(){
+	return L_pp;
+}
+
 void Vessel::setState(Vector6d eta_new, Vector6d nu_new){
 	eta = eta_new;
 	nu = nu_new;
@@ -334,9 +344,9 @@ void Vessel::updateMatrices(){
 			0,	0,	0,	0,	C_a_55, 0,
 			0,	0,	0,	0,	0,	C_a_66;
 	C = u*(C_rb+C_a);
-	/*
-	// Complete
 	
+	// Complete
+	/*
 	double a_1, a_2, a_3, b_1, b_2, b_3;
 	a_1 = -1*(X_u_dot*u+X_v_dot*v+X_w_dot*w+X_p_dot*p+X_q_dot*q+X_r_dot*r);
 	a_2 = -1*(Y_u_dot*u+Y_v_dot*v+Y_w_dot*w+Y_p_dot*p+Y_q_dot*q+Y_r_dot*r);
@@ -361,7 +371,30 @@ void Vessel::updateMatrices(){
 			a_3, 	0, 		-a_1, 	b_3, 	0, 		-b_1,
 			-a_2, 	a_1, 	0, 		-b_2, 	b_1, 	0;
 
-	C = C_rb+C_a;*/
+	C = C_rb+C_a;
+	double a_1, a_2, a_3, b_1, b_2, b_3;
+	a_1 = (X_u_dot*u+X_v_dot*v+X_w_dot*w+X_p_dot*p+X_q_dot*q+X_r_dot*r);
+	a_2 = (Y_u_dot*u+Y_v_dot*v+Y_w_dot*w+Y_p_dot*p+Y_q_dot*q+Y_r_dot*r);
+	a_3 = (Z_u_dot*u+Z_v_dot*v+Z_w_dot*w+Z_p_dot*p+Z_q_dot*q+Z_r_dot*r);
+	b_1 = (K_u_dot*u+K_v_dot*v+K_w_dot*w+K_p_dot*p+K_q_dot*q+K_r_dot*r);
+	b_2 = (M_u_dot*u+M_v_dot*v+M_w_dot*w+M_p_dot*p+M_q_dot*q+M_r_dot*r);
+	b_3 = (N_u_dot*u+N_v_dot*v+N_w_dot*w+N_p_dot*p+N_q_dot*q+N_r_dot*r);
+
+	C_a << 	0, 		0, 		0, 		0, 		-a_3, 	a_2,
+			0, 		0, 		0, 		a_3, 	0, 		-a_1,
+			0, 		0, 		0, 		-a_2, 	a_1, 	0,
+			0, 		-a_3, 	a_2, 	0, 		-b_3,	b_2,
+			a_3, 	0, 		-a_1, 	b_3, 	0, 		-b_1,
+			-a_2, 	a_1, 	0, 		-b_2, 	b_1, 	0;
+
+	C_rb << 0, 							-m_11*r,				m_11*q,			m_11*z_g*r, 	-m_11*x_g*q,			-m_11*x_g*r,
+			m_11*r,						0,						-m_11*p,		0,				m_11*(z_g*r+x_g*p),		0,
+			-m_11*q, 					m_11*p,					0,				-m_11*z_g*p,	-m_11*z_g*q, 			m_11*x_g*p,
+			-m_11*z_g*r,				0, 				 		m_11*z_g*p,		0,				m_64*p-m_66*r,			+m_55*q,	
+			m_11*x_g*q,					-m_11*(z_g*r+x_g*p),	m_11*z_g*q,		-m_46*p+m_66*r,	0, 						m_46*r-m_44*p,	
+			m_11*x_g*r, 				0, 						-m_11*x_g*p,	-m_55*q,		-m_46*r-m_44*p,			0;
+
+			C = C_rb+C_a;*/
 
 	// Damping matrix. Contains non-linear elements for the standard 3DOF representation, and linear elements in the restoring 3 DOFs.
 	calculateNonlinearSurge();
@@ -390,8 +423,7 @@ void Vessel::step(){
 	calculateNextNu();
 	publishSensorData();
 	calculateEnvironmentalForces();
-	//getWaveYawMoment();
-	//std::cout << nu_r << std::endl;
+
 }
 
 void Vessel::calculateEnvironmentalForces(){
@@ -699,6 +731,8 @@ bool Vessel::readParameters(ros::NodeHandle nh) {
 	if (!nh.getParam("x_g", x_g))
 		parameterFail=true;
 	if (!nh.getParam("y_g", y_g))
+		parameterFail=true;
+	if (!nh.getParam("z_g", z_g))
 		parameterFail=true;
 
 	// Linear damping
