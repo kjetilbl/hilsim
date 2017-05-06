@@ -457,7 +457,7 @@ void Vessel::calculateWindForces(){
 }
 
 void Vessel::publishSensorData(){
-	nu_n = (J*nu_r);
+	nu_n = (J*nu);
 	gps.publishGpsData(nu_n, eta);
 	imu.publishImuData(nu_dot , nu);
 	mru.publishMruData(nu, eta);
