@@ -7,9 +7,13 @@ struct gpsPoint {
 	double latitude;
 };
 
-struct gpsPoint3DOF{
-	double longitude;
-	double latitude;
+struct gpsPoint3DOF : public gpsPoint {
+	gpsPoint3DOF(){};
+	gpsPoint3DOF(double Longitude, double Latitude, double Heading){
+		this->longitude = Longitude;
+		this->latitude = Latitude;
+		this->heading = Heading;
+	};
 	double heading;
 };
 
