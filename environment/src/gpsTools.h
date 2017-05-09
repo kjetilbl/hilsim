@@ -3,12 +3,12 @@
 
 
 struct gpsPoint {
-	double longitude;
-	double latitude;
+	double longitude = 0;
+	double latitude = 0;
 };
 
 struct gpsPoint3DOF : public gpsPoint {
-	gpsPoint3DOF(){};
+	gpsPoint3DOF(){heading = 0;};
 	gpsPoint3DOF(double Longitude, double Latitude, double Heading){
 		this->longitude = Longitude;
 		this->latitude = Latitude;
@@ -19,7 +19,9 @@ struct gpsPoint3DOF : public gpsPoint {
 
 double deg2rad(double degrees);
 
-double distance(gpsPoint a, gpsPoint b);
+double distance_m(gpsPoint a, gpsPoint b);
+
+double compass_bearing(gpsPoint from, gpsPoint to);
 
 double latitude_degs_pr_meter();
 

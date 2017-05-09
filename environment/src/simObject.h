@@ -56,10 +56,12 @@ private slots:
 class fixedObstacle : public simObject
 {
 public:
-	fixedObstacle( ros::NodeHandle nh, string obstID, gpsPoint3DOF eta0, QThread *parent = 0 );
+	fixedObstacle( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent = 0 );
 	~fixedObstacle(){};
 
 private:
+	void run();
+	static int IDiterator;
 };
 
 
@@ -69,7 +71,7 @@ class aisUser : public simObject
 {
 	Q_OBJECT
 public:
-	aisUser( ros::NodeHandle nh, uint32_t mmsiNumber, gpsPoint3DOF eta0, QThread *parent );
+	aisUser( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent );
 
 private slots:
 	void broadcast_AIS_msg();
@@ -91,6 +93,7 @@ protected:
 private:
 	mutex activeObjMutex;
 
+	static int IDiterator;
 	QTimer *AIStimer = NULL;
 	uint32_t MMSI;
 	navStatus status;
@@ -107,7 +110,7 @@ class ship : public aisUser
 {
 	Q_OBJECT
 public:
-	ship( ros::NodeHandle nh, uint32_t mmsiNumber, gpsPoint3DOF eta0, QThread *parent = 0 );
+	ship( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent = 0 );
 	void add_waypoint(gpsPoint wp);
 
 private:

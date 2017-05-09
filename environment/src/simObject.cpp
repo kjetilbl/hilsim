@@ -4,6 +4,8 @@
 
 #include <QDebug>
 
+int fixedObstacle::IDiterator = 0;
+int aisUser::IDiterator = 0;
 
 simObject::simObject( const simObject& other )
 {
@@ -45,6 +47,7 @@ void simObject::run()
 void simObject::publish_position_report()
 {
 	environment::obstacleUpdate posUpdate = make_position_update_msg();
+	//qDebug() << "Publishing pos report from: " << this->ID.c_str();
 	this->posUpdatePub.publish(posUpdate);
 	ros::spinOnce();
 }
@@ -82,33 +85,42 @@ gpsPoint3DOF simObject::get_eta()
 }
 
 
-fixedObstacle::fixedObstacle( ros::NodeHandle nh, string obstID, gpsPoint3DOF eta0, QThread *parent ) 
-							: simObject( nh, obstID, eta0, parent )
+fixedObstacle::fixedObstacle( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
+							: simObject( nh, "fixed_obstacle_"+to_string(this->IDiterator++), eta0, parent )
 {
 	this->objectDescriptor = "fixed_obstacle";
 }
 
+void fixedObstacle::run(){
+	this->initiate_pos_report_broadcast();
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
+	QThread::exec();
+}
 
-aisUser::aisUser( ros::NodeHandle nh, uint32_t mmsiNumber, gpsPoint3DOF eta0, QThread *parent ) 
-				: simObject( nh, "AIS_user_"+to_string(mmsiNumber), eta0, parent )
+
+aisUser::aisUser( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
+				: simObject( nh, "AIS_user_"+to_string(this->IDiterator), eta0, parent )
 {
-
+	this->set_MMSI(IDiterator++);
 }
 
 
 void aisUser::broadcast_AIS_msg()
 {
 	gpsPoint3DOF currentEta = this->get_eta();
-	navData nd( this->get_MMSI(), currentEta.longitude, currentEta.latitude, this->get_SOG() );
+	navData nd( this->get_MMSI(), currentEta.longitude, currentEta.latitude, this->get_SOG(), currentEta.heading );
 	nd.set_nav_status( this->get_status() );
 	nd.set_ROT( this->get_ROT() );
 	nd.set_position_accuracy( this->get_pos_accuracy() );
 	nd.set_COG( currentEta.heading );
 
 	string AISmsg = nd.get_AIS_class_A_position_report(); // Should be broadcast
+	/*
 	qDebug() << "---------------------Publish" << this->ID.c_str() << "AIS message--------------------- ";
 	nd.print_data();
 	qDebug() << "-----------------------------------------------------------------------------";
+	*/
 }
 
 void aisUser::set_MMSI(uint32_t ID){
@@ -173,14 +185,13 @@ void aisUser::initiate_AIS_broadcast(uint16_t intervalMs){
 
 
 
-ship::ship( ros::NodeHandle nh, uint32_t mmsiNumber, gpsPoint3DOF eta0, QThread *parent ) 
-				: aisUser( nh, mmsiNumber, eta0, parent )
+ship::ship( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
+				: aisUser( nh, eta0, parent )
 {
 	this->objectDescriptor = "ship";
-	this->set_MMSI(mmsiNumber);
 	this->set_status(UNDERWAY_USING_ENGINE);
 	this->set_ROT(0);
-	this->set_SOG(2);
+	this->set_SOG(10);
 	this->set_pos_accuracy(HIGH);
 }
 
@@ -198,6 +209,9 @@ void ship::run()
 	this->initiate_AIS_broadcast(2000);
 	this->initiate_pos_report_broadcast();
 
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
+
 	QThread::exec();
 }
 
@@ -207,7 +221,7 @@ gpsPoint3DOF ship::calculate_next_eta(){
 
 	if(!waypoints.empty()){
 		nextWaypoint = waypoints.front();
-		if(distance(Eta, nextWaypoint) < 3){
+		if(distance_m(Eta, nextWaypoint) < 3){
 			waypoints.erase(waypoints.begin());
 		}
 	}
@@ -226,10 +240,8 @@ gpsPoint3DOF ship::calculate_next_eta(){
 	nextEta.longitude = Eta.longitude + dE*longitude_degs_pr_meter(Eta.latitude);
 	nextEta.latitude = Eta.latitude + dN*latitude_degs_pr_meter();
 
-	//TODO: calculate next heading according to next waypoint
-	nextEta.heading = Eta.heading;
-
-
+	// Calculate bearing to next waypoint
+	nextEta.heading = compass_bearing(Eta, nextWaypoint);
 
 	return nextEta;
 }

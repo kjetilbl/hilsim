@@ -236,6 +236,8 @@ void navData::print_data() const
 	s += to_string(latitude);
 	s += "\nHeading:\t\t";
 	s += to_string(track);
+	s += "\nCOG:\t\t\t";
+	s += to_string(COG);
 	s += "\nROT:\t\t\t";
 	s += to_string(ROT);
 	s += "\nSOG:\t\t\t";

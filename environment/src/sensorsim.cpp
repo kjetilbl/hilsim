@@ -49,17 +49,20 @@ void sensorSim::print_USV_AIS_msg()
 {
 	std::lock_guard<std::mutex> lock(m);
 	USVnavData.set_time(QTime::currentTime());
+	/*
 	qDebug() << "\n---------------------Publish USV AIS message---------------------";
 	USVnavData.print_data();
 	qDebug() << "-----------------------------------------------------------------\n";
+	*/
 }
 
 
 void sensorSim::print_detected_targets()
 {
 	std::lock_guard<std::mutex> lock(m);
-	if ( !obstPositions.empty() )
-		qDebug() << "Printing all detected obstacles:";
+	if ( !obstPositions.empty() ){
+		// qDebug() << "Printing all detected obstacles:";
+	}
 	
 	vector<string> outdatedObstacles;
 
@@ -74,9 +77,11 @@ void sensorSim::print_detected_targets()
 		}
 		else
 		{
+			/* 
 			qDebug() << obst.first.c_str() << ":";
 			obst.second.print();
 			qDebug() << "------------------------";
+			*/
 		}
 	}
 

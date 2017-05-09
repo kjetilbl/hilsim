@@ -26,7 +26,8 @@ public:
 
 private:
 	void run();
-	void spawn_ships();
+	void spawn_obstacles();
+	void spawn_fixed_obstacle(gpsPoint3DOF eta);
 	gpsPoint mapOrigin;
 	void get_origin_from_sim_params(ros::NodeHandle nh);
 	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);
@@ -34,7 +35,7 @@ private:
 	ros::NodeHandle n;
 	ros::Subscriber cmdSub;
 	QThread *simObjectsThread = NULL;
-	vector<simObject*> agents = vector<simObject*>(0);
+	vector<simObject*> simObjects = vector<simObject*>(0);
 };
 
 
