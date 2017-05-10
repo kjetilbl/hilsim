@@ -10,8 +10,8 @@ int aisUser::IDiterator = 0;
 simObject::simObject( const simObject& other )
 {
 	this->n = other.n;
-	this->cmdSub = n.subscribe("obstacleCommandTopic", 1000, &simObject::command_parser, this);
-	this->posUpdatePub = n.advertise<environment::obstacleUpdate>("obstUpdateTopic", 1000);
+	this->cmdSub = n.subscribe("/simObject/command", 1000, &simObject::command_parser, this);
+	this->posUpdatePub = n.advertise<environment::obstacleUpdate>("/simObject/position", 1000);
 
 	this->ID = other.ID;
 	this->eta = other.eta;
@@ -20,8 +20,8 @@ simObject::simObject( const simObject& other )
 simObject::simObject(ros::NodeHandle nh, string obstID, gpsPoint3DOF eta0, QThread *parent) : QThread(parent)
 {
 	this->n = nh;
-	this->cmdSub = n.subscribe("obstacleCommandTopic", 1000, &simObject::command_parser, this);
-	this->posUpdatePub = n.advertise<environment::obstacleUpdate>("obstUpdateTopic", 1000);
+	this->cmdSub = n.subscribe("/simObject/command", 1000, &simObject::command_parser, this);
+	this->posUpdatePub = n.advertise<environment::obstacleUpdate>("/simObject/position", 1000);
 
 	this->ID = obstID;
 	this->eta = eta0;
@@ -49,7 +49,6 @@ void simObject::publish_position_report()
 	environment::obstacleUpdate posUpdate = make_position_update_msg();
 	//qDebug() << "Publishing pos report from: " << this->ID.c_str();
 	this->posUpdatePub.publish(posUpdate);
-	ros::spinOnce();
 }
 
 void simObject::command_parser(const environment::obstacleCmd::ConstPtr& cmd)
@@ -94,7 +93,7 @@ fixedObstacle::fixedObstacle( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *pa
 void fixedObstacle::run(){
 	this->initiate_pos_report_broadcast();
 	ros::AsyncSpinner spinner(1);
-	spinner.start();
+	//spinner.start();
 	QThread::exec();
 }
 
@@ -103,6 +102,7 @@ aisUser::aisUser( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent )
 				: simObject( nh, "AIS_user_"+to_string(this->IDiterator), eta0, parent )
 {
 	this->set_MMSI(IDiterator++);
+	this->AISpub = nh.advertise<simulator_messages::AIS>("sensors/ais", 1000);
 }
 
 
@@ -114,8 +114,11 @@ void aisUser::broadcast_AIS_msg()
 	nd.set_ROT( this->get_ROT() );
 	nd.set_position_accuracy( this->get_pos_accuracy() );
 	nd.set_COG( currentEta.heading );
+	string rawAISdata = nd.get_AIS_class_A_position_report();
 
-	string AISmsg = nd.get_AIS_class_A_position_report(); // Should be broadcast
+	simulator_messages::AIS newAISmsg = nd.get_AIS_ros_msg();
+	this->AISpub.publish(newAISmsg);
+	//ros::spinOnce();
 	/*
 	qDebug() << "---------------------Publish" << this->ID.c_str() << "AIS message--------------------- ";
 	nd.print_data();
@@ -210,7 +213,7 @@ void ship::run()
 	this->initiate_pos_report_broadcast();
 
 	ros::AsyncSpinner spinner(1);
-	spinner.start();
+	//spinner.start();
 
 	QThread::exec();
 }

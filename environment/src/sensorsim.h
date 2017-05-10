@@ -11,6 +11,7 @@
 #include <mutex>
 
 #include "navData.h"
+#include "gpsTools.h"
 
 #include "ros/ros.h"
 #include "environment/obstacleUpdate.h"
@@ -33,6 +34,7 @@ private:
 	void run();
 	void USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg);
 	void obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
+	void AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg);
 
 	navData USVnavData;
 
@@ -40,7 +42,8 @@ private:
 	ros::NodeHandle nh;
 	QTimer *AIStimer;
 	QTimer *DTtimer;
-	map<string, gpsData> obstPositions;
+	map<string, gpsPointStamped> unidentifiedObjects;
+	map<int, navData> detectedAISusers;
 };
 
 

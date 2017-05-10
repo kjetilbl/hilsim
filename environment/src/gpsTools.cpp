@@ -29,9 +29,9 @@ double compass_bearing(gpsPoint from, gpsPoint to){
 			 - sin(deg2rad(from.latitude))*cos(deg2rad(to.latitude))*cos(deg2rad(to.longitude - from.longitude));
 	double bearing = atan2(y,x)*180/M_PI;
 	if(bearing < 0) bearing += 360;
-	
-	return bearing;
+	if(bearing >= 360) bearing -= 360;
 
+	return bearing;
 }
 
 double latitude_degs_pr_meter()

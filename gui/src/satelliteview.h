@@ -64,8 +64,8 @@ public:
 	void addSimObject( string obstacleID, string objectDescriptor, double x, double y, double psi = 0 );
 	void removeSimObject(string obstacleID);
 	bool doesExist( string simObjectID );
-	void setPosition( string obstacleID, double x, double y, double psi = 0 );
-	void simTargetMoveTo( double x, double y, double psi = 0 );
+	void setPosition( string obstacleID, gpsPointStamped newPos );
+	void simTargetMoveTo( gpsPointStamped pos );
 	void simTargetClearTrajectory();
 	bool popMarkedPosition(position *pos);
 
@@ -79,7 +79,7 @@ private:
 	QPushButton *zoomInButton;
 	QPushButton *zoomOutButton;
 	QFrame *rangeReference;
-	int mapRangeInMeters = 400;
+	int mapRangeInMeters = 800;
 	QLabel *rangeDescriptor;
 	void initialize_buttons();
 	void update_range_descriptor();
@@ -97,17 +97,17 @@ private:
 
 
 
-class simObject // simObject
+class simObject
 {
 public:
 	simObject(string targetID, QCustomPlot *satelliteViewWidget);
 	~simObject();
-	void 			setNewPosition(position Pos);
+	void 			setNewPosition(gpsPointStamped Pos);
 	void 			updateTrajectory();
 	string 			getID(){return ID;};
 	bool 			isPlottable(){ return readyToPlot; };
 	virtual void 	makePlottable() = 0;
-	position 		getPosition();
+	gpsPointStamped getPosition();
 	void			clearTrajectory();
 
 protected:
@@ -115,7 +115,7 @@ protected:
 	bool readyToPlot = false;
 	mutex m;
 	string ID;
-	position pos;
+	gpsPointStamped pos;
 	QCustomPlot *ownerSVWidget;
 	QPixmap *targetIcon;
 	QCPCurve *trajectory;
@@ -125,14 +125,14 @@ protected:
 class USV : public simObject
 {
 public:
-	USV(string USVid, QCustomPlot *satelliteViewWidget, double X = 0, double Y = 0, double Psi = 0);
+	USV(string USVid, QCustomPlot *satelliteViewWidget, gpsPointStamped Pos);
 	void makePlottable();
 };
 
 class obstacle : public simObject
 {
 public:
-	obstacle(string obstID, QCustomPlot *satelliteViewWidget, double X = 0, double Y = 0, double Psi = 0);
+	obstacle(string obstID, QCustomPlot *satelliteViewWidget, gpsPointStamped Pos);
 	void makePlottable();
 };
 
@@ -140,7 +140,7 @@ public:
 class ship : public simObject
 {
 public:
-	ship(string shipID, QCustomPlot *satelliteViewWidget, double longitude = 0, double latitude = 0, double heading = 0);
+	ship(string shipID, QCustomPlot *satelliteViewWidget, gpsPointStamped Pos);
 	void makePlottable();
 };
 

@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, quit_application);
 	
     int exitCode = a.exec();
+    //------------------------------------------------
 
     oh->quit();
     oh->wait();
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
 
     obstacleThread->quit();
     obstacleThread->wait();
+
     sensorThread->quit();
     sensorThread->wait();
 

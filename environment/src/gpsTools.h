@@ -1,6 +1,7 @@
 #ifndef GPSTOOLS_H
 #define GPSTOOLS_H
 
+#include <QTime>
 
 struct gpsPoint {
 	double longitude = 0;
@@ -15,6 +16,18 @@ struct gpsPoint3DOF : public gpsPoint {
 		this->heading = Heading;
 	};
 	double heading;
+};
+
+struct gpsPointStamped : public gpsPoint3DOF
+{
+	gpsPointStamped(){timeStamp = QTime::currentTime();}
+	gpsPointStamped(double Longitude, double Latitude, double Heading){
+		this->longitude = Longitude;
+		this->latitude = Latitude;
+		this->heading = Heading;
+		this->timeStamp = QTime::currentTime();
+	};
+	QTime timeStamp;
 };
 
 double deg2rad(double degrees);

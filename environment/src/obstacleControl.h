@@ -31,7 +31,6 @@ private:
 	gpsPoint mapOrigin;
 	void get_origin_from_sim_params(ros::NodeHandle nh);
 	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);
-	ship *testShip;
 	ros::NodeHandle n;
 	ros::Subscriber cmdSub;
 	QThread *simObjectsThread = NULL;

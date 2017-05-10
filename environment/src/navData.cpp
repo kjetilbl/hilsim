@@ -224,6 +224,25 @@ string navData::get_AIS_class_A_position_report() const
 	return AISmsg;
 }
 
+simulator_messages::AIS navData::get_AIS_ros_msg(){
+	simulator_messages::AIS AISmsg;
+	AISmsg.MMSI = this->MMSI;
+	AISmsg.status = this->status;
+	AISmsg.ROT = this->ROT;
+	AISmsg.SOG = this->SOG;
+	AISmsg.positionAccuracy = this->positionAccuracy;
+	AISmsg.longitude = this->longitude;
+	AISmsg.latitude = this->latitude;
+	AISmsg.COG = this->COG;
+	AISmsg.track = this->track;
+	AISmsg.hour = this->time.hour();
+	AISmsg.minute = this->time.minute();
+	AISmsg.second = this->time.second();
+	AISmsg.SMI = this->SMI;
+	AISmsg.raw_data = this->get_AIS_class_A_position_report();
+	return AISmsg;
+}
+
 
 void navData::print_data() const
 {

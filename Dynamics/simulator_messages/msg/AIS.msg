@@ -1,0 +1,14 @@
+uint32 MMSI
+uint8 status
+float64 ROT
+float64 SOG
+uint8 positionAccuracy
+float64 longitude
+float64 latitude
+float64 COG
+float64 track
+uint8 hour
+uint8 minute
+uint8 second
+uint8 SMI
+string raw_data

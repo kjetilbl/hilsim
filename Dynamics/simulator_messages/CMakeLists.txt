@@ -25,6 +25,7 @@ add_message_files(
   Environment.msg 
   Gps.msg
   ActuatorMessage.msg
+  AIS.msg
 )
 
 

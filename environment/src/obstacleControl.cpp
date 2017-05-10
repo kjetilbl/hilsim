@@ -4,14 +4,11 @@
 
 obstacleHandler::obstacleHandler(ros::NodeHandle nh, QThread *parent ) : QThread(parent) {
 	this->n = nh;
-	this->cmdSub = nh.subscribe("obstacleCommandTopic", 1000, &obstacleHandler::command_parser, this);
+	this->cmdSub = nh.subscribe("/simObject/command", 1000, &obstacleHandler::command_parser, this);
 	get_origin_from_sim_params(nh);
 }
 
 obstacleHandler::~obstacleHandler(){
-	testShip->quit();
-	testShip->wait();
-	delete testShip;
 
 	for(auto const& simObjectPtr: simObjects){
 		simObjectPtr->quit();
@@ -67,6 +64,7 @@ void obstacleHandler::spawn_obstacles(){
 	ship1->start();
 	simObjects.push_back( ship1 );
 
+
 	radius = radius*0.8;
 	eta0.latitude = mapOrigin.latitude;
 	eta0.longitude = mapOrigin.longitude - radius*longitude_degs_pr_meter(eta0.latitude);
@@ -81,6 +79,7 @@ void obstacleHandler::spawn_obstacles(){
 	QObject::connect(simObjectsThread, SIGNAL(finished()), ship2, SLOT(deleteLater()) );
 	ship2->start();
 	simObjects.push_back( ship2 );
+	
 
 	// Spawn obstacles
 	for(int i = 0; i < 25; i++){

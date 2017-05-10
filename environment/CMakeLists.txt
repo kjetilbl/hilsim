@@ -36,13 +36,13 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## Declare ROS messages and services
- add_message_files(
-   DIRECTORY
-   msg
-   FILES
-   obstacleUpdate.msg
-   obstacleCmd.msg
- )
+# add_message_files(
+#   DIRECTORY
+#   msg
+#   FILES
+#   obstacleUpdate.msg
+#   obstacleCmd.msg
+# )
 
 ## Generate added messages and services
 generate_messages(DEPENDENCIES std_msgs)

@@ -15,6 +15,7 @@
 #include "ros/ros.h"
 #include "environment/obstacleUpdate.h"
 #include "environment/obstacleCmd.h"
+#include "simulator_messages/AIS.h"
 
 
 using namespace std;
@@ -38,12 +39,12 @@ protected:
 	string ID;
 
 private:
+	ros::NodeHandle n;
 	QTimer *posReportTimer = NULL;
 	mutex m;
 	bool stop = false;
 	bool running = false;
 	gpsPoint3DOF eta;
-	ros::NodeHandle n;
 	ros::Publisher posUpdatePub;
 	ros::Subscriber cmdSub;
 
