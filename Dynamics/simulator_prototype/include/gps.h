@@ -15,6 +15,8 @@ public:
 
   void publishGpsData(Vector6d nu_n, Vector6d eta);
 
+  void getCoordinates(double &lat_, double &long_);
+
 private:
   // Latitude and longitude used for GPS position.
   long double latitude, longitude, height;

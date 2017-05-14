@@ -10,7 +10,7 @@ public:
   ~MRU();
 
   // Publishes the IMU-data to a sensor-topic
-  void publishMruData(Vector6d nu, Vector6d eta);
+  void publishMruData(Vector6d nu, Vector6d eta, double latitude, double longitude);
 
 private:
 	

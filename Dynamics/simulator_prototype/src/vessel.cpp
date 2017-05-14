@@ -491,8 +491,9 @@ void Vessel::calculateWindForces(){
 void Vessel::publishSensorData(){
 	nu_n = (J*nu);
 	gps.publishGpsData(nu_n, eta);
+	gps.getCoordinates(latitude, longitude);
 	imu.publishImuData(nu_dot , nu);
-	mru.publishMruData(nu, eta);
+	mru.publishMruData(nu, eta, latitude, longitude);
 	speedSensor.publishSpeedSensorData(nu(0), nu(1));
 	windSensor.publishWindSensorData(wind_speed, wind_direction);
 }

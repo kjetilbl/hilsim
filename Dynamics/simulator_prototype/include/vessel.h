@@ -178,8 +178,8 @@ private:
   // Update frequency for onboard sensors.
   double gps_frequency, mru_frequency, imu_frequency, speed_sensor_frequency, wind_sensor_frequency;
 
-  // Starting position in lat/long
-  double start_latitude, start_longitude;
+  // Starting position and current position in lat/long
+  double start_latitude, start_longitude, latitude, longitude;
 
   // The damping, coriolis and rotation matrix are dependent of the vessel
   // state, and needs to be updated for each step
