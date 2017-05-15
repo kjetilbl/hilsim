@@ -30,7 +30,7 @@ private:
 	realtimePlot *velocityPlot;
 	satelliteView *sv;
 	obstacleInterface *obstInterface;
-	std::thread *posUpdateThread;
+	//std::thread *posUpdateThread;
 	QThread *puhThread;
 	posUpdateHandler *puh;
 };

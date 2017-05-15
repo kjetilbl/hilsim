@@ -29,7 +29,7 @@ satelliteView::satelliteView(QCustomPlot *satelliteViewWidget)
 
 	connect(svWidget, SIGNAL(mousePress(QMouseEvent*)), SLOT(markPosition( QMouseEvent *)));
 
-	simTarget = new USV("USV_Odin", svWidget, 10.472, 59.438);
+	simTarget = new USV("USV_Odin", svWidget, gpsPointStamped(10.472, 59.438, 0));
 	simTarget->makePlottable();
 }
 
@@ -57,21 +57,39 @@ void satelliteView::updatePlot()
 	std::lock_guard<std::mutex> lock(m);
 
 	simTarget->updateTrajectory();
+
+
+	vector<string> outdatedSimObjects;
 	for( auto const& aso : activeSimObjects )
 	{
 		if(!aso.second->isPlottable())
 		{
 			aso.second->makePlottable();	
 		}
-		aso.second->updateTrajectory();
+
+		// Check if outdated
+		QTime now = QTime::currentTime();
+		QTime lastUpdate = aso.second->getPosition().timeStamp;
+		if(lastUpdate.msecsTo(now) > 200){
+			outdatedSimObjects.push_back(aso.first);
+			qDebug() << "push_back" << aso.first.c_str();
+		}
+		else{
+			aso.second->updateTrajectory();
+		}
 	}
 
-	position plotCenter = simTarget->getPosition();
+	for( auto const& ID : outdatedSimObjects){
+		delete activeSimObjects[ID];
+		activeSimObjects.erase(ID);
+	}
 
-	double xrange = mapRangeInMeters*longitude_degs_pr_meter(plotCenter.y);
+	gpsPointStamped plotCenter = simTarget->getPosition();
+
+	double xrange = mapRangeInMeters*longitude_degs_pr_meter(plotCenter.latitude);
 	double yrange = mapRangeInMeters*latitude_degs_pr_meter();
-	svWidget->xAxis->setRange(plotCenter.x - xrange/2, plotCenter.x + xrange/2);
-	svWidget->yAxis->setRange(plotCenter.y - yrange/2, plotCenter.y + yrange/2);
+	svWidget->xAxis->setRange(plotCenter.longitude - xrange/2, plotCenter.longitude + xrange/2);
+	svWidget->yAxis->setRange(plotCenter.latitude - yrange/2, plotCenter.latitude + yrange/2);
 	svWidget->replot();
 }
 
@@ -127,8 +145,6 @@ void satelliteView::initialize_buttons()
 	rangeDescriptor->setStyleSheet("background-color: transparent");
 	rangeDescriptor->setAlignment(Qt::AlignCenter);
 	update_range_descriptor();
-
-
 }
 
 void satelliteView::update_range_descriptor()
@@ -146,24 +162,22 @@ void satelliteView::addSimObject( string objectID, string objectDescriptor, doub
 		// This simObject already exists
 		return;
 	}
-	
+	gpsPointStamped pos(x, y, psi);
 	if( objectDescriptor == "fixed_obstacle" )
 	{
 		qDebug() << "Added new fixed obstacle...";
-		activeSimObjects[objectID] = new obstacle(objectID.c_str(), svWidget, x, y, psi);
+		activeSimObjects[objectID] = new obstacle(objectID.c_str(), svWidget, pos);
 	}
 	else if( objectDescriptor == "ship")
 	{
 		qDebug() << "Added new ship...";
-		activeSimObjects[objectID] = new ship(objectID.c_str(), svWidget, x, y, psi);
+		activeSimObjects[objectID] = new ship(objectID.c_str(), svWidget, pos);
 	}
 }
 
-void satelliteView::setPosition( string objectID, double x, double y, double psi )
+void satelliteView::setPosition( string objectID, gpsPointStamped newPos )
 {
 	std::lock_guard<std::mutex> lock(m);
-
-	position newPos = {x, y, psi};
 	map<string, simObject*>::iterator it = activeSimObjects.find(objectID);
 	if( it != activeSimObjects.end() )
 	{
@@ -202,10 +216,10 @@ bool satelliteView::doesExist( string simObjectID )
 }
 
 
-void satelliteView::simTargetMoveTo( double longitude, double latitude, double heading )
+void satelliteView::simTargetMoveTo( gpsPointStamped pos )
 {
 	std::lock_guard<std::mutex> lock(m);
-	simTarget->setNewPosition(position{longitude, latitude, heading});
+	simTarget->setNewPosition(pos);
 }
 
 void satelliteView::simTargetClearTrajectory()
@@ -248,13 +262,13 @@ void simObject::trajectoryInit()
 	trajectoryHead = new QCPCurve(ownerSVWidget->xAxis, ownerSVWidget->yAxis);
 }
 
-void simObject::setNewPosition(position Pos)
+void simObject::setNewPosition(gpsPointStamped Pos)
 {
 	std::lock_guard<std::mutex> lock(m);
 	pos = Pos;
 }
 
-position simObject::getPosition()
+gpsPointStamped simObject::getPosition()
 {
 	std::lock_guard<std::mutex> lock(m);
 	return pos;
@@ -262,15 +276,15 @@ position simObject::getPosition()
 
 void simObject::updateTrajectory(){
 	std::lock_guard<std::mutex> lock(m);
-	trajectory->addData(pos.x, pos.y);
+	trajectory->addData(pos.longitude, pos.latitude);
 
 	QMatrix rm;
-	rm.rotate(pos.psi);
+	rm.rotate(pos.heading);
 	QPixmap rotatedTargetIcon = targetIcon->transformed(rm);
 
 	trajectoryHead->data()->clear();
 	trajectoryHead->setScatterStyle(QCPScatterStyle(rotatedTargetIcon));
-	trajectoryHead->addData(pos.x, pos.y);
+	trajectoryHead->addData(pos.longitude, pos.latitude);
 }
 
 void simObject::clearTrajectory()
@@ -279,8 +293,7 @@ void simObject::clearTrajectory()
 	trajectory->data()->clear();
 }
 
-USV::USV(std::string USVid, QCustomPlot *satelliteViewWidget, double X, double Y, double Psi) : simObject(USVid, satelliteViewWidget){
-	position Pos = {X, Y, Psi};
+USV::USV(std::string USVid, QCustomPlot *satelliteViewWidget, gpsPointStamped Pos) : simObject(USVid, satelliteViewWidget){
 	this->setNewPosition(Pos);
 }
 
@@ -299,8 +312,7 @@ void USV::makePlottable()
 	readyToPlot = true;
 }
 
-obstacle::obstacle(std::string obstID, QCustomPlot *satelliteViewWidget, double X, double Y, double Psi) : simObject(obstID, satelliteViewWidget){
-	position Pos = {X, Y, Psi};
+obstacle::obstacle(std::string obstID, QCustomPlot *satelliteViewWidget, gpsPointStamped Pos) : simObject(obstID, satelliteViewWidget){
 	this->setNewPosition(Pos);
 }
 
@@ -314,8 +326,8 @@ void obstacle::makePlottable()
 	readyToPlot = true;
 }
 
-ship::ship(std::string shipID, QCustomPlot *satelliteViewWidget, double longitude, double latitude, double heading) : simObject(shipID, satelliteViewWidget){
-	this->setNewPosition( position{longitude, latitude, heading} );
+ship::ship(std::string shipID, QCustomPlot *satelliteViewWidget, gpsPointStamped Pos) : simObject(shipID, satelliteViewWidget){
+	this->setNewPosition( Pos );
 }
 
 void ship::makePlottable()

@@ -16,6 +16,11 @@ void GPS::updateCurvatures() {
   r_prime = r_e / pow(1 - e * e * sin(latitude) * sin(latitude), 0.5);
 }
 
+void GPS::getCoordinates(double &lat_, double &long_){
+  lat_ = gps_position(0)*(180/M_PI);
+  long_ = gps_position(1)*(180/M_PI);
+}
+
 void GPS::calculateNextPosition(){
   A << 1 / (r_mer + height), 0, 0,0,0,0,
    0, 1 / ((r_prime + height) * cos(latitude)),0,0,0,0,

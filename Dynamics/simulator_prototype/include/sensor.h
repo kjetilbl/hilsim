@@ -6,6 +6,8 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
 #include "simulator_messages/Gps.h"
+#include "nav_msgs/Odometry.h"
+#include <tf/transform_broadcaster.h>
 
 using namespace Eigen;
 
@@ -29,6 +31,8 @@ protected:
   ros::Publisher imu_pub = sensor_handle.advertise<geometry_msgs::Twist>("sensors/imu", 0);
   ros::Publisher speed_sensor_pub = sensor_handle.advertise<geometry_msgs::Twist>("sensors/speedSensor", 0);
   ros::Publisher wind_sensor_pub = sensor_handle.advertise<geometry_msgs::Twist>("sensors/windSensor", 0);
+
+  ros::Publisher odom_pub = sensor_handle.advertise<nav_msgs::Odometry>("sensors/odom", 0);
 
   double dt, frequency, steps_per_data_output, step;
 };

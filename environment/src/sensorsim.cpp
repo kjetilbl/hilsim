@@ -33,7 +33,8 @@ void sensorSim::run()
 {
 	USVnavData = navData(316001245, 123.8777500, 49.2002817, 19.6, 235.0);
 	ros::Subscriber USVupdateSub = nh.subscribe("sensors/gps", 1000, &sensorSim::USV_gps_parser, this);
-	ros::Subscriber obstUpdateSub = nh.subscribe("obstUpdateTopic", 1000, &sensorSim::obstacle_update_parser, this);
+	ros::Subscriber obstUpdateSub = nh.subscribe("/simObject/position", 1000, &sensorSim::obstacle_update_parser, this);
+	ros::Subscriber AISsub = nh.subscribe("sensors/ais", 1000, &sensorSim::AIS_parser, this);
 
 	AIStimer = new QTimer();
 	DTtimer = new QTimer();
@@ -41,6 +42,9 @@ void sensorSim::run()
 	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(print_detected_targets()) );
 	AIStimer->start(2000);
 	DTtimer->start(1000);
+
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
 	QThread::exec();
 }
 
@@ -49,43 +53,46 @@ void sensorSim::print_USV_AIS_msg()
 {
 	std::lock_guard<std::mutex> lock(m);
 	USVnavData.set_time(QTime::currentTime());
+	/*
 	qDebug() << "\n---------------------Publish USV AIS message---------------------";
 	USVnavData.print_data();
 	qDebug() << "-----------------------------------------------------------------\n";
+	*/
 }
 
 
 void sensorSim::print_detected_targets()
 {
 	std::lock_guard<std::mutex> lock(m);
-	if ( !obstPositions.empty() )
-		qDebug() << "Printing all detected obstacles:";
+	if ( !unidentifiedObjects.empty() ){
+		// qDebug() << "Printing all detected obstacles:";
+	}
 	
 	vector<string> outdatedObstacles;
 
 	// Print obstacle position info and find outdated obstacles
-	for( auto const& obst : obstPositions )
+	for( auto const& obst : unidentifiedObjects )
 	{
 		QTime now = QTime::currentTime();
-		if( obst.second.time.msecsTo(now) > 1000)
+		if( obst.second.timeStamp.msecsTo(now) > 1000)
 		{
 			string obstID = obst.first;
 			outdatedObstacles.push_back(obstID);
 		}
 		else
 		{
+			/* 
 			qDebug() << obst.first.c_str() << ":";
 			obst.second.print();
 			qDebug() << "------------------------";
+			*/
 		}
 	}
 
 	// Delete old obstacles
 	for ( auto const& ID : outdatedObstacles ) 
 	{
-    	obstPositions.erase(ID);
-		qDebug() << "Erased " << ID.c_str() << "from map";
-		qDebug() << "-------------------------";
+    	unidentifiedObjects.erase(ID);
 	}
 }
 
@@ -108,8 +115,24 @@ void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstP
 	std::lock_guard<std::mutex> lock(m);
 	if( obstUpdateMsg->msgDescriptor == "position_update" )
 	{
-		string ID = obstUpdateMsg->objectID;
-		obstPositions[ID] = gpsData(obstUpdateMsg->longitude, obstUpdateMsg->latitude, obstUpdateMsg->heading);		
+		if(obstUpdateMsg->objectDescriptor == "fixed_obstacle"){
+			string ID = obstUpdateMsg->objectID;
+			unidentifiedObjects[ID] = gpsPointStamped(obstUpdateMsg->longitude, obstUpdateMsg->latitude, obstUpdateMsg->heading);			
+		}
+		
 	}
+}
 
+void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
+{
+	std::lock_guard<std::mutex> lock(m);
+	navData nd(AISmsg->MMSI, AISmsg->longitude, AISmsg->latitude, AISmsg->SOG, AISmsg->track);
+	nd.set_nav_status((navStatus)AISmsg->status);
+	nd.set_ROT(AISmsg->ROT);
+	nd.set_position_accuracy((posAccuracy)AISmsg->positionAccuracy);
+	nd.set_COG(AISmsg->COG);
+	nd.set_time(QTime(AISmsg->hour, AISmsg->minute, AISmsg->second));
+	detectedAISusers[AISmsg->MMSI] = nd;
+
+	//TODO: sende disse over til gui som plotter i rviz
 }

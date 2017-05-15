@@ -15,6 +15,7 @@ SET(gui_SOURCES
 	src/satelliteview.cpp
 	src/obstacleinterface.cpp
 	src/posUpdateHandler.cpp
+	src/RVIZ_Interface.cpp
 	../environment/src/gpsTools.cpp
 	)
 SET(gui_FORMS 
@@ -28,6 +29,7 @@ SET(gui_HEADERS
 	src/obstacleinterface.h
 	src/watchDog.h
 	src/posUpdateHandler.h
+	src/RVIZ_Interface.h
 	../environment/src/gpsTools.h
 	)
 

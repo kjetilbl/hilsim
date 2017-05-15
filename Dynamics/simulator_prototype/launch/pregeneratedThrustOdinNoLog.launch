@@ -10,6 +10,7 @@
 
     <param name="hil/robot_description" textfile="$(find simulator_prototype)/config/models/Odin.urdf" />
     <param name="hil/obstacle_description3" textfile="$(find simulator_prototype)/config/models/Obstacle3.urdf" />
+    <param name="hil/class_A_ship_description" textfile="$(find simulator_prototype)/config/models/class_A_ship.urdf" />
 
     <node pkg="txt_to_actuator_info" name="actuator_node" type="txt_to_actuator_info" respawn="false" output="screen">
     </node>

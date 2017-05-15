@@ -5,6 +5,7 @@
 #include <string>
 #include "stdint.h"
 #include <math.h>
+#include "simulator_messages/AIS.h"
 
 using namespace std;
 
@@ -48,6 +49,7 @@ public:
 			double trackDeg = 0);
 
 	string get_AIS_class_A_position_report() const;
+	simulator_messages::AIS get_AIS_ros_msg();
 	void print_data() const;
 	
 	void set_nav_status(navStatus ns);

@@ -12,6 +12,7 @@ SET(environment_SOURCES
 	src/sensorsim.cpp
 	src/navData.cpp
 	src/gpsTools.cpp
+	src/simObject.cpp
 	)
 
 SET(environment_HEADERS 
@@ -19,6 +20,7 @@ SET(environment_HEADERS
 	src/sensorsim.h
 	src/navData.h
 	src/gpsTools.h
+	src/simObject.h
 	)
 
 QT4_WRAP_CPP(environment_HEADERS_MOC ${environment_HEADERS})
@@ -34,13 +36,13 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## Declare ROS messages and services
- add_message_files(
-   DIRECTORY
-   msg
-   FILES
-   obstacleUpdate.msg
-   obstacleCmd.msg
- )
+# add_message_files(
+#   DIRECTORY
+#   msg
+#   FILES
+#   obstacleUpdate.msg
+#   obstacleCmd.msg
+# )
 
 ## Generate added messages and services
 generate_messages(DEPENDENCIES std_msgs)
