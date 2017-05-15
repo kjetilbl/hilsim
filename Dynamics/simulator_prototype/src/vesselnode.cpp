@@ -79,31 +79,27 @@ void VesselNode::initializeActuatorMarkers(){
 	actuator_2_marker.header.frame_id = tf_name;
     actuator_2_marker.header.stamp = ros::Time::now();
 
-    // Set the namespace and id for this marker.  This serves to create a unique ID
-    // Any marker sent with the same namespace and id will overwrite the old one
     actuator_1_marker.ns = "Actuator 1 Visualization";
     actuator_1_marker.id = 0; 
 	actuator_2_marker.ns = "Actuator 2 Visualization";
     actuator_2_marker.id = 1; 
     Vector6d actuator_states = vessel.actuators.getActuatorState();
-    // Set the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
+
     actuator_1_marker.type = visualization_msgs::Marker::ARROW;
  	actuator_2_marker.type = visualization_msgs::Marker::ARROW;
 
-    // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
     actuator_1_marker.action = visualization_msgs::Marker::ADD;
 	actuator_2_marker.action = visualization_msgs::Marker::ADD;
 
-    // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
     actuator_1_marker.pose.position.x = actuator_positions(0);
     actuator_1_marker.pose.position.y = actuator_positions(1);
     actuator_1_marker.pose.position.z = 0;
-    actuator_1_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI - actuator_states(3));
+    actuator_1_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI);
 
 	actuator_2_marker.pose.position.x = actuator_positions(2);
     actuator_2_marker.pose.position.y = actuator_positions(3);
     actuator_2_marker.pose.position.z = 0;
-    actuator_2_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI - actuator_states(2));
+    actuator_2_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI);
 
     double L_pp = vessel.getLength();
     actuator_1_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(1)));

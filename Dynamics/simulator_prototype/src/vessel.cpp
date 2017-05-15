@@ -423,7 +423,6 @@ void Vessel::step(){
 	calculateNextNu();
 	publishSensorData();
 	calculateEnvironmentalForces();
-
 }
 
 void Vessel::calculateEnvironmentalForces(){
