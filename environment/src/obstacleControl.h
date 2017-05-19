@@ -27,7 +27,7 @@ public:
 private:
 	void run();
 	void spawn_obstacles();
-	void spawn_fixed_obstacle(gpsPoint3DOF eta);
+	void spawn_fixed_obstacle(gpsPoint3DOF eta, double size);
 	gpsPoint mapOrigin;
 	void get_origin_from_sim_params(ros::NodeHandle nh);
 	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);

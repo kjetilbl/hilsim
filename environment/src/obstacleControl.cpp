@@ -30,7 +30,7 @@ void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& c
 		ROS_INFO("%s %s [%f %f %f]", cmd->cmdSpecifier.c_str(), cmd->receiverID.c_str(), cmd->x, cmd->y, cmd->psi);
 
 		gpsPoint3DOF eta0{cmd->x, cmd->y, cmd->psi};
-		spawn_fixed_obstacle(eta0);
+		spawn_fixed_obstacle(eta0, 20);
 	}
 }
 
@@ -52,7 +52,7 @@ void obstacleHandler::spawn_obstacles(){
 	gpsPoint3DOF eta0;
 	eta0.latitude = mapOrigin.latitude;
 	eta0.longitude = mapOrigin.longitude+radius*longitude_degs_pr_meter(eta0.latitude);
-	ship* ship1 = new ship(n, eta0);
+	ship* ship1 = new ship(n, eta0, 50);
 	for(int i = 1; i < 128; i++){
 		gpsPoint newWaypoint;
 		newWaypoint.longitude = mapOrigin.longitude + radius*cos(M_PI/4*i)*longitude_degs_pr_meter(eta0.latitude); //m
@@ -68,7 +68,7 @@ void obstacleHandler::spawn_obstacles(){
 	radius = radius*0.8;
 	eta0.latitude = mapOrigin.latitude;
 	eta0.longitude = mapOrigin.longitude - radius*longitude_degs_pr_meter(eta0.latitude);
-	ship* ship2 = new ship(n, eta0);
+	ship* ship2 = new ship(n, eta0, 100);
 	for(int i = 1; i < 128; i++){
 		gpsPoint newWaypoint;
 		newWaypoint.longitude = mapOrigin.longitude + radius*cos(-M_PI/4*i + M_PI)*longitude_degs_pr_meter(eta0.latitude); //m
@@ -85,19 +85,19 @@ void obstacleHandler::spawn_obstacles(){
 	for(int i = 0; i < 25; i++){
 		eta0.longitude = mapOrigin.longitude + (rand()%1000 - 500)*longitude_degs_pr_meter(mapOrigin.latitude);
 		eta0.latitude = mapOrigin.latitude + (rand()%1000 - 500)*latitude_degs_pr_meter();
-		spawn_fixed_obstacle(eta0);
+		spawn_fixed_obstacle(eta0, 15);
 	}
 
 }
 
 
-void obstacleHandler::spawn_fixed_obstacle(gpsPoint3DOF eta){
+void obstacleHandler::spawn_fixed_obstacle(gpsPoint3DOF eta, double size){
 	if ( simObjectsThread == NULL )
 	{
 		simObjectsThread = new QThread();
 		simObjectsThread->start();
 	}
-	fixedObstacle* newObstacle = new fixedObstacle(this->n, eta);
+	fixedObstacle* newObstacle = new fixedObstacle(this->n, eta, size);
 	newObstacle->moveToThread( this->simObjectsThread );
 	QObject::connect(this->simObjectsThread, SIGNAL(finished()), newObstacle, SLOT(deleteLater()) );
 	newObstacle->start();

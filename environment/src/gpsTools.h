@@ -27,6 +27,13 @@ struct gpsPointStamped : public gpsPoint3DOF
 		this->heading = Heading;
 		this->timeStamp = QTime::currentTime();
 	};
+
+	gpsPointStamped(double Longitude, double Latitude, double Heading, QTime time){
+		this->longitude = Longitude;
+		this->latitude = Latitude;
+		this->heading = Heading;
+		this->timeStamp = time;
+	};
 	QTime timeStamp;
 };
 

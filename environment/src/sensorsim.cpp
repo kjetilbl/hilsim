@@ -13,6 +13,18 @@
 #define TWO_BIT_MASK 		0b00000011
 #define ONE_BIT_MASK 		0b00000001
 
+uint32_t detectedObject::targetIterator = 0;
+
+simulator_messages::detectedTarget makeDTmsg(detectedObject obj){
+	simulator_messages::detectedTarget dt;
+	dt.targetID = "detected_target_" + to_string(obj.get_target_number());
+	dt.longitude = obj.get_estimated_position().longitude;
+	dt.latitude = obj.get_estimated_position().latitude;
+	dt.COG = obj.get_estimated_COG();
+	dt.size = obj.get_estimated_CS();
+	return dt;
+}
+
 //----------------------------------------------------------------------------------------
 //----------------------------------------sensorSim----------------------------------------
 //----------------------------------------------------------------------------------------
@@ -35,13 +47,14 @@ void sensorSim::run()
 	ros::Subscriber USVupdateSub = nh.subscribe("sensors/gps", 1000, &sensorSim::USV_gps_parser, this);
 	ros::Subscriber obstUpdateSub = nh.subscribe("/simObject/position", 1000, &sensorSim::obstacle_update_parser, this);
 	ros::Subscriber AISsub = nh.subscribe("sensors/ais", 1000, &sensorSim::AIS_parser, this);
+	detectedTargetPub = nh.advertise<simulator_messages::detectedTarget>("sensors/target_detection", 1000);
 
 	AIStimer = new QTimer();
 	DTtimer = new QTimer();
 	QObject::connect( AIStimer, SIGNAL(timeout()), this, SLOT(print_USV_AIS_msg()) );
 	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(print_detected_targets()) );
 	AIStimer->start(2000);
-	DTtimer->start(1000);
+	DTtimer->start(500);
 
 	ros::AsyncSpinner spinner(1);
 	spinner.start();
@@ -71,16 +84,20 @@ void sensorSim::print_detected_targets()
 	vector<string> outdatedObstacles;
 
 	// Print obstacle position info and find outdated obstacles
-	for( auto const& obst : unidentifiedObjects )
+	for( auto & obst : unidentifiedObjects )
 	{
 		QTime now = QTime::currentTime();
-		if( obst.second.timeStamp.msecsTo(now) > 1000)
+		string obstID = obst.first;
+		if( obst.second.truePos.timeStamp.msecsTo(now) > 2000)
 		{
-			string obstID = obst.first;
 			outdatedObstacles.push_back(obstID);
 		}
 		else
 		{
+			obst.second.make_parameter_estimates(distance_m(USVnavData.get_position(), obst.second.truePos));
+			simulator_messages::detectedTarget dt = makeDTmsg(obst.second);
+			detectedTargetPub.publish(dt);
+			//qDebug() << "DT: " << dt.targetID.c_str() << dt.longitude << dt.latitude;
 			/* 
 			qDebug() << obst.first.c_str() << ":";
 			obst.second.print();
@@ -113,13 +130,34 @@ void sensorSim::USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMs
 void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg)
 {
 	std::lock_guard<std::mutex> lock(m);
+	gpsPointStamped obstPos(obstUpdateMsg->longitude, obstUpdateMsg->latitude, obstUpdateMsg->heading);
+	double crossSection = obstUpdateMsg->size;
+	double COG = obstUpdateMsg->heading;
+	double SOG = 0;
+
 	if( obstUpdateMsg->msgDescriptor == "position_update" )
 	{
 		if(obstUpdateMsg->objectDescriptor == "fixed_obstacle"){
-			string ID = obstUpdateMsg->objectID;
-			unidentifiedObjects[ID] = gpsPointStamped(obstUpdateMsg->longitude, obstUpdateMsg->latitude, obstUpdateMsg->heading);			
+
+			if (!is_within_visibility(obstPos, obstUpdateMsg->size))
+			{
+				return;
+			}
+
+			string objectID = obstUpdateMsg->objectID;
+			map<string, detectedObject>::iterator it = unidentifiedObjects.find(objectID);
+			if( it != unidentifiedObjects.end() )
+			{
+				// Object already detected
+				unidentifiedObjects[objectID].truePos = obstPos;
+				unidentifiedObjects[objectID].trueCS = crossSection;
+				unidentifiedObjects[objectID].trueCOG = COG;
+				unidentifiedObjects[objectID].trueSOG = SOG;
+			}else
+			{
+				unidentifiedObjects[objectID] = detectedObject(obstPos, crossSection, COG, SOG);
+			}
 		}
-		
 	}
 }
 
@@ -135,4 +173,42 @@ void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
 	detectedAISusers[AISmsg->MMSI] = nd;
 
 	//TODO: sende disse over til gui som plotter i rviz
+}
+
+bool sensorSim::is_within_visibility(gpsPoint obstaclePosition, double crossSection){
+	//Check range
+	gpsPointStamped usvPos = USVnavData.get_position();
+	double distanceToObject = distance_m(usvPos, obstaclePosition);
+	if (distanceToObject > radarRange)
+	{
+		return false;
+	}
+	if (crossSection/distanceToObject < 0.01)
+	{
+		return false;
+	}
+
+	// Check if behind other objects
+
+	//
+	return true;
+}
+
+detectedObject::detectedObject(gpsPointStamped truePosition, 
+								double trueCrossSection, 
+								double trueCourseOverGround, 
+								double trueSpeedOverGround){
+	truePos = truePosition;
+	trueCS = trueCrossSection;
+	trueCOG = trueCourseOverGround;
+	trueSOG = trueSpeedOverGround;
+	targetNumber = targetIterator++;
+	make_parameter_estimates(1);
+}
+
+void detectedObject::make_parameter_estimates(double distanceFromUSV){
+	estimatedPos = truePos;
+	estimatedCS = trueCS;
+	estimatedCOG = trueCOG;
+	estimatedSOG = trueSOG;
 }

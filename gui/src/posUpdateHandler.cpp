@@ -26,7 +26,8 @@ void posUpdateHandler::run()
 {
 	obstUpdateSub = nh.subscribe("/simObject/position", 1000, &posUpdateHandler::obstUpdateParser, this);
 	gpsSub = nh.subscribe("sensors/gps", 1000, &posUpdateHandler::gpsParser, this);
-	
+	detectedTargetSub = nh.subscribe("sensors/target_detection", 1000, &posUpdateHandler::detectedTargetParser, this);
+
 	ros::AsyncSpinner spinner(1);
 	spinner.start();
 	QThread::exec();}
@@ -72,5 +73,15 @@ void posUpdateHandler::gpsParser(const simulator_messages::Gps::ConstPtr& gpsMsg
 	sv->simTargetMoveTo(pos);
 	headingPlot->updateValues(gpsMsg->heading, gpsMsg->heading - 1);
 	velocityPlot->updateValues(gpsMsg->speed, gpsMsg->speed - 0.5);
+}
+
+
+
+void posUpdateHandler::detectedTargetParser(const simulator_messages::detectedTarget::ConstPtr& dtMsg)
+{
+	string targetID = dtMsg->targetID;
+	gpsPointStamped pos(dtMsg->longitude, dtMsg->latitude, dtMsg->COG);
+	uint8_t size = dtMsg->size;
+	rviz->show_detected_target(targetID, pos, size);
 }
 

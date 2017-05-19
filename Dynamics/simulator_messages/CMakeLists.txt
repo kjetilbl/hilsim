@@ -26,6 +26,7 @@ add_message_files(
   Gps.msg
   ActuatorMessage.msg
   AIS.msg
+  detectedTarget.msg
 )
 
 

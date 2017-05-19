@@ -17,7 +17,7 @@ simObject::simObject( const simObject& other )
 	this->eta = other.eta;
 }
 
-simObject::simObject(ros::NodeHandle nh, string obstID, gpsPoint3DOF eta0, QThread *parent) : QThread(parent)
+simObject::simObject(ros::NodeHandle nh, string obstID, gpsPoint3DOF eta0, double Size, QThread *parent) : QThread(parent)
 {
 	this->n = nh;
 	this->cmdSub = n.subscribe("/simObject/command", 1000, &simObject::command_parser, this);
@@ -25,6 +25,7 @@ simObject::simObject(ros::NodeHandle nh, string obstID, gpsPoint3DOF eta0, QThre
 
 	this->ID = obstID;
 	this->eta = eta0;
+	this->size = Size;
 
 }
 
@@ -53,7 +54,7 @@ void simObject::publish_position_report()
 
 void simObject::command_parser(const environment::obstacleCmd::ConstPtr& cmd)
 {
-	ROS_INFO("%s received a new command!", this->ID.c_str()); // Forbeholdt terminate-kommando
+	// Forbeholdt terminate-kommando
 }
 
 
@@ -68,6 +69,7 @@ environment::obstacleUpdate simObject::make_position_update_msg()
 	posUpdate.longitude = this->eta.longitude;
 	posUpdate.latitude = this->eta.latitude;
 	posUpdate.heading = this->eta.heading;
+	posUpdate.size = this->size;
 	return posUpdate;
 }
 
@@ -84,8 +86,8 @@ gpsPoint3DOF simObject::get_eta()
 }
 
 
-fixedObstacle::fixedObstacle( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
-							: simObject( nh, "fixed_obstacle_"+to_string(this->IDiterator++), eta0, parent )
+fixedObstacle::fixedObstacle( ros::NodeHandle nh, gpsPoint3DOF eta0, double Size, QThread *parent ) 
+							: simObject( nh, "fixed_obstacle_"+to_string(this->IDiterator++), eta0, Size, parent )
 {
 	this->objectDescriptor = "fixed_obstacle";
 }
@@ -98,8 +100,8 @@ void fixedObstacle::run(){
 }
 
 
-aisUser::aisUser( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
-				: simObject( nh, "AIS_user_"+to_string(this->IDiterator), eta0, parent )
+aisUser::aisUser( ros::NodeHandle nh, gpsPoint3DOF eta0, double Size, QThread *parent ) 
+				: simObject( nh, "AIS_user_"+to_string(this->IDiterator), eta0, Size, parent )
 {
 	this->set_MMSI(IDiterator++);
 	this->AISpub = nh.advertise<simulator_messages::AIS>("sensors/ais", 1000);
@@ -188,8 +190,8 @@ void aisUser::initiate_AIS_broadcast(uint16_t intervalMs){
 
 
 
-ship::ship( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
-				: aisUser( nh, eta0, parent )
+ship::ship( ros::NodeHandle nh, gpsPoint3DOF eta0, double Size, QThread *parent ) 
+				: aisUser( nh, eta0, Size, parent )
 {
 	this->objectDescriptor = "ship";
 	this->set_status(UNDERWAY_USING_ENGINE);
