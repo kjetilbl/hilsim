@@ -4,6 +4,11 @@
 #include <QTime>
 
 struct gpsPoint {
+	gpsPoint(){};
+	gpsPoint(double Longitude, double Latitude){
+		this->longitude = Longitude;
+		this->latitude = Latitude;
+	}
 	double longitude = 0;
 	double latitude = 0;
 };
@@ -42,6 +47,8 @@ double deg2rad(double degrees);
 double distance_m(gpsPoint a, gpsPoint b);
 
 double compass_bearing(gpsPoint from, gpsPoint to);
+
+bool is_within_bearing_range(double bearing, double min, double max);
 
 double latitude_degs_pr_meter();
 

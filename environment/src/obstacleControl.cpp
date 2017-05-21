@@ -80,9 +80,13 @@ void obstacleHandler::spawn_obstacles(){
 	ship2->start();
 	simObjects.push_back( ship2 );
 	
+	eta0.longitude = mapOrigin.longitude;
+	eta0.latitude = mapOrigin.latitude;
+
+	spawn_fixed_obstacle(eta0, 100);
 
 	// Spawn obstacles
-	for(int i = 0; i < 25; i++){
+	for(int i = 0; i < 100; i++){
 		eta0.longitude = mapOrigin.longitude + (rand()%1000 - 500)*longitude_degs_pr_meter(mapOrigin.latitude);
 		eta0.latitude = mapOrigin.latitude + (rand()%1000 - 500)*latitude_degs_pr_meter();
 		spawn_fixed_obstacle(eta0, 15);

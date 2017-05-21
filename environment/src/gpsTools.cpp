@@ -1,5 +1,6 @@
 #include "gpsTools.h"
-#include <math.h>  
+#include <math.h>
+#include <cmath>
 #include <QDebug>
 
 double deg2rad(double degrees){
@@ -32,6 +33,21 @@ double compass_bearing(gpsPoint from, gpsPoint to){
 	if(bearing >= 360) bearing -= 360;
 
 	return bearing;
+}
+
+bool is_within_bearing_range(double bearing, double min, double max){
+	int intMin = floor(min);
+	int intMax = ceil(max);
+	int intBearing = round(bearing);
+	intMin = intMin % 360;
+	int degsFromMinToNorth = 360 - intMin;
+	intMax = (intMax + degsFromMinToNorth) % 360;
+	intBearing = (intBearing + degsFromMinToNorth) % 360;
+	if (intBearing <= intMax)
+	{
+		return true;
+	}
+	return false;
 }
 
 double latitude_degs_pr_meter()

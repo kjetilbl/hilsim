@@ -9,6 +9,8 @@
 #include <string>
 #include <map>
 #include <mutex>
+#include <iostream>
+#include "Eigen/Dense"
 
 #include "navData.h"
 #include "gpsTools.h"
@@ -39,12 +41,12 @@ private:
 	void obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
 	void AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg);
 
-	bool is_within_visibility(gpsPoint obstaclePosition, double crossSection);
+	bool is_within_visibility(string ID, gpsPoint obstaclePosition, double crossSection);
 
 	navData USVnavData;
 
 	mutex m;
-	double radarRange = 100;
+	double radarRange = 200;
 	ros::NodeHandle nh;
 	ros::Publisher detectedTargetPub;
 	QTimer *AIStimer;
@@ -56,26 +58,37 @@ private:
 class detectedObject
 {
 public:
-	detectedObject(gpsPointStamped truePosition, double trueCrossSection, double trueCOG, double trueSOG);
-	detectedObject(){};
-	void make_parameter_estimates(double distanceFromUSV);
-	uint32_t get_target_number(){ return targetNumber; }
-	gpsPointStamped get_estimated_position(){ return estimatedPos; }
-	double get_estimated_CS(){ return estimatedCS; }
-	double get_estimated_COG(){ return estimatedCOG; }
-	double get_estimated_SOG(){ return estimatedSOG; }
-	gpsPointStamped truePos;
-	double trueCS; //m²
-	double trueCOG;
-	double trueSOG;
+	detectedObject(gpsPoint truePosition, double trueCOG, double trueSOG, double trueCrossSection);
+	detectedObject();
+	void make_parameter_estimates(double distanceFromUSV_m );
+	uint32_t get_target_number() { return targetNumber; } // TODO: make const
+	gpsPoint get_true_position() { return gpsPoint(X(0), X(1)); }
+	double get_true_CS(){ return X(4); }
+	gpsPoint get_estimated_position(){ return gpsPoint(Xm(0), Xm(1)); }
+	double get_estimated_COG(){ return Xm(2); }
+	double get_estimated_SOG(){ return Xm(3); }
+	double get_estimated_CS(){ return Xm(4); }
+	void update_true_states(gpsPoint pos, double COG, double SOG, double crossSection);
+	int msecs_since_last_update(){ return lastUpdate.msecsTo(QTime::currentTime()); }
+	simulator_messages::detectedTarget makeDTmsg();
  
 private:
+	void set_true_position(gpsPoint truePos);
+	void set_true_COG(double trueCOG);
+	void set_true_SOG(double trueSOG);
+	void set_true_cross_section(double trueCS);
+
 	static uint32_t targetIterator;
 	uint32_t targetNumber;
-	gpsPointStamped estimatedPos;
-	double estimatedCS; //m²
-	double estimatedCOG;
-	double estimatedSOG;
+	QTime lastUpdate;
+	Eigen::VectorXd X; // true states
+	Eigen::VectorXd Xm; // measured states
+	Eigen::VectorXd b; // bias
+	Eigen::MatrixXd T; // continous-time bias state matrix
+	Eigen::MatrixXd Td; // discrete-time bias system matrix
+	Eigen::VectorXd biasSigmas; // characteristic standard deviations of bias white noise
+	Eigen::VectorXd measureSigmas; // characteristic standard deviations of measurement white noise
+	Eigen::MatrixXd errorPrDistanceGain;
 };
 
 

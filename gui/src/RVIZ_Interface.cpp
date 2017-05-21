@@ -13,7 +13,7 @@ rvizInterface::rvizInterface(ros::NodeHandle nh){
 }
 
 
-void rvizInterface::set_object(string objectID, gpsPoint3DOF position){
+void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double crossSection){
 	visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
     marker.header.frame_id = "map";
@@ -85,9 +85,9 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position){
 	    marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
 
 	    // Set the scale of the marker -- 1x1x1 here means 1m on a side
-	    marker.scale.x = 10;
-	    marker.scale.y = 10;
-	    marker.scale.z = 10;
+	    marker.scale.x = sqrt(crossSection);
+	    marker.scale.y = sqrt(crossSection);
+	    marker.scale.z = sqrt(crossSection);
 
 	    // Set the color -- be sure to set alpha to something non-zero!
 	    marker.color.r = 1;
@@ -173,19 +173,20 @@ void rvizInterface::show_detected_target(string targetID, gpsPointStamped positi
 	    marker.pose.orientation.z = sin(deg2rad(-position.heading/2));;
 	    marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
 
+
 	    // Set the scale of the marker -- 1x1x1 here means 1m on a side
-	    marker.scale.x = size;
-	    marker.scale.y = size;
-	    marker.scale.z = size;
+	    marker.scale.x = sqrt(size);
+	    marker.scale.y = sqrt(size);
+	    marker.scale.z = sqrt(size);
 
 	    // Set the color -- be sure to set alpha to something non-zero!
 	    marker.color.r = 1;
 	    marker.color.g = 0;
 	    marker.color.b = 0;
-	    marker.color.a = 0.3;
+	    marker.color.a = 1;
     }
 
-    marker.lifetime = ros::Duration(1);
+    marker.lifetime = ros::Duration(2);
     objectPub.publish(marker);
 }
 

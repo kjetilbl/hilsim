@@ -1,4 +1,5 @@
 #include "posUpdateHandler.h"
+#include <QTime>
 
 
 posUpdateHandler::posUpdateHandler(ros::NodeHandle n, satelliteView *Sv, realtimePlot *hdngPlot, realtimePlot *velPlot)
@@ -42,6 +43,7 @@ void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::Const
 		double longitude = updateMsg->longitude;
 		double latitude = updateMsg->latitude;
 		double heading = updateMsg->heading;
+		double crossSection = updateMsg->size;
 		
 		gpsPointStamped pos(updateMsg->longitude, updateMsg->latitude, updateMsg->heading);
 
@@ -54,7 +56,7 @@ void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::Const
 			sv->addSimObject(ID, objectDescriptor, longitude, latitude, heading);
 		}
 
-		rviz->set_object(ID, gpsPoint3DOF{longitude, latitude, heading});
+		rviz->set_object(ID, gpsPoint3DOF{longitude, latitude, heading}, crossSection);
 	}
 }
 
@@ -78,7 +80,19 @@ void posUpdateHandler::gpsParser(const simulator_messages::Gps::ConstPtr& gpsMsg
 
 
 void posUpdateHandler::detectedTargetParser(const simulator_messages::detectedTarget::ConstPtr& dtMsg)
-{
+{	
+	/*
+	static QTime lastTime = QTime::currentTime();
+	static int count = 0;
+	QTime now = QTime::currentTime();
+	if (lastTime.msecsTo(now) > 700){
+		qDebug() << "GUI received" << count << "detected objects.";
+		count = 0;
+	}
+	count++;
+	lastTime = now;
+	*/
+
 	string targetID = dtMsg->targetID;
 	gpsPointStamped pos(dtMsg->longitude, dtMsg->latitude, dtMsg->COG);
 	uint8_t size = dtMsg->size;
