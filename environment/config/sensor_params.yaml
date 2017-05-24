@@ -1,0 +1,22 @@
+radar_range: 500
+
+position_bias_sigma: 1
+COG_bias_sigma: 2
+SOG_bias_sigma: 0.5
+size_bias_sigma: 1
+
+position_measure_sigma: 0
+COG_measure_sigma: 0
+SOG_measure_sigma: 0
+size_measure_sigma: 0
+
+position_error_pr_distance_gain: 0.002
+COG_error_pr_distance_gain: 0.002
+SOG_error_pr_distance_gain: 0.001
+size_error_pr_distance_gain: 0.003
+
+position_bias_time_constant: 20
+COG_bias_time_constant: 100
+SOG_bias_time_constant: 10
+size_bias_time_constant: 200
+

@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
 	// Start simulation of sensors:
 	QThread *sensorThread = new QThread();
-    sensorSim *sensorSimulator = new sensorSim(nh);
+    sensorSim *sensorSimulator = new sensorSim(&nh);
     sensorSimulator->moveToThread(sensorThread);
     QObject::connect(sensorThread, SIGNAL(finished()), sensorSimulator, SLOT(deleteLater()) );
     sensorThread->start();
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
     // Start simulation of obstacles:
     QThread *obstacleThread = new QThread();
-    obstacleHandler *oh = new obstacleHandler(nh);
+    obstacleHandler *oh = new obstacleHandler(&nh);
     oh->moveToThread(obstacleThread);
     QObject::connect(obstacleThread, SIGNAL(finished()), oh, SLOT(deleteLater()) );
     obstacleThread->start();

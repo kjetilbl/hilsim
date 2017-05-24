@@ -1,5 +1,6 @@
-string targetID
+int32 targetID
+string objectDescriptor
 float64 longitude
 float64 latitude
 float64 COG
-uint8 size
+float64 crossSection

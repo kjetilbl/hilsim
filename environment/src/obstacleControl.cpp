@@ -1,11 +1,40 @@
 #include "obstacleControl.h"
+#include <stdlib.h>
+#include <math.h>
+
+gpsPoint get_coordinate_from_string(string coordAsString){
+	stringstream ss;
+	ss.str(coordAsString);
+	string longitudeAsString;
+	string latitudeAsString;
+	getline(ss,longitudeAsString, '/');
+	getline(ss,latitudeAsString, '/');
+	double longitude = atof(longitudeAsString.c_str());
+	double latitude = atof(latitudeAsString.c_str());
+	if(abs(longitude) > 180 || abs(latitude) > 90){
+		qDebug() << "Invalid coordinate" << longitude << latitude;
+		return gpsPoint(0,0);
+	}
+	return gpsPoint(longitude, latitude);
+}
+
+vector<string> split_string(string myString, char splitChar){
+	stringstream ss;
+    ss.str(myString);
+    string tempString;
+    vector<string> v;;
+   	while( getline(ss, tempString, splitChar)){
+   		v.push_back(tempString);
+   	}
+   	return v;
+}
 
 
-
-obstacleHandler::obstacleHandler(ros::NodeHandle nh, QThread *parent ) : QThread(parent) {
-	this->n = nh;
-	this->cmdSub = nh.subscribe("/simObject/command", 1000, &obstacleHandler::command_parser, this);
-	get_origin_from_sim_params(nh);
+obstacleHandler::obstacleHandler(ros::NodeHandle *n, QThread *parent ) : QThread(parent) {
+	this->nh = n;
+	this->cmdSub = nh->subscribe("/simObject/command", 1000, &obstacleHandler::command_parser, this);
+	get_origin_from_sim_params(*nh);
+	
 }
 
 obstacleHandler::~obstacleHandler(){
@@ -47,51 +76,59 @@ void obstacleHandler::run()
 }
 
 void obstacleHandler::spawn_obstacles(){
-	// Spawn ships
-	double radius = 450;
+
+	// Spawn ships requested in .yaml file
+	map<string, string> requestedShips;
+	nh->getParam("ships", requestedShips);
+	for(auto const& shipDescriptor: requestedShips){
+	    vector<gpsPoint> waypoints;
+	    double size = 1;
+
+	    vector<string> shipParameters = split_string(shipDescriptor.second, ' ');
+	    for (auto const& shipParam: shipParameters)
+	    {
+	    	vector<string> paramPair = split_string(shipParam, '=');
+	    	if (paramPair.size() != 2)
+	    	{
+	    		qDebug() << "Error in ship parameters.";
+	    	}
+	    	string key = paramPair.front();
+	    	string value = paramPair.back();
+	   		if (key == "WP")
+	   		{
+	   			waypoints.push_back( get_coordinate_from_string(value) );
+	   		}
+	   		else if (key == "Size")
+	   		{
+	   			size = atof(value.c_str());
+	   		}
+	   		else{
+	   			qDebug() << "Unknown key" << key.c_str() << "in ship parameters.";
+	   		}
+	    }
+	   	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, 0);
+	   	ship* newShip = new ship(nh, eta0, pow(size,2));
+	   	for (auto const& WP: waypoints)
+	   	{
+	   		newShip->add_waypoint(WP);
+	   	}
+
+	   	newShip->moveToThread(simObjectsThread);
+		QObject::connect(simObjectsThread, SIGNAL(finished()), newShip, SLOT(deleteLater()) );
+		newShip->start();
+		simObjects.push_back( newShip );
+	}
+
+
+	// Spawn obstacles in random places. As many as requested in .yaml file
 	gpsPoint3DOF eta0;
-	eta0.latitude = mapOrigin.latitude;
-	eta0.longitude = mapOrigin.longitude+radius*longitude_degs_pr_meter(eta0.latitude);
-	ship* ship1 = new ship(n, eta0, 50);
-	for(int i = 1; i < 128; i++){
-		gpsPoint newWaypoint;
-		newWaypoint.longitude = mapOrigin.longitude + radius*cos(M_PI/4*i)*longitude_degs_pr_meter(eta0.latitude); //m
-		newWaypoint.latitude = mapOrigin.latitude + radius*sin(M_PI/4*i)*latitude_degs_pr_meter(); //m
-		ship1->add_waypoint(newWaypoint);
-	}
-	ship1->moveToThread(simObjectsThread);
-	QObject::connect(simObjectsThread, SIGNAL(finished()), ship1, SLOT(deleteLater()) );
-	ship1->start();
-	simObjects.push_back( ship1 );
-
-
-	radius = radius*0.8;
-	eta0.latitude = mapOrigin.latitude;
-	eta0.longitude = mapOrigin.longitude - radius*longitude_degs_pr_meter(eta0.latitude);
-	ship* ship2 = new ship(n, eta0, 100);
-	for(int i = 1; i < 128; i++){
-		gpsPoint newWaypoint;
-		newWaypoint.longitude = mapOrigin.longitude + radius*cos(-M_PI/4*i + M_PI)*longitude_degs_pr_meter(eta0.latitude); //m
-		newWaypoint.latitude = mapOrigin.latitude + radius*sin(-M_PI/4*i + M_PI)*latitude_degs_pr_meter();
-		ship2->add_waypoint(newWaypoint);
-	}
-	ship2->moveToThread(simObjectsThread);
-	QObject::connect(simObjectsThread, SIGNAL(finished()), ship2, SLOT(deleteLater()) );
-	ship2->start();
-	simObjects.push_back( ship2 );
-	
-	eta0.longitude = mapOrigin.longitude;
-	eta0.latitude = mapOrigin.latitude;
-
-	spawn_fixed_obstacle(eta0, 100);
-
-	// Spawn obstacles
-	for(int i = 0; i < 100; i++){
+	int numberOfObstacles;
+	nh->getParam("n_fixed_obstacles", numberOfObstacles);
+	for(int i = 0; i < numberOfObstacles; i++){
 		eta0.longitude = mapOrigin.longitude + (rand()%1000 - 500)*longitude_degs_pr_meter(mapOrigin.latitude);
 		eta0.latitude = mapOrigin.latitude + (rand()%1000 - 500)*latitude_degs_pr_meter();
-		spawn_fixed_obstacle(eta0, 15);
+		spawn_fixed_obstacle(eta0, 100);
 	}
-
 }
 
 
@@ -101,7 +138,7 @@ void obstacleHandler::spawn_fixed_obstacle(gpsPoint3DOF eta, double size){
 		simObjectsThread = new QThread();
 		simObjectsThread->start();
 	}
-	fixedObstacle* newObstacle = new fixedObstacle(this->n, eta, size);
+	fixedObstacle* newObstacle = new fixedObstacle(this->nh, eta, size);
 	newObstacle->moveToThread( this->simObjectsThread );
 	QObject::connect(this->simObjectsThread, SIGNAL(finished()), newObstacle, SLOT(deleteLater()) );
 	newObstacle->start();

@@ -93,9 +93,10 @@ void posUpdateHandler::detectedTargetParser(const simulator_messages::detectedTa
 	lastTime = now;
 	*/
 
-	string targetID = dtMsg->targetID;
+	int targetID = dtMsg->targetID;
+	string objectDescriptor = dtMsg->objectDescriptor;
 	gpsPointStamped pos(dtMsg->longitude, dtMsg->latitude, dtMsg->COG);
-	uint8_t size = dtMsg->size;
-	rviz->show_detected_target(targetID, pos, size);
+	double crossSection = dtMsg->crossSection;
+	rviz->show_detected_target(targetID, objectDescriptor, pos, crossSection);
 }
 

@@ -21,7 +21,7 @@ class obstacleHandler : public QThread
 {
 	Q_OBJECT
 public:
-	obstacleHandler(ros::NodeHandle nh, QThread *parent = 0);
+	obstacleHandler(ros::NodeHandle *n, QThread *parent = 0);
 	~obstacleHandler();
 
 private:
@@ -31,7 +31,7 @@ private:
 	gpsPoint mapOrigin;
 	void get_origin_from_sim_params(ros::NodeHandle nh);
 	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);
-	ros::NodeHandle n;
+	ros::NodeHandle *nh;
 	ros::Subscriber cmdSub;
 	QThread *simObjectsThread = NULL;
 	vector<simObject*> simObjects = vector<simObject*>(0);

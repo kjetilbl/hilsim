@@ -28,15 +28,16 @@ class sensorSim : public QThread
 {
 	Q_OBJECT 
 public:
-	sensorSim( ros::NodeHandle n, QThread *parent = 0 );
+	sensorSim( ros::NodeHandle *n, QThread *parent = 0 );
 	~sensorSim();
 
 private slots:
 	void print_USV_AIS_msg();
-	void print_detected_targets();
+	void publish_detected_targets();
 
 private:
 	void run();
+	bool read_sensor_config();
 	void USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg);
 	void obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
 	void AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg);
@@ -46,8 +47,8 @@ private:
 	navData USVnavData;
 
 	mutex m;
-	double radarRange = 200;
-	ros::NodeHandle nh;
+	double radarRange;
+	ros::NodeHandle *nh;
 	ros::Publisher detectedTargetPub;
 	QTimer *AIStimer;
 	QTimer *DTtimer;
@@ -58,7 +59,12 @@ private:
 class detectedObject
 {
 public:
-	detectedObject(gpsPoint truePosition, double trueCOG, double trueSOG, double trueCrossSection);
+	detectedObject(	ros::NodeHandle nh,
+					string objectDescriptor,
+					gpsPoint truePosition,
+					double trueCOG, 
+					double trueSOG, 
+					double trueCrossSection);
 	detectedObject();
 	void make_parameter_estimates(double distanceFromUSV_m );
 	uint32_t get_target_number() { return targetNumber; } // TODO: make const
@@ -71,20 +77,25 @@ public:
 	void update_true_states(gpsPoint pos, double COG, double SOG, double crossSection);
 	int msecs_since_last_update(){ return lastUpdate.msecsTo(QTime::currentTime()); }
 	simulator_messages::detectedTarget makeDTmsg();
+	bool noiseEnabled = true;
+	string descriptor;
  
 private:
+	bool read_sensor_config(ros::NodeHandle nh, gpsPoint truePosition);
 	void set_true_position(gpsPoint truePos);
 	void set_true_COG(double trueCOG);
 	void set_true_SOG(double trueSOG);
 	void set_true_cross_section(double trueCS);
 
+	bool firstTimeParamEstimate = true;
+	QTime lastEstimateTime;
 	static uint32_t targetIterator;
 	uint32_t targetNumber;
 	QTime lastUpdate;
 	Eigen::VectorXd X; // true states
 	Eigen::VectorXd Xm; // measured states
 	Eigen::VectorXd b; // bias
-	Eigen::MatrixXd T; // continous-time bias state matrix
+	Eigen::MatrixXd T; // continous-time bias system matrix
 	Eigen::MatrixXd Td; // discrete-time bias system matrix
 	Eigen::VectorXd biasSigmas; // characteristic standard deviations of bias white noise
 	Eigen::VectorXd measureSigmas; // characteristic standard deviations of measurement white noise
