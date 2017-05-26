@@ -4,6 +4,7 @@
 #include <string>
 #include <mutex>
 #include <vector>
+#include "Eigen/Dense"
 
 #include <QObject>
 #include <QThread>
@@ -37,9 +38,9 @@ protected:
 	environment::obstacleUpdate make_position_update_msg();
 	string objectDescriptor;
 	string ID;
+	ros::NodeHandle *nh;
 
 private:
-	ros::NodeHandle *nh;
 	QTimer *posReportTimer = NULL;
 	mutex m;
 	double size;
@@ -90,12 +91,18 @@ protected:
 	void set_pos_accuracy(posAccuracy accuracy);
 	posAccuracy get_pos_accuracy();
 	void initiate_AIS_broadcast(uint16_t intervalMs);
+	void pause_AIS_broadcast(){ AISenabled = false; }
+	void continue_AIS_broadcast(){ AISenabled =true; }
 
 
 private:
+	bool read_AIS_config();
+	Eigen::VectorXd get_estimated_nav_parameters();
 	mutex activeObjMutex;
 
 	static int IDiterator;
+	bool AISenabled = true;
+	uint16_t AISinterval;
 	QTimer *AIStimer = NULL;
 	uint32_t MMSI;
 	navStatus status;
@@ -103,6 +110,16 @@ private:
 	double SOG;
 	posAccuracy positionAccuracy;
 	ros::Publisher AISpub;
+
+	// Error parameters
+	bool firstTimeErrorCalc = true;
+	QTime lastErrorCalcTime;
+	bool updatedParameters = false;
+	Eigen::VectorXd b; // bias
+	Eigen::MatrixXd T; // continous-time bias system matrix
+	Eigen::MatrixXd Td; // discrete-time bias system matrix
+	Eigen::VectorXd biasSigmas; // characteristic standard deviations of bias white noise
+	Eigen::VectorXd measureSigmas; // characteristic standard deviations of measurement white noise
 };
 
 

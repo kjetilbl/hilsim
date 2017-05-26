@@ -1,22 +1,44 @@
 radar_range: 500
+AIS_range: 10000
 
-position_bias_sigma: 1
-COG_bias_sigma: 2
-SOG_bias_sigma: 0.5
-size_bias_sigma: 1
+## DTM error parameters
+DTM_position_bias_sigma: 1
+DTM_COG_bias_sigma: 2
+DTM_SOG_bias_sigma: 0.5
+DTM_size_bias_sigma: 1
 
-position_measure_sigma: 0
-COG_measure_sigma: 0
-SOG_measure_sigma: 0
-size_measure_sigma: 0
+DTM_position_measure_sigma: 0
+DTM_COG_measure_sigma: 0
+DTM_SOG_measure_sigma: 0
+DTM_size_measure_sigma: 0
 
-position_error_pr_distance_gain: 0.002
-COG_error_pr_distance_gain: 0.002
-SOG_error_pr_distance_gain: 0.001
-size_error_pr_distance_gain: 0.003
+DTM_position_error_pr_distance_gain: 0.002
+DTM_COG_error_pr_distance_gain: 0.002
+DTM_SOG_error_pr_distance_gain: 0.001
+DTM_size_error_pr_distance_gain: 0.003
 
-position_bias_time_constant: 20
-COG_bias_time_constant: 100
-SOG_bias_time_constant: 10
-size_bias_time_constant: 200
+DTM_position_bias_time_constant: 20
+DTM_COG_bias_time_constant: 10
+DTM_SOG_bias_time_constant: 10
+DTM_size_bias_time_constant: 100
+
+
+## AIS error parameters
+AIS_position_bias_sigma: 1
+AIS_COG_bias_sigma: 2
+AIS_track_bias_sigma: 2
+AIS_ROT_bias_sigma: 3
+AIS_SOG_bias_sigma: 0.5
+
+AIS_position_measure_sigma: 0
+AIS_COG_measure_sigma: 0
+AIS_track_measure_sigma: 0.5
+AIS_ROT_measure_sigma: 0.5
+AIS_SOG_measure_sigma: 0.5
+
+AIS_position_bias_time_constant: 20
+AIS_COG_bias_time_constant: 10
+AIS_track_bias_time_constant: 10
+AIS_ROT_bias_time_constant: 200
+AIS_SOG_bias_time_constant: 200
 

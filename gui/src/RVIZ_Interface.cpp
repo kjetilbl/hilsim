@@ -101,7 +101,11 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double cr
     objectPub.publish(marker);
 }
 
-void rvizInterface::show_detected_target(int targetID, string objectDescriptor, gpsPointStamped position, double crossSection){
+void rvizInterface::show_detected_target(	int targetID, 
+											string objectDescriptor, 
+											gpsPointStamped position,
+											double SOG,
+											double crossSection){
 
 	visualization_msgs::Marker marker;
     marker.header.frame_id = "map";
@@ -111,7 +115,6 @@ void rvizInterface::show_detected_target(int targetID, string objectDescriptor, 
     marker.id = targetID;
 
     marker.action = visualization_msgs::Marker::ADD;
-	marker.type = visualization_msgs::Marker::CUBE;
 
     double y = -(position.longitude - mapOrigin.longitude)/longitude_degs_pr_meter(position.latitude);
     double x = (position.latitude - mapOrigin.latitude)/latitude_degs_pr_meter();
@@ -125,6 +128,7 @@ void rvizInterface::show_detected_target(int targetID, string objectDescriptor, 
     marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
 
     if(objectDescriptor == "fixed_obstacle"){
+	marker.type = visualization_msgs::Marker::CUBE;
 	    marker.scale.x = sqrt(crossSection);
 	    marker.scale.y = sqrt(crossSection);
 	    marker.scale.z = sqrt(crossSection);
@@ -134,6 +138,7 @@ void rvizInterface::show_detected_target(int targetID, string objectDescriptor, 
 	    marker.color.b = 0;
     }
     else if( objectDescriptor == "vessel"){
+	marker.type = visualization_msgs::Marker::SPHERE;
 	    marker.scale.x = sqrt(crossSection);
 	    marker.scale.y = sqrt(crossSection)/3;
 	    marker.scale.z = sqrt(crossSection)/2;
@@ -147,5 +152,34 @@ void rvizInterface::show_detected_target(int targetID, string objectDescriptor, 
 
     marker.lifetime = ros::Duration(2);
     objectPub.publish(marker);
+
+
+    visualization_msgs::Marker textMarker;
+    textMarker.header.frame_id = "map";
+    textMarker.header.stamp = ros::Time::now();
+
+    textMarker.ns = "detected_" + objectDescriptor + "_info";
+    textMarker.id = targetID;
+    textMarker.text = 	objectDescriptor 
+    					+ "\nID: " + to_string(targetID)
+    					+ "\nCOG: " + to_string((int)position.heading)
+    					+ "\nSOG: " + to_string((int)SOG);
+
+    textMarker.action = visualization_msgs::Marker::ADD;
+	textMarker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+
+    y = -(position.longitude - mapOrigin.longitude)/longitude_degs_pr_meter(position.latitude);
+    x = (position.latitude - mapOrigin.latitude)/latitude_degs_pr_meter();
+
+    textMarker.pose.position.x = x;
+    textMarker.pose.position.y = y;
+
+    textMarker.pose.position.z = sqrt(crossSection)/4 + 20;
+	textMarker.scale.z = 5;
+
+	textMarker.color.a = 1;
+
+    textMarker.lifetime = ros::Duration(2);
+    objectPub.publish(textMarker);
 }
 

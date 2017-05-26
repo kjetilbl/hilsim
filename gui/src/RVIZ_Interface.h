@@ -13,7 +13,11 @@ class rvizInterface
 public:
 	rvizInterface(ros::NodeHandle nh);
 	void set_object(string objectID, gpsPoint3DOF position, double crossSection);
-	void show_detected_target(int targetID, string objectDescriptor, gpsPointStamped position, double crossSection);
+	void show_detected_target(	int targetID, 
+								string objectDescriptor, 
+								gpsPointStamped position,
+								double SOG, 
+								double crossSection);
 
 private:
 	gpsPoint mapOrigin;

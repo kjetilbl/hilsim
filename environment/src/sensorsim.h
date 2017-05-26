@@ -42,7 +42,7 @@ private:
 	void obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
 	void AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg);
 
-	bool is_within_visibility(string ID, gpsPoint obstaclePosition, double crossSection);
+	bool is_within_visibility(gpsPoint obstaclePosition, double crossSection);
 
 	navData USVnavData;
 
@@ -77,15 +77,15 @@ public:
 	void update_true_states(gpsPoint pos, double COG, double SOG, double crossSection);
 	int msecs_since_last_update(){ return lastUpdate.msecsTo(QTime::currentTime()); }
 	simulator_messages::detectedTarget makeDTmsg();
+	void set_true_position(gpsPoint truePos);
+	void set_true_COG(double trueCOG);
+	void set_true_SOG(double trueSOG);
+	void set_true_cross_section(double trueCS);
 	bool noiseEnabled = true;
 	string descriptor;
  
 private:
 	bool read_sensor_config(ros::NodeHandle nh, gpsPoint truePosition);
-	void set_true_position(gpsPoint truePos);
-	void set_true_COG(double trueCOG);
-	void set_true_SOG(double trueSOG);
-	void set_true_cross_section(double trueCS);
 
 	bool firstTimeParamEstimate = true;
 	QTime lastEstimateTime;
