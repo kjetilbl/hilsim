@@ -4,6 +4,7 @@
 #include <string>
 #include <mutex>
 #include <vector>
+#include "Eigen/Dense"
 
 #include <QObject>
 #include <QThread>
@@ -25,7 +26,7 @@ class simObject : public QThread
 	Q_OBJECT
 public:
 	simObject( const simObject& other );
-	simObject( ros::NodeHandle nh, string obstID, gpsPoint3DOF eta0, QThread *parent );
+	simObject( ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, double Size, QThread *parent );
 	~simObject();
 	void set_eta(gpsPoint3DOF newEta);
 	gpsPoint3DOF get_eta();
@@ -37,11 +38,12 @@ protected:
 	environment::obstacleUpdate make_position_update_msg();
 	string objectDescriptor;
 	string ID;
+	ros::NodeHandle *nh;
 
 private:
-	ros::NodeHandle n;
 	QTimer *posReportTimer = NULL;
 	mutex m;
+	double size;
 	bool stop = false;
 	bool running = false;
 	gpsPoint3DOF eta;
@@ -57,7 +59,7 @@ private slots:
 class fixedObstacle : public simObject
 {
 public:
-	fixedObstacle( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent = 0 );
+	fixedObstacle( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent = 0 );
 	~fixedObstacle(){};
 
 private:
@@ -72,7 +74,7 @@ class aisUser : public simObject
 {
 	Q_OBJECT
 public:
-	aisUser( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent );
+	aisUser( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent );
 
 private slots:
 	void broadcast_AIS_msg();
@@ -89,12 +91,18 @@ protected:
 	void set_pos_accuracy(posAccuracy accuracy);
 	posAccuracy get_pos_accuracy();
 	void initiate_AIS_broadcast(uint16_t intervalMs);
+	void pause_AIS_broadcast(){ AISenabled = false; }
+	void continue_AIS_broadcast(){ AISenabled =true; }
 
 
 private:
+	bool read_AIS_config();
+	Eigen::VectorXd get_estimated_nav_parameters();
 	mutex activeObjMutex;
 
 	static int IDiterator;
+	bool AISenabled = true;
+	uint16_t AISinterval;
 	QTimer *AIStimer = NULL;
 	uint32_t MMSI;
 	navStatus status;
@@ -102,6 +110,16 @@ private:
 	double SOG;
 	posAccuracy positionAccuracy;
 	ros::Publisher AISpub;
+
+	// Error parameters
+	bool firstTimeErrorCalc = true;
+	QTime lastErrorCalcTime;
+	bool updatedParameters = false;
+	Eigen::VectorXd b; // bias
+	Eigen::MatrixXd T; // continous-time bias system matrix
+	Eigen::MatrixXd Td; // discrete-time bias system matrix
+	Eigen::VectorXd biasSigmas; // characteristic standard deviations of bias white noise
+	Eigen::VectorXd measureSigmas; // characteristic standard deviations of measurement white noise
 };
 
 
@@ -111,7 +129,7 @@ class ship : public aisUser
 {
 	Q_OBJECT
 public:
-	ship( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent = 0 );
+	ship( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent = 0 );
 	void add_waypoint(gpsPoint wp);
 
 private:

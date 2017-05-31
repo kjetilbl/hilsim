@@ -9,22 +9,23 @@ int aisUser::IDiterator = 0;
 
 simObject::simObject( const simObject& other )
 {
-	this->n = other.n;
-	this->cmdSub = n.subscribe("/simObject/command", 1000, &simObject::command_parser, this);
-	this->posUpdatePub = n.advertise<environment::obstacleUpdate>("/simObject/position", 1000);
+	this->nh = other.nh;
+	this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
+	this->posUpdatePub = nh->advertise<environment::obstacleUpdate>("/simObject/position", 1000);
 
 	this->ID = other.ID;
 	this->eta = other.eta;
 }
 
-simObject::simObject(ros::NodeHandle nh, string obstID, gpsPoint3DOF eta0, QThread *parent) : QThread(parent)
+simObject::simObject(ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, double Size, QThread *parent) : QThread(parent)
 {
-	this->n = nh;
-	this->cmdSub = n.subscribe("/simObject/command", 1000, &simObject::command_parser, this);
-	this->posUpdatePub = n.advertise<environment::obstacleUpdate>("/simObject/position", 1000);
+	this->nh = n;
+	this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
+	this->posUpdatePub = nh->advertise<environment::obstacleUpdate>("/simObject/position", 1000);
 
 	this->ID = obstID;
 	this->eta = eta0;
+	this->size = Size;
 
 }
 
@@ -36,7 +37,7 @@ void simObject::initiate_pos_report_broadcast()
 {
 	this->posReportTimer = new QTimer(0);
 	QObject::connect( posReportTimer, SIGNAL(timeout()), this, SLOT(publish_position_report()) );
-	this->posReportTimer->start(50);
+	this->posReportTimer->start(200);
 }
 
 void simObject::run()
@@ -53,7 +54,7 @@ void simObject::publish_position_report()
 
 void simObject::command_parser(const environment::obstacleCmd::ConstPtr& cmd)
 {
-	ROS_INFO("%s received a new command!", this->ID.c_str()); // Forbeholdt terminate-kommando
+	// Forbeholdt terminate-kommando
 }
 
 
@@ -68,6 +69,7 @@ environment::obstacleUpdate simObject::make_position_update_msg()
 	posUpdate.longitude = this->eta.longitude;
 	posUpdate.latitude = this->eta.latitude;
 	posUpdate.heading = this->eta.heading;
+	posUpdate.size = this->size;
 	return posUpdate;
 }
 
@@ -84,8 +86,8 @@ gpsPoint3DOF simObject::get_eta()
 }
 
 
-fixedObstacle::fixedObstacle( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
-							: simObject( nh, "fixed_obstacle_"+to_string(this->IDiterator++), eta0, parent )
+fixedObstacle::fixedObstacle( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent ) 
+							: simObject( n, "fixed_obstacle_"+to_string(this->IDiterator++), eta0, Size, parent )
 {
 	this->objectDescriptor = "fixed_obstacle";
 }
@@ -98,32 +100,33 @@ void fixedObstacle::run(){
 }
 
 
-aisUser::aisUser( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
-				: simObject( nh, "AIS_user_"+to_string(this->IDiterator), eta0, parent )
+aisUser::aisUser( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent ) 
+				: simObject( n, "AIS_user_"+to_string(this->IDiterator), eta0, Size, parent )
 {
+	int N = 6;
+	b = Eigen::VectorXd::Zero(N);
+	Td = Eigen::MatrixXd::Zero(N,N);
 	this->set_MMSI(IDiterator++);
-	this->AISpub = nh.advertise<simulator_messages::AIS>("sensors/ais", 1000);
+	this->AISpub = n->advertise<simulator_messages::AIS>("sensors/ais", 1000);
 }
 
 
 void aisUser::broadcast_AIS_msg()
 {
-	gpsPoint3DOF currentEta = this->get_eta();
-	navData nd( this->get_MMSI(), currentEta.longitude, currentEta.latitude, this->get_SOG(), currentEta.heading );
+	Eigen::VectorXd Xm = get_estimated_nav_parameters();
+
+	navData nd( this->get_MMSI(), Xm(0), Xm(1), Xm(5), Xm(3) );
+	nd.set_COG( Xm(2) );
+	nd.set_ROT( Xm(4) );
 	nd.set_nav_status( this->get_status() );
-	nd.set_ROT( this->get_ROT() );
 	nd.set_position_accuracy( this->get_pos_accuracy() );
-	nd.set_COG( currentEta.heading );
 	string rawAISdata = nd.get_AIS_class_A_position_report();
 
 	simulator_messages::AIS newAISmsg = nd.get_AIS_ros_msg();
-	this->AISpub.publish(newAISmsg);
-	//ros::spinOnce();
-	/*
-	qDebug() << "---------------------Publish" << this->ID.c_str() << "AIS message--------------------- ";
-	nd.print_data();
-	qDebug() << "-----------------------------------------------------------------------------";
-	*/
+	if (AISenabled)
+	{
+		this->AISpub.publish(newAISmsg);
+	}
 }
 
 void aisUser::set_MMSI(uint32_t ID){
@@ -183,18 +186,164 @@ void aisUser::initiate_AIS_broadcast(uint16_t intervalMs){
 		AIStimer = new QTimer(0);
 		QObject::connect( AIStimer, SIGNAL(timeout()), this, SLOT(broadcast_AIS_msg()) );
 	}
+	this->AISinterval = intervalMs;
 	this->AIStimer->start(intervalMs);
+}
+
+bool aisUser::read_AIS_config(){
+	bool successfulRead = true;
+	int n = 6;
+	biasSigmas = Eigen::VectorXd(n);
+	double positionBiasSigma = 0;
+	if(!nh->getParam("AIS_position_bias_sigma", positionBiasSigma)){
+		successfulRead = false;
+	}
+	biasSigmas(0) = positionBiasSigma*longitude_degs_pr_meter(this->get_eta().latitude);
+	biasSigmas(1) = positionBiasSigma*latitude_degs_pr_meter();
+
+	if(!nh->getParam("AIS_COG_bias_sigma", biasSigmas(2))){
+		successfulRead = false;
+		biasSigmas(2) = 0;
+	}
+
+	if(!nh->getParam("AIS_track_bias_sigma", biasSigmas(3))){
+		successfulRead = false;
+		biasSigmas(3) = 0;
+	}
+
+	if(!nh->getParam("AIS_ROT_bias_sigma", biasSigmas(4))){
+		successfulRead = false;
+		biasSigmas(4) = 0;
+	}
+
+	if(!nh->getParam("AIS_SOG_bias_sigma", biasSigmas(5))){
+		successfulRead = false;
+		biasSigmas(5) = 0;
+	}
+
+
+	measureSigmas = Eigen::VectorXd(n);
+	double positionMeasureSigma = 0;
+	if(!nh->getParam("AIS_position_measure_sigma", positionMeasureSigma)){
+		successfulRead = false;
+	}
+	measureSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(this->get_eta().latitude);
+	measureSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
+
+	if(!nh->getParam("AIS_COG_measure_sigma", measureSigmas(2))){
+		successfulRead = false;
+		measureSigmas(2) = 0;
+	}
+
+	if(!nh->getParam("AIS_track_measure_sigma", measureSigmas(3))){
+		successfulRead = false;
+		measureSigmas(3) = 0;
+	}
+
+	if(!nh->getParam("AIS_ROT_measure_sigma", measureSigmas(4))){
+		successfulRead = false;
+		measureSigmas(4) = 0;
+	}
+
+	if(!nh->getParam("AIS_SOG_measure_sigma", measureSigmas(5))){
+		successfulRead = false;
+		measureSigmas(5) = 0;
+	}
+
+
+	Eigen::VectorXd biasTimeConstants(n);
+	double posBiasTimeConstant = 1;
+	if(!nh->getParam("AIS_position_bias_time_constant", posBiasTimeConstant)){
+		successfulRead = false;
+	}
+	biasTimeConstants(0) = posBiasTimeConstant;
+	biasTimeConstants(1) = posBiasTimeConstant;
+
+	if(!nh->getParam("AIS_COG_bias_time_constant", biasTimeConstants(2))){
+		successfulRead = false;
+		biasTimeConstants(2) = 0;
+	}
+
+	if(!nh->getParam("AIS_track_bias_time_constant", biasTimeConstants(3))){
+		successfulRead = false;
+		biasTimeConstants(3) = 0;
+	}
+
+	if(!nh->getParam("AIS_ROT_bias_time_constant", biasTimeConstants(4))){
+		successfulRead = false;
+		biasTimeConstants(3) = 0;
+	}
+
+	if(!nh->getParam("AIS_SOG_bias_time_constant", biasTimeConstants(5))){
+		successfulRead = false;
+		biasTimeConstants(3) = 0;
+	}
+	T = biasTimeConstants.asDiagonal();
+
+	return successfulRead;
+}
+
+Eigen::VectorXd aisUser::get_estimated_nav_parameters(){
+	static std::default_random_engine randomGenerator;
+	static std::normal_distribution<double> gaussianWhiteNoise(0,1);
+
+	if(!updatedParameters){
+		if(!read_AIS_config()){
+			qDebug() << "read_AIS_config() failed.";
+			exit(EXIT_FAILURE);
+		}
+		updatedParameters = true;
+	}
+	if(firstTimeErrorCalc){
+		lastErrorCalcTime = QTime::currentTime();
+		firstTimeErrorCalc = false;
+	}
+	QTime now = QTime::currentTime();
+	double dt = (double)(lastErrorCalcTime.msecsTo( now ))/1000;
+	lastErrorCalcTime = now;
+
+	gpsPoint3DOF currentEta = this->get_eta();
+	int n = 6;
+	Eigen::VectorXd Xm(n);
+	Eigen::VectorXd X(n);
+	X << 	currentEta.longitude,
+			currentEta.latitude,
+			currentEta.heading,
+			currentEta.heading,
+			this->get_ROT(),
+			this->get_SOG();
+
+
+	Eigen::VectorXd e(n);
+	Eigen::VectorXd w(n);
+	Eigen::VectorXd v(n);
+	for (int i = 0; i < n; i++)
+	{
+		Td(i,i) = exp(-1/T(i,i)*dt);
+		w(i) = gaussianWhiteNoise(randomGenerator)*biasSigmas(i);
+		v(i) = gaussianWhiteNoise(randomGenerator)*measureSigmas(i);
+	}
+
+	// Make artificial deviations
+	b = Td*b + w;
+	e = b + v;
+	e(5) = max(-X(5), (double)e(5));
+
+	// Set artificial measurements:
+	Xm = X + e;
+
+	return Xm;
 }
 
 
 
-ship::ship( ros::NodeHandle nh, gpsPoint3DOF eta0, QThread *parent ) 
-				: aisUser( nh, eta0, parent )
+ship::ship( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent ) 
+				: aisUser( n, eta0, Size, parent )
 {
 	this->objectDescriptor = "ship";
 	this->set_status(UNDERWAY_USING_ENGINE);
 	this->set_ROT(0);
-	this->set_SOG(10);
+	this->set_SOG(5);
 	this->set_pos_accuracy(HIGH);
 }
 

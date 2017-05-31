@@ -13,7 +13,7 @@ rvizInterface::rvizInterface(ros::NodeHandle nh){
 }
 
 
-void rvizInterface::set_object(string objectID, gpsPoint3DOF position){
+void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double crossSection){
 	visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
     marker.header.frame_id = "map";
@@ -53,19 +53,20 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position){
 	    marker.type = visualization_msgs::Marker::MESH_RESOURCE;
 	    marker.mesh_resource = "file:///home/uss_deplorables_small.stl";
 
+	    double scale = sqrt(crossSection)*0.0013;
 	    // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
-	    marker.pose.position.x = x + 64*sqrt(2)*cos(deg2rad(position.heading + 36));
-	    marker.pose.position.y = y - 64*sqrt(2)*cos(deg2rad(position.heading - 54));
-	    marker.pose.position.z = 15;
+	    marker.pose.position.x = x + 64*sqrt(2)*cos(deg2rad(position.heading + 36))*scale/0.1;
+	    marker.pose.position.y = y - 64*sqrt(2)*cos(deg2rad(position.heading - 54))*scale/0.1;
+	    marker.pose.position.z = 15*scale/0.1;
 	    marker.pose.orientation.x = 0;
 	    marker.pose.orientation.y = 0.0;
 	    marker.pose.orientation.z = sin(deg2rad(-position.heading/2));//-deg2rad(position.heading);
 	    marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
 
 	    // Set the scale of the marker -- 1x1x1 here means 1m on a side
-	    marker.scale.x = 0.1;
-	    marker.scale.y = 0.1;
-	    marker.scale.z = 0.1;
+	    marker.scale.x = scale;
+	    marker.scale.y = scale;
+	    marker.scale.z = scale;
 
 	    // Set the color -- be sure to set alpha to something non-zero!
 	    marker.color.r = 0.2;
@@ -85,9 +86,9 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position){
 	    marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
 
 	    // Set the scale of the marker -- 1x1x1 here means 1m on a side
-	    marker.scale.x = 10;
-	    marker.scale.y = 10;
-	    marker.scale.z = 10;
+	    marker.scale.x = sqrt(crossSection);
+	    marker.scale.y = sqrt(crossSection);
+	    marker.scale.z = sqrt(crossSection);
 
 	    // Set the color -- be sure to set alpha to something non-zero!
 	    marker.color.r = 1;
@@ -96,11 +97,89 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position){
 	    marker.color.a = 1;
     }
 
-
-
-    
-
-
     marker.lifetime = ros::Duration();
     objectPub.publish(marker);
 }
+
+void rvizInterface::show_detected_target(	int targetID, 
+											string objectDescriptor, 
+											gpsPointStamped position,
+											double SOG,
+											double crossSection){
+
+	visualization_msgs::Marker marker;
+    marker.header.frame_id = "map";
+    marker.header.stamp = ros::Time::now();
+
+    marker.ns = "detected_" + objectDescriptor;
+    marker.id = targetID;
+
+    marker.action = visualization_msgs::Marker::ADD;
+
+    double y = -(position.longitude - mapOrigin.longitude)/longitude_degs_pr_meter(position.latitude);
+    double x = (position.latitude - mapOrigin.latitude)/latitude_degs_pr_meter();
+
+    marker.pose.position.x = x;
+    marker.pose.position.y = y;
+    marker.pose.position.z = 0;
+    marker.pose.orientation.x = 0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = sin(deg2rad(-position.heading/2));;
+    marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
+
+    if(objectDescriptor == "fixed_obstacle"){
+	marker.type = visualization_msgs::Marker::CUBE;
+	    marker.scale.x = sqrt(crossSection);
+	    marker.scale.y = sqrt(crossSection);
+	    marker.scale.z = sqrt(crossSection);
+
+	    marker.color.r = 1;
+	    marker.color.g = 0;
+	    marker.color.b = 0;
+    }
+    else if( objectDescriptor == "vessel"){
+	marker.type = visualization_msgs::Marker::SPHERE;
+	    marker.scale.x = sqrt(crossSection);
+	    marker.scale.y = sqrt(crossSection)/3;
+	    marker.scale.z = sqrt(crossSection)/2;
+
+	    marker.color.r = 1;
+	    marker.color.g = 0;
+	    marker.color.b = 0;
+    }
+
+	marker.color.a = 0.5;
+
+    marker.lifetime = ros::Duration(2);
+    objectPub.publish(marker);
+
+
+    visualization_msgs::Marker textMarker;
+    textMarker.header.frame_id = "map";
+    textMarker.header.stamp = ros::Time::now();
+
+    textMarker.ns = "detected_" + objectDescriptor + "_info";
+    textMarker.id = targetID;
+    textMarker.text = 	objectDescriptor 
+    					+ "\nID: " + to_string(targetID)
+    					+ "\nCOG: " + to_string((int)position.heading)
+    					+ "\nSOG: " + to_string((int)SOG);
+
+    textMarker.action = visualization_msgs::Marker::ADD;
+	textMarker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+
+    y = -(position.longitude - mapOrigin.longitude)/longitude_degs_pr_meter(position.latitude);
+    x = (position.latitude - mapOrigin.latitude)/latitude_degs_pr_meter();
+
+    textMarker.pose.position.x = x;
+    textMarker.pose.position.y = y;
+
+    textMarker.pose.position.z = sqrt(crossSection)/4 + 20;
+	textMarker.scale.z = 5;
+
+	textMarker.color.a = 1;
+
+    textMarker.lifetime = ros::Duration(2);
+    objectPub.publish(textMarker);
+}
+

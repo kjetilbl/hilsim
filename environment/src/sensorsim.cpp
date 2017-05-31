@@ -4,6 +4,7 @@
 #include <QTime>
 #include "stdint.h"
 #include <math.h>
+#include <random>
 
 #define ASCII_CHAR_OFFSET 	48
 #define SIX_BIT_MASK 		0b00111111
@@ -13,14 +14,20 @@
 #define TWO_BIT_MASK 		0b00000011
 #define ONE_BIT_MASK 		0b00000001
 
+uint32_t detectedObject::targetIterator = 0;
+
 //----------------------------------------------------------------------------------------
 //----------------------------------------sensorSim----------------------------------------
 //----------------------------------------------------------------------------------------
 
 
-sensorSim::sensorSim(ros::NodeHandle n, QThread *parent) : QThread(parent)
+sensorSim::sensorSim(ros::NodeHandle *n, QThread *parent) : QThread(parent)
 {
 	nh = n;
+	if( !read_sensor_config() ){
+		qDebug() << "sensorSim read sensor config failed.";
+		exit(0);
+	}
 }
 
 sensorSim::~sensorSim()
@@ -32,22 +39,31 @@ sensorSim::~sensorSim()
 void sensorSim::run()
 {
 	USVnavData = navData(316001245, 123.8777500, 49.2002817, 19.6, 235.0);
-	ros::Subscriber USVupdateSub = nh.subscribe("sensors/gps", 1000, &sensorSim::USV_gps_parser, this);
-	ros::Subscriber obstUpdateSub = nh.subscribe("/simObject/position", 1000, &sensorSim::obstacle_update_parser, this);
-	ros::Subscriber AISsub = nh.subscribe("sensors/ais", 1000, &sensorSim::AIS_parser, this);
+	ros::Subscriber USVupdateSub = nh->subscribe("sensors/gps", 1000, &sensorSim::USV_gps_parser, this);
+	ros::Subscriber obstUpdateSub = nh->subscribe("/simObject/position", 1000, &sensorSim::obstacle_update_parser, this);
+	ros::Subscriber AISsub = nh->subscribe("sensors/ais", 1000, &sensorSim::AIS_parser, this);
+	detectedTargetPub = nh->advertise<simulator_messages::detectedTarget>("sensors/target_detection", 1000);
 
 	AIStimer = new QTimer();
 	DTtimer = new QTimer();
 	QObject::connect( AIStimer, SIGNAL(timeout()), this, SLOT(print_USV_AIS_msg()) );
-	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(print_detected_targets()) );
+	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(publish_detected_targets()) );
 	AIStimer->start(2000);
-	DTtimer->start(1000);
+	DTtimer->start(500);
 
 	ros::AsyncSpinner spinner(1);
 	spinner.start();
 	QThread::exec();
 }
 
+bool sensorSim::read_sensor_config(){
+	bool successfulRead = true;
+	if(!nh->getParam("radar_range", radarRange)){
+		radarRange = 200;
+		successfulRead = false;
+	}
+	return successfulRead;
+}
 
 void sensorSim::print_USV_AIS_msg()
 {
@@ -61,34 +77,28 @@ void sensorSim::print_USV_AIS_msg()
 }
 
 
-void sensorSim::print_detected_targets()
+void sensorSim::publish_detected_targets()
 {
 	std::lock_guard<std::mutex> lock(m);
-	if ( !unidentifiedObjects.empty() ){
-		// qDebug() << "Printing all detected obstacles:";
-	}
 	
 	vector<string> outdatedObstacles;
 
 	// Print obstacle position info and find outdated obstacles
-	for( auto const& obst : unidentifiedObjects )
+	for( auto & obst : unidentifiedObjects )
 	{
-		QTime now = QTime::currentTime();
-		if( obst.second.timeStamp.msecsTo(now) > 1000)
+		string obstID = obst.first;
+		if( obst.second.msecs_since_last_update() > 3000)
 		{
-			string obstID = obst.first;
 			outdatedObstacles.push_back(obstID);
 		}
 		else
 		{
-			/* 
-			qDebug() << obst.first.c_str() << ":";
-			obst.second.print();
-			qDebug() << "------------------------";
-			*/
+			double distanceToObject = distance_m(USVnavData.get_position(), obst.second.get_true_position());
+			obst.second.make_parameter_estimates(distanceToObject);
+			simulator_messages::detectedTarget dt = obst.second.makeDTmsg();
+			detectedTargetPub.publish(dt);
 		}
 	}
-
 	// Delete old obstacles
 	for ( auto const& ID : outdatedObstacles ) 
 	{
@@ -113,14 +123,34 @@ void sensorSim::USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMs
 void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg)
 {
 	std::lock_guard<std::mutex> lock(m);
-	if( obstUpdateMsg->msgDescriptor == "position_update" )
-	{
-		if(obstUpdateMsg->objectDescriptor == "fixed_obstacle"){
-			string ID = obstUpdateMsg->objectID;
-			unidentifiedObjects[ID] = gpsPointStamped(obstUpdateMsg->longitude, obstUpdateMsg->latitude, obstUpdateMsg->heading);			
-		}
-		
+
+	string objectDescriptor = obstUpdateMsg->objectDescriptor;
+	gpsPoint obstPos(obstUpdateMsg->longitude, obstUpdateMsg->latitude);
+	double crossSection = obstUpdateMsg->size;
+	double COG = obstUpdateMsg->heading;
+	string objectID = obstUpdateMsg->objectID;
+
+	if( !is_within_visibility(obstPos, crossSection) ){
+		return;
 	}
+	map<string, detectedObject>::iterator it = unidentifiedObjects.find(objectID);
+	if( it != unidentifiedObjects.end() ) // Object already detected
+	{
+		unidentifiedObjects[objectID].set_true_position(obstPos);
+		unidentifiedObjects[objectID].set_true_COG(COG);
+		unidentifiedObjects[objectID].set_true_cross_section(crossSection);
+	}else
+	{
+		if (objectDescriptor == "fixed_obstacle")
+		{
+			unidentifiedObjects[objectID] = detectedObject(*nh, objectDescriptor, obstPos, COG, 0, crossSection);
+		}
+		else if (objectDescriptor == "ship")
+		{
+			unidentifiedObjects[objectID] = detectedObject(*nh, "vessel", obstPos, COG, 0, crossSection);
+		}
+	}
+	
 }
 
 void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
@@ -134,5 +164,289 @@ void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
 	nd.set_time(QTime(AISmsg->hour, AISmsg->minute, AISmsg->second));
 	detectedAISusers[AISmsg->MMSI] = nd;
 
-	//TODO: sende disse over til gui som plotter i rviz
+	string objectDescriptor = "vessel";
+	string objectID = "AIS_user_" + to_string(AISmsg->MMSI);
+	gpsPoint position(AISmsg->longitude, AISmsg->latitude);
+
+	double COG = AISmsg->COG;
+	double SOG = AISmsg->SOG;
+	double crossSection = pow(150,2);	
+	map<string, detectedObject>::iterator it = unidentifiedObjects.find(objectID);
+	if( it != unidentifiedObjects.end() ) // Object already detected
+	{	
+		crossSection = unidentifiedObjects[objectID].get_true_CS();
+		unidentifiedObjects[objectID].set_true_SOG(SOG);
+		if( !is_within_visibility(position, crossSection) ){
+			unidentifiedObjects[objectID].set_true_position(position);
+			unidentifiedObjects[objectID].set_true_COG(COG);
+		}
+		else{
+			unidentifiedObjects[objectID].noiseEnabled = false;
+			// Dont update nav data, trust radar and lidar.
+		}
+	}else
+	{
+		unidentifiedObjects[objectID] = detectedObject(*nh, objectDescriptor, position, COG, SOG, crossSection);
+		unidentifiedObjects[objectID].noiseEnabled = false;
+	}
+}
+
+bool sensorSim::is_within_visibility(gpsPoint newPos, double crossSection){
+	//Check range
+	gpsPointStamped usvPos = USVnavData.get_position();
+	double distToNewPos = distance_m(usvPos, newPos);
+	if (distToNewPos > radarRange)
+	{
+		return false;
+	}
+	if (sqrt(crossSection)/distToNewPos < 0.01)
+	{
+		return false;
+	}
+
+	// Check if behind other objects
+	for( auto & mapPair : unidentifiedObjects ){
+		gpsPoint objectPos = mapPair.second.get_true_position();
+		double distToObject = distance_m(usvPos, objectPos);
+		double objectRadius = sqrt(mapPair.second.get_true_CS())/2;
+		if( distToNewPos < distToObject ) // newPos is closer
+		{
+			continue;
+		}
+		if( (distToNewPos > distToObject - 1) && (distToNewPos < distToObject + 1)){
+			continue;
+		}
+		double newPosBearing = compass_bearing(usvPos, newPos);
+		double maxBearing = compass_bearing(usvPos, objectPos) + atan2(objectRadius, distToObject)*180/M_PI;
+		double minBearing = compass_bearing(usvPos, objectPos) - atan2(objectRadius, distToObject)*180/M_PI;
+		if ( is_within_bearing_range(newPosBearing, minBearing, maxBearing) )
+		{
+			return false;
+		}
+	}
+
+	//
+	return true;
+}
+
+detectedObject::detectedObject(){}
+
+detectedObject::detectedObject(	ros::NodeHandle nh,
+								string objectDescriptor,
+								gpsPoint truePosition, 
+								double trueCOG, 
+								double trueSOG, 
+								double trueCrossSection)
+{
+	descriptor = objectDescriptor;
+	targetNumber = targetIterator++;
+	int n = 5;
+	X = Eigen::VectorXd(n);
+	Xm = Eigen::VectorXd(n);
+	b = Eigen::VectorXd::Zero(n);
+	Td = Eigen::MatrixXd::Zero(n, n); // discretize at each time step (varying sample time)
+	
+	if(!read_sensor_config(nh, truePosition)){
+		qDebug() << "detectedObject read sensor config failed.";
+		exit(-1);
+	}
+	update_true_states(truePosition, trueCOG, trueSOG, trueCrossSection);
+}
+
+void detectedObject::make_parameter_estimates( double distanceFromUSV_m ){
+	if (!noiseEnabled){
+		Xm = X;
+		return;
+	}
+
+	int n = Xm.rows();
+	static std::default_random_engine randomGenerator;
+	static std::normal_distribution<double> gaussianWhiteNoise(0,1);
+
+	if (firstTimeParamEstimate)
+	{
+		for (int i = 0; i < n; i++)
+		{
+			b(i) = gaussianWhiteNoise(randomGenerator)*biasSigmas(i)*25;
+		}
+		firstTimeParamEstimate = false;
+		lastEstimateTime = QTime::currentTime();
+	}
+	
+	QTime now = QTime::currentTime();
+	double dt = (double)(lastEstimateTime.msecsTo( now ))/1000;
+
+	Eigen::VectorXd e(n);
+	Eigen::VectorXd w(n);
+	Eigen::VectorXd v(n);
+	for (int i = 0; i < n; i++)
+	{
+		Td(i,i) = exp(-1/T(i,i)*dt);
+		w(i) = gaussianWhiteNoise(randomGenerator)*biasSigmas(i);
+		v(i) = gaussianWhiteNoise(randomGenerator)*measureSigmas(i);
+	}
+
+	// Make artificial deviations
+	b = Td*b + w;
+	e = b + v;
+	e = errorPrDistanceGain * distanceFromUSV_m * e;
+	e(3) = max(-X(3), (double)e(3));
+	e(4) = max(-X(4) + 1, (double)e(4));
+
+	// Update artificial measurements:
+	Xm = X + e;
+
+	// Keep estimated COG in valid range:
+	while (Xm(2) < 0)
+	{
+		Xm(2) += 360.0;
+	}
+	while (Xm(2) > 360.0)
+	{
+		Xm(2) -= 360.0;
+	}
+
+	lastEstimateTime = now;
+}
+
+void detectedObject::update_true_states(gpsPoint pos, double COG, double SOG, double crossSection){
+	set_true_position(pos);
+	set_true_COG(COG);
+	set_true_SOG(SOG);
+	set_true_cross_section(crossSection);
+}
+
+simulator_messages::detectedTarget detectedObject::makeDTmsg(){
+	simulator_messages::detectedTarget dt;
+	dt.targetID = get_target_number();
+	dt.objectDescriptor = descriptor;
+	dt.longitude = get_estimated_position().longitude;
+	dt.latitude = get_estimated_position().latitude;
+	dt.COG = round( get_estimated_COG() );
+	dt.SOG = round( get_estimated_SOG() );
+	dt.crossSection = get_estimated_CS();
+	return dt;
+}
+
+bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePosition){
+	bool successfulRead = true;
+	int n = 5;
+	biasSigmas = Eigen::VectorXd(n);
+	double positionBiasSigma = 0;
+	if(!nh.getParam("DTM_position_bias_sigma", positionBiasSigma)){
+		successfulRead = false;
+	}
+	biasSigmas(0) = positionBiasSigma*longitude_degs_pr_meter(truePosition.latitude);
+	biasSigmas(1) = positionBiasSigma*latitude_degs_pr_meter();
+
+	if(!nh.getParam("DTM_COG_bias_sigma", biasSigmas(2))){
+		successfulRead = false;
+		biasSigmas(2) = 0;
+	}
+
+	if(!nh.getParam("DTM_SOG_bias_sigma", biasSigmas(3))){
+		successfulRead = false;
+		biasSigmas(3) = 0;
+	}
+
+	if(!nh.getParam("DTM_size_bias_sigma", biasSigmas(4))){
+		successfulRead = false;
+		biasSigmas(4) = 0;
+	}
+
+	measureSigmas = Eigen::VectorXd(n);
+	double positionMeasureSigma = 0;
+	if(!nh.getParam("DTM_position_measure_sigma", positionMeasureSigma)){
+		successfulRead = false;
+	}
+	measureSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(truePosition.latitude);
+	measureSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
+
+	if(!nh.getParam("DTM_COG_measure_sigma", measureSigmas(2))){
+		successfulRead = false;
+		measureSigmas(2) = 0;
+	}
+
+	if(!nh.getParam("DTM_SOG_measure_sigma", measureSigmas(3))){
+		successfulRead = false;
+		measureSigmas(3) = 0;
+	}
+
+	if(!nh.getParam("DTM_size_measure_sigma", measureSigmas(4))){
+		successfulRead = false;
+		measureSigmas(4) = 0;
+	}
+
+
+	Eigen::VectorXd k(n);
+	double posErrorPrDistanceGain = 0;
+	if(!nh.getParam("DTM_position_error_pr_distance_gain", posErrorPrDistanceGain)){
+		successfulRead = false;
+	}
+	k(0) = posErrorPrDistanceGain;
+	k(1) = posErrorPrDistanceGain;
+
+	if(!nh.getParam("DTM_COG_error_pr_distance_gain", k(2))){
+		successfulRead = false;
+		k(2) = 0;
+	}
+
+	if(!nh.getParam("DTM_SOG_error_pr_distance_gain", k(3))){
+		successfulRead = false;
+		k(3) = 0;
+	}
+
+	if(!nh.getParam("DTM_size_error_pr_distance_gain", k(4))){
+		successfulRead = false;
+		k(4) = 0;
+	}
+	errorPrDistanceGain = k.asDiagonal();
+
+
+	Eigen::VectorXd biasTimeConstants(n);
+	double posBiasTimeConstant = 1;
+	if(!nh.getParam("DTM_position_bias_time_constant", posBiasTimeConstant)){
+		successfulRead = false;
+	}
+	biasTimeConstants(0) = posBiasTimeConstant;
+	biasTimeConstants(1) = posBiasTimeConstant;
+
+	if(!nh.getParam("DTM_COG_bias_time_constant", biasTimeConstants(2))){
+		successfulRead = false;
+		biasTimeConstants(2) = 0;
+	}
+
+	if(!nh.getParam("DTM_SOG_bias_time_constant", biasTimeConstants(3))){
+		successfulRead = false;
+		biasTimeConstants(3) = 0;
+	}
+
+	if(!nh.getParam("DTM_size_bias_time_constant", biasTimeConstants(4))){
+		successfulRead = false;
+		biasTimeConstants(4) = 0;
+	}
+	T = biasTimeConstants.asDiagonal();
+
+	return successfulRead;
+}
+
+void detectedObject::set_true_position(gpsPoint truePos){
+	X(0) = truePos.longitude;
+	X(1) = truePos.latitude;
+	lastUpdate = QTime::currentTime();
+}
+
+void detectedObject::set_true_COG(double trueCOG){
+	X(2) = trueCOG;
+	lastUpdate = QTime::currentTime();
+}
+
+void detectedObject::set_true_SOG(double trueSOG){
+	X(3) = trueSOG;
+	lastUpdate = QTime::currentTime();
+}
+
+void detectedObject::set_true_cross_section(double trueCS){
+	X(4) = trueCS;
+	lastUpdate = QTime::currentTime();
 }

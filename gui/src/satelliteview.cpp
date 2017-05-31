@@ -72,7 +72,6 @@ void satelliteView::updatePlot()
 		QTime lastUpdate = aso.second->getPosition().timeStamp;
 		if(lastUpdate.msecsTo(now) > 200){
 			outdatedSimObjects.push_back(aso.first);
-			qDebug() << "push_back" << aso.first.c_str();
 		}
 		else{
 			aso.second->updateTrajectory();
@@ -165,12 +164,10 @@ void satelliteView::addSimObject( string objectID, string objectDescriptor, doub
 	gpsPointStamped pos(x, y, psi);
 	if( objectDescriptor == "fixed_obstacle" )
 	{
-		qDebug() << "Added new fixed obstacle...";
 		activeSimObjects[objectID] = new obstacle(objectID.c_str(), svWidget, pos);
 	}
 	else if( objectDescriptor == "ship")
 	{
-		qDebug() << "Added new ship...";
 		activeSimObjects[objectID] = new ship(objectID.c_str(), svWidget, pos);
 	}
 }

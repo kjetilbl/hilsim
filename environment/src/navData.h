@@ -2,9 +2,13 @@
 #define NAVDATA_H
 
 #include <QTime>
+
 #include <string>
 #include "stdint.h"
 #include <math.h>
+
+#include "gpsTools.h"
+
 #include "simulator_messages/AIS.h"
 
 using namespace std;
@@ -63,6 +67,7 @@ public:
 	void set_position(double longitd, double latitd);
 	double get_longitude() {return longitude;}
 	double get_latitude() {return latitude;}
+	gpsPointStamped get_position() { return gpsPointStamped(longitude, latitude, track, time); }
 	void set_COG(double degrees);
 	double get_COG() {return COG;}
 	void set_track(double degrees);

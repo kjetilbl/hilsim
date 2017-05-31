@@ -14,6 +14,7 @@
 #include "environment/obstacleUpdate.h"
 #include "environment/obstacleCmd.h"
 #include "simulator_messages/Gps.h"
+#include "simulator_messages/detectedTarget.h"
 
 
 class posUpdateHandler : public QThread
@@ -35,8 +36,10 @@ private:
 	ros::NodeHandle nh;
 	ros::Subscriber obstUpdateSub;
 	ros::Subscriber gpsSub;
+	ros::Subscriber detectedTargetSub;
 	void obstUpdateParser(const environment::obstacleUpdate::ConstPtr& updateMsg);
 	void gpsParser(const simulator_messages::Gps::ConstPtr& gpsMsg);
+	void detectedTargetParser(const simulator_messages::detectedTarget::ConstPtr& dtMsg);
 };
 
 
