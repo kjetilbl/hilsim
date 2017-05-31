@@ -7,8 +7,10 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Twist.h"
 #include "visualization_msgs/Marker.h"
+#include "nav_msgs/Path.h"
 #include "simulator_messages/ActuatorMessage.h"
 #include "vessel.h"
+#include <queue>
 
 class VesselNode{
 public:
@@ -29,6 +31,8 @@ private:
 
 	void publishState();
 
+	void publishTrace();
+
 	void receiveForcesAndMoments(const geometry_msgs::Twist::ConstPtr &thrust_msg);
 
 	void receiveActuatorInfo(const simulator_messages::ActuatorMessage::ConstPtr &actuator_msg);
@@ -38,6 +42,11 @@ private:
 	void publishActuatorMarkers();
 
 	geometry_msgs::Twist vectorToGeometryMsg(Vector6d vector_in);
+
+	nav_msgs::Path trace;
+	std::deque<geometry_msgs::PoseStamped> trace_log;
+	ros::NodeHandle trace_handle;
+	ros::Publisher trace_pub = trace_handle.advertise<nav_msgs::Path>("log/trace", 1);
 
 	double time_since_last_message, dt;
 

@@ -149,7 +149,7 @@ l_y_1: 0.5 #Y-coordinate of right thruster
 l_y_2: -0.5 # Y-coordinate of left thruster
 l_x_1: -5.1 #X-coordinate of right thruster
 l_x_2: -5.1 # X-coordinate of left thruster
-C_d_2d: 0.65
+C_d_2d: 0.75
 T: 0.7
 X_uu_c: -21487.33
 surge_max: 10000

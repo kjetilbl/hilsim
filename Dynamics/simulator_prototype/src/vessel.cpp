@@ -309,7 +309,7 @@ void Vessel::calculateCrossFlowDrag(){
 	}
 
 	if(std::abs(_v)>=0.05){
-		Y_vv = -(Y_vv*(rho/2))/(_v);
+		Y_vv = -2*(Y_vv*(rho/2))/(_v);
 		N_vv = -(N_vv*(rho/2))/(_v);
 	}
 	

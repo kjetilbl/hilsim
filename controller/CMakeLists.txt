@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   simulator_messages
 )
 
+add_definitions(-std=c++11 -Wall -g)
+
 include_directories(
 include
   ${catkin_INCLUDE_DIRS}
@@ -29,5 +31,5 @@ include_directories(
   	${GTEST_INCLUDE_DIRS}
 )
 
-add_executable(controller src/main.cpp src/controller.cpp)
+add_executable(controller src/main.cpp src/controller.cpp src/waypointController.cpp)
 target_link_libraries(controller ${catkin_LIBRARIES})

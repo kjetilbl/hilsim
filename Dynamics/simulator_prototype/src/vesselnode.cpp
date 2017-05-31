@@ -13,6 +13,7 @@ VesselNode::~VesselNode(){
 void VesselNode::step(){
 	if(!paused){
 		time_since_last_message += dt;
+		publishTrace();
 		if(time_since_last_message>1){
 			tau_control << 0, 0, 0, 0, 0, 0;
 		}
@@ -22,6 +23,7 @@ void VesselNode::step(){
 		vessel.getState(eta, nu);
 		logInfo();
 		publishState();
+		
 	}else{
 
 	}	
@@ -60,6 +62,33 @@ void VesselNode::logInfo(){
 	state_pub.publish(state);
 
 	thrust_pub.publish(thrust);
+}
+
+void VesselNode::publishTrace(){
+	static unsigned int trace_max_size = 1000;
+	static int step = 0;
+	static double simulator_frequency = 1.0/dt;
+	static double trace_frequency = 5; 
+	if(step*trace_frequency >= simulator_frequency){
+		step=0;
+		geometry_msgs::PoseStamped pose;
+		trace.header.stamp = ros::Time::now();
+		trace.header.frame_id = "map";
+		pose.pose.position.x = eta[0];
+		pose.pose.position.y = -eta[1];
+		pose.pose.position.z = -eta[2];
+		trace_log.push_front(pose);
+		if(trace_log.size()>trace_max_size){			
+				trace_log.resize(trace_max_size);
+		}	
+		trace.poses.resize(trace_log.size());
+		for(unsigned int i=0; i<trace_log.size(); i++){
+			trace.poses[i] = trace_log[i];
+		}
+		trace_pub.publish(trace);
+	}
+
+	step++;
 }
 
 geometry_msgs::Twist VesselNode::vectorToGeometryMsg(Vector6d vector_in){
