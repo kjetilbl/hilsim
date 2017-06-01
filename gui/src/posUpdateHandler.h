@@ -22,7 +22,7 @@ class posUpdateHandler : public QThread
     Q_OBJECT
 public:
 	posUpdateHandler(const posUpdateHandler& other);
-	posUpdateHandler(ros::NodeHandle n, satelliteView *Sv, realtimePlot *hdngPlot, realtimePlot *velPlot);
+	posUpdateHandler(ros::NodeHandle *n, satelliteView *Sv, realtimePlot *hdngPlot, realtimePlot *velPlot);
 	~posUpdateHandler();
 	void run();
 
@@ -33,7 +33,7 @@ private:
 	realtimePlot *headingPlot;
 	realtimePlot *velocityPlot;
 
-	ros::NodeHandle nh;
+	ros::NodeHandle *nh;
 	ros::Subscriber obstUpdateSub;
 	ros::Subscriber gpsSub;
 	ros::Subscriber detectedTargetSub;

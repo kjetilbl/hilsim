@@ -1,4 +1,5 @@
 #include "navData.h"
+#include <stdio.h>
 #include <QDebug>
 
 #define ASCII_CHAR_OFFSET 	48
@@ -13,6 +14,20 @@ int sign(double x)
 	if (x > 0) return 1;
 	if (x < 0) return -1;
 	return 0;
+}
+
+uint8_t get_nmea_checksum(const char* nmeaString){
+	const char* n = nmeaString;
+	if (nmeaString[0] == '!' ||  nmeaString[0] == '$' )
+	{
+		n = nmeaString + 1;
+	}
+	uint8_t checksum = 0;
+	while(*n != '*' && *n != '\n'){
+		checksum ^= (uint8_t) *n;
+		n++;
+	}
+	return checksum;
 }
 
 
@@ -220,7 +235,12 @@ string navData::get_AIS_class_A_position_report() const
 	}
 	string AISmsg = "!AIVDM,1,1,,A,";
 	AISmsg += AISpayload;
-	AISmsg += ",0*7D"; // dummy checksum, will give error
+	AISmsg += ",0*";
+	uint8_t checksum = get_nmea_checksum(AISmsg.c_str());
+	char checksumAsString[3];
+	sprintf(checksumAsString, "%X", checksum);
+	AISmsg += checksumAsString;
+
 	return AISmsg;
 }
 

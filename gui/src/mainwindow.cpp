@@ -13,7 +13,7 @@
 #include "environment/obstacleUpdate.h"
 
 
-MainWindow::MainWindow(int argc, char *argv[], QWidget *parent) :
+MainWindow::MainWindow(ros::NodeHandle *nh, QWidget *parent) :
 	QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -32,9 +32,6 @@ MainWindow::MainWindow(int argc, char *argv[], QWidget *parent) :
 	velocityPlot->updateValues(1,2);
 
 	sv = new satelliteView(ui->satelliteView);
-
-	ros::init(argc, argv, "gui");
-	ros::NodeHandle nh;
 
 	obstInterface = new obstacleInterface(nh, ui->obstInterfaceWindow, sv);
 
