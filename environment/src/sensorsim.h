@@ -42,7 +42,7 @@ private:
 	void obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
 	void AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg);
 
-	bool is_within_visibility(gpsPoint obstaclePosition, double crossSection);
+	bool is_within_visibility(gpsPoint obstaclePosition, double crossSection, string objectID);
 
 	navData USVnavData;
 
@@ -66,7 +66,8 @@ public:
 					double trueSOG, 
 					double trueCrossSection);
 	detectedObject();
-	void make_parameter_estimates(double distanceFromUSV_m );
+	Eigen::VectorXd generate_radar_measurement(double distanceFromUSV_m );
+	Eigen::VectorXd KalmanFusion(Eigen::VectorXd Zr, double hr, double ha);
 	uint32_t get_target_number() { return targetNumber; } // TODO: make const
 	gpsPoint get_true_position() { return gpsPoint(X(0), X(1)); }
 	double get_true_CS(){ return X(4); }
@@ -81,7 +82,10 @@ public:
 	void set_true_COG(double trueCOG);
 	void set_true_SOG(double trueSOG);
 	void set_true_cross_section(double trueCS);
+	void set_AIS_data(double SOG, double COG, gpsPoint position);
 	bool noiseEnabled = true;
+	bool AIS_ON = false;
+	bool radar_ais_fusion = false;
 	string descriptor;
  
 private:
@@ -100,6 +104,19 @@ private:
 	Eigen::VectorXd biasSigmas; // characteristic standard deviations of bias white noise
 	Eigen::VectorXd measureSigmas; // characteristic standard deviations of measurement white noise
 	Eigen::MatrixXd errorPrDistanceGain;
+
+	// Kalman parameters
+	Eigen::VectorXd Za; 		// AIS measurements
+	Eigen::VectorXd Za_prev; 	// Previous AIS measurements
+	Eigen::VectorXd Xr_bar;
+	Eigen::VectorXd Xr_hat;
+	Eigen::VectorXd Xa_bar;
+	Eigen::VectorXd Xa_hat;
+	Eigen::MatrixXd Pa;
+	Eigen::MatrixXd Pr;
+	Eigen::MatrixXd Pa_bar;
+	Eigen::MatrixXd Pr_bar;
+	Eigen::MatrixXd fa_hat;
 };
 
 

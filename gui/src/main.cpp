@@ -11,11 +11,16 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    MainWindow *w = new MainWindow(argc, argv);
+    ros::init(argc, argv, "gui");
+	ros::NodeHandle nh;
+
+    MainWindow *w = new MainWindow(&nh);
     w->show();
 
     signal(SIGINT, quit_application);
-
+	
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
     int exitCode = a.exec();
 
     w->close();    

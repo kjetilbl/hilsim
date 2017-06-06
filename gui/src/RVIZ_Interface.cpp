@@ -1,23 +1,51 @@
 #include "RVIZ_Interface.h"
 #include <visualization_msgs/Marker.h>
+#include <nav_msgs/OccupancyGrid.h>
 #include <sstream>
 #include <vector>
 
 #include <QDebug>
 
-rvizInterface::rvizInterface(ros::NodeHandle nh){
-	objectPub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+rvizInterface::rvizInterface(ros::NodeHandle *nh){
+	objectPub = nh->advertise<visualization_msgs::Marker>("visualization_marker", 10000);
+	mapPub = nh->advertise<nav_msgs::OccupancyGrid>("/map", 1000);
 
-	nh.getParam("start_longitude", mapOrigin.longitude);
-	nh.getParam("start_latitude", mapOrigin.latitude);
+	nh->getParam("start_longitude", mapOrigin.longitude);
+	nh->getParam("start_latitude", mapOrigin.latitude);
 }
 
 
 void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double crossSection){
+	/*
+	nav_msgs::OccupancyGrid myMap;
+	myMap.header.stamp = ros::Time();
+	myMap.header.frame_id = "/map";
+	myMap.info.map_load_time = ros::Time::now();
+	myMap.info.resolution = 10;
+	myMap.info.width = 100;
+	myMap.info.height = 50;
+	myMap.info.origin.position.x = 0;
+	myMap.info.origin.position.y = 0;
+	myMap.info.origin.position.z = 0;
+	myMap.info.origin.orientation.x = 0;
+	myMap.info.origin.orientation.y = 0;
+	myMap.info.origin.orientation.z = 0;
+	myMap.info.origin.orientation.w = 0;
+	vector<signed char> data;
+	for (int i = 0; i < 5000; i++)
+	{
+		data.push_back(50);
+	}
+	myMap.data = data;
+
+	mapPub.publish(myMap);
+	ros::spinOnce();
+	*/
+
 	visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
     marker.header.frame_id = "map";
-    marker.header.stamp = ros::Time::now();
+    marker.header.stamp = ros::Time();
 
     stringstream ss;
     ss.str(objectID);
@@ -99,6 +127,7 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double cr
 
     marker.lifetime = ros::Duration();
     objectPub.publish(marker);
+    // ros::spinOnce();
 }
 
 void rvizInterface::show_detected_target(	int targetID, 
@@ -106,15 +135,14 @@ void rvizInterface::show_detected_target(	int targetID,
 											gpsPointStamped position,
 											double SOG,
 											double crossSection){
-
 	visualization_msgs::Marker marker;
     marker.header.frame_id = "map";
-    marker.header.stamp = ros::Time::now();
+    marker.header.stamp = ros::Time();
 
     marker.ns = "detected_" + objectDescriptor;
     marker.id = targetID;
 
-    marker.action = visualization_msgs::Marker::ADD;
+    marker.action = visualization_msgs::Marker::MODIFY;
 
     double y = -(position.longitude - mapOrigin.longitude)/longitude_degs_pr_meter(position.latitude);
     double x = (position.latitude - mapOrigin.latitude)/latitude_degs_pr_meter();
@@ -128,7 +156,7 @@ void rvizInterface::show_detected_target(	int targetID,
     marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
 
     if(objectDescriptor == "fixed_obstacle"){
-	marker.type = visualization_msgs::Marker::CUBE;
+	marker.type = visualization_msgs::Marker::SPHERE;
 	    marker.scale.x = sqrt(crossSection);
 	    marker.scale.y = sqrt(crossSection);
 	    marker.scale.z = sqrt(crossSection);
@@ -152,11 +180,13 @@ void rvizInterface::show_detected_target(	int targetID,
 
     marker.lifetime = ros::Duration(2);
     objectPub.publish(marker);
+    ros::spinOnce();
 
 
+    // Display info above target:
     visualization_msgs::Marker textMarker;
     textMarker.header.frame_id = "map";
-    textMarker.header.stamp = ros::Time::now();
+    textMarker.header.stamp = ros::Time();
 
     textMarker.ns = "detected_" + objectDescriptor + "_info";
     textMarker.id = targetID;
@@ -181,5 +211,6 @@ void rvizInterface::show_detected_target(	int targetID,
 
     textMarker.lifetime = ros::Duration(2);
     objectPub.publish(textMarker);
+    ros::spinOnce();
 }
 

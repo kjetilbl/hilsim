@@ -10,7 +10,7 @@ int aisUser::IDiterator = 0;
 simObject::simObject( const simObject& other )
 {
 	this->nh = other.nh;
-	this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
+	//this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
 	this->posUpdatePub = nh->advertise<environment::obstacleUpdate>("/simObject/position", 1000);
 
 	this->ID = other.ID;
@@ -20,7 +20,7 @@ simObject::simObject( const simObject& other )
 simObject::simObject(ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, double Size, QThread *parent) : QThread(parent)
 {
 	this->nh = n;
-	this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
+	//this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
 	this->posUpdatePub = nh->advertise<environment::obstacleUpdate>("/simObject/position", 1000);
 
 	this->ID = obstID;
@@ -94,8 +94,6 @@ fixedObstacle::fixedObstacle( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size
 
 void fixedObstacle::run(){
 	this->initiate_pos_report_broadcast();
-	ros::AsyncSpinner spinner(1);
-	//spinner.start();
 	QThread::exec();
 }
 
@@ -112,7 +110,8 @@ aisUser::aisUser( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *p
 
 
 void aisUser::broadcast_AIS_msg()
-{
+{	
+
 	Eigen::VectorXd Xm = get_estimated_nav_parameters();
 
 	navData nd( this->get_MMSI(), Xm(0), Xm(1), Xm(5), Xm(3) );
@@ -337,13 +336,17 @@ Eigen::VectorXd aisUser::get_estimated_nav_parameters(){
 
 
 
-ship::ship( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent ) 
-				: aisUser( n, eta0, Size, parent )
+ship::ship( ros::NodeHandle *n, 
+			gpsPoint3DOF eta0, 
+			double Size, 
+			double SpeedInKnots,
+			QThread *parent ) 
+	: aisUser( n, eta0, Size, parent )
 {
 	this->objectDescriptor = "ship";
 	this->set_status(UNDERWAY_USING_ENGINE);
 	this->set_ROT(0);
-	this->set_SOG(5);
+	this->set_SOG(SpeedInKnots);
 	this->set_pos_accuracy(HIGH);
 }
 
@@ -361,9 +364,6 @@ void ship::run()
 	this->initiate_AIS_broadcast(2000);
 	this->initiate_pos_report_broadcast();
 
-	ros::AsyncSpinner spinner(1);
-	//spinner.start();
-
 	QThread::exec();
 }
 
@@ -373,7 +373,7 @@ gpsPoint3DOF ship::calculate_next_eta(){
 
 	if(!waypoints.empty()){
 		nextWaypoint = waypoints.front();
-		if(distance_m(Eta, nextWaypoint) < 3){
+		if(distance_m(Eta, nextWaypoint) < 50){
 			waypoints.erase(waypoints.begin());
 		}
 	}
@@ -382,7 +382,7 @@ gpsPoint3DOF ship::calculate_next_eta(){
 		return Eta;
 	}
 
-	double Speed = this->get_SOG(); 					// ms
+	double Speed = this->get_SOG();			// ms
 	double dt = ((double)this->stepIntervalMs)/1000; 	// s
 	gpsPoint3DOF nextEta;
 
@@ -393,7 +393,8 @@ gpsPoint3DOF ship::calculate_next_eta(){
 	nextEta.latitude = Eta.latitude + dN*latitude_degs_pr_meter();
 
 	// Calculate bearing to next waypoint
-	nextEta.heading = compass_bearing(Eta, nextWaypoint);
+	double WPbearing = compass_bearing(Eta, nextWaypoint);
+	nextEta.heading = Eta.heading + dt*0.1*(WPbearing - Eta.heading);
 
 	return nextEta;
 }

@@ -20,18 +20,16 @@ environment::obstacleCmd makeObstacleCommand(string CmdSpecifier, double x = 0, 
 
 
 
-obstacleInterface::obstacleInterface(ros::NodeHandle nh, QGroupBox *interfaceWindow, satelliteView *Sv) 
+obstacleInterface::obstacleInterface(ros::NodeHandle *nh, QGroupBox *interfaceWindow, satelliteView *Sv) 
 	: sv(Sv)
 {
-	cmdPub = nh.advertise<environment::obstacleCmd>("/simObject/command", 1000);
+	cmdPub = nh->advertise<environment::obstacleCmd>("/simObject/command", 1000);
 
 	spawnObstacleButton = new QPushButton("Spawn Obstacles");
 	QVBoxLayout *vbox = new QVBoxLayout;
 	vbox->addWidget(spawnObstacleButton);
 	interfaceWindow->setLayout(vbox);
 	connect(spawnObstacleButton, SIGNAL (released()), this, SLOT (handleSpawnButton()));
-
-
 }
 
 void obstacleInterface::requestNewObstacle(double x, double y, double psi)

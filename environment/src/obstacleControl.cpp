@@ -70,8 +70,8 @@ void obstacleHandler::run()
 
 	spawn_obstacles();
 
-	ros::AsyncSpinner spinner(1);
-	spinner.start();
+	// ros::AsyncSpinner spinner(1);
+	// spinner.start();
 	QThread::exec();
 }
 
@@ -80,9 +80,11 @@ void obstacleHandler::spawn_obstacles(){
 	// Spawn ships requested in .yaml file
 	map<string, string> requestedShips;
 	nh->getParam("ships", requestedShips);
+
 	for(auto const& shipDescriptor: requestedShips){
 	    vector<gpsPoint> waypoints;
 	    double size = 1;
+	    double speed = 0;
 
 	    vector<string> shipParameters = split_string(shipDescriptor.second, ' ');
 	    for (auto const& shipParam: shipParameters)
@@ -102,12 +104,16 @@ void obstacleHandler::spawn_obstacles(){
 	   		{
 	   			size = atof(value.c_str());
 	   		}
+	   		else if (key == "SpeedInKnots")
+	   		{
+	   			speed = atof(value.c_str());
+	   		}
 	   		else{
 	   			qDebug() << "Unknown key" << key.c_str() << "in ship parameters.";
 	   		}
 	    }
 	   	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, 0);
-	   	ship* newShip = new ship(nh, eta0, pow(size,2));
+	   	ship* newShip = new ship(nh, eta0, pow(size,2), speed);
 	   	for (auto const& WP: waypoints)
 	   	{
 	   		newShip->add_waypoint(WP);
@@ -117,6 +123,7 @@ void obstacleHandler::spawn_obstacles(){
 		QObject::connect(simObjectsThread, SIGNAL(finished()), newShip, SLOT(deleteLater()) );
 		newShip->start();
 		simObjects.push_back( newShip );
+		break;
 	}
 
 
@@ -125,9 +132,10 @@ void obstacleHandler::spawn_obstacles(){
 	int numberOfObstacles;
 	nh->getParam("n_fixed_obstacles", numberOfObstacles);
 	for(int i = 0; i < numberOfObstacles; i++){
-		eta0.longitude = mapOrigin.longitude + (rand()%1000 - 500)*longitude_degs_pr_meter(mapOrigin.latitude);
-		eta0.latitude = mapOrigin.latitude + (rand()%1000 - 500)*latitude_degs_pr_meter();
-		spawn_fixed_obstacle(eta0, 100);
+		eta0.longitude = mapOrigin.longitude + (rand()%10000 - 5000)*longitude_degs_pr_meter(mapOrigin.latitude);
+		eta0.latitude = mapOrigin.latitude + (rand()%10000 - 5000)*latitude_degs_pr_meter();
+		uint16_t size = 500 + (rand() % 1000 - 400);
+		spawn_fixed_obstacle(eta0, size);
 	}
 }
 

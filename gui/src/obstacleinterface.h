@@ -26,7 +26,7 @@ class obstacleInterface : public QObject
 	Q_OBJECT
 public:
 	obstacleInterface(){};
-	obstacleInterface(ros::NodeHandle nh, QGroupBox *interfaceWindow, satelliteView *Sv);
+	obstacleInterface(ros::NodeHandle *nh, QGroupBox *interfaceWindow, satelliteView *Sv);
 	~obstacleInterface(){};
 	void requestNewObstacle(double x, double y, double psi);
 

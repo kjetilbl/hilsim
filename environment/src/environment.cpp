@@ -43,6 +43,8 @@ int main(int argc, char *argv[])
 
     signal(SIGINT, quit_application);
 	
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
     int exitCode = a.exec();
     //------------------------------------------------
 

@@ -129,7 +129,11 @@ class ship : public aisUser
 {
 	Q_OBJECT
 public:
-	ship( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent = 0 );
+	ship( 	ros::NodeHandle *n, 
+			gpsPoint3DOF eta0, 
+			double Size,
+			double SpeedInKnots, 
+			QThread *parent = 0 );
 	void add_waypoint(gpsPoint wp);
 
 private:

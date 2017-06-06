@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(int argc, char *argv[], QWidget *parent = 0);
+    explicit MainWindow(ros::NodeHandle *nh, QWidget *parent = 0);
     ~MainWindow();
 
 private:

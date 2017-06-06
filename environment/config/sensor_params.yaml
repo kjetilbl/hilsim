@@ -1,4 +1,4 @@
-radar_range: 500
+radar_range: 5000
 AIS_range: 10000
 
 ## DTM error parameters
@@ -40,5 +40,5 @@ AIS_position_bias_time_constant: 20
 AIS_COG_bias_time_constant: 10
 AIS_track_bias_time_constant: 10
 AIS_ROT_bias_time_constant: 200
-AIS_SOG_bias_time_constant: 200
+AIS_SOG_bias_time_constant: 20
 

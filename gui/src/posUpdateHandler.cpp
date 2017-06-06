@@ -2,7 +2,7 @@
 #include <QTime>
 
 
-posUpdateHandler::posUpdateHandler(ros::NodeHandle n, satelliteView *Sv, realtimePlot *hdngPlot, realtimePlot *velPlot)
+posUpdateHandler::posUpdateHandler(ros::NodeHandle *n, satelliteView *Sv, realtimePlot *hdngPlot, realtimePlot *velPlot)
 {
 	sv = Sv;
 	nh = n;
@@ -25,12 +25,10 @@ posUpdateHandler::~posUpdateHandler(){
 
 void posUpdateHandler::run()
 {
-	obstUpdateSub = nh.subscribe("/simObject/position", 1000, &posUpdateHandler::obstUpdateParser, this);
-	gpsSub = nh.subscribe("sensors/gps", 1000, &posUpdateHandler::gpsParser, this);
-	detectedTargetSub = nh.subscribe("sensors/target_detection", 1000, &posUpdateHandler::detectedTargetParser, this);
+	obstUpdateSub = nh->subscribe("/simObject/position", 1000, &posUpdateHandler::obstUpdateParser, this);
+	gpsSub = nh->subscribe("sensors/gps", 1000, &posUpdateHandler::gpsParser, this);
+	detectedTargetSub = nh->subscribe("sensors/target_detection", 1000, &posUpdateHandler::detectedTargetParser, this);
 
-	ros::AsyncSpinner spinner(1);
-	spinner.start();
 	QThread::exec();}
 
 
@@ -92,7 +90,7 @@ void posUpdateHandler::detectedTargetParser(const simulator_messages::detectedTa
 	count++;
 	lastTime = now;
 	*/
-
+	
 	int targetID = dtMsg->targetID;
 	string objectDescriptor = dtMsg->objectDescriptor;
 	gpsPointStamped pos(dtMsg->longitude, dtMsg->latitude, dtMsg->COG);
