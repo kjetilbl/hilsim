@@ -16,7 +16,7 @@ private:
 
   ros::NodeHandle nh_;
 
-  double left_thr, right_thr;
+  double left_thr, right_thr, left_bowthruster, right_bowthruster;
   ros::Publisher vel_pub_;
   ros::Subscriber joy_sub_;
 
@@ -25,7 +25,9 @@ private:
 
 JoystickPublisher::JoystickPublisher():
   left_thr(PS3_AXIS_STICK_LEFT_UPWARDS),
-  right_thr(PS3_AXIS_STICK_RIGHT_UPWARDS)
+  right_thr(PS3_AXIS_STICK_RIGHT_UPWARDS),
+  left_bowthruster(PS3_BUTTON_REAR_LEFT_2),
+  right_bowthruster(PS3_BUTTON_REAR_RIGHT_2)
 {
   vel_pub_ = nh_.advertise<simulator_messages::ActuatorMessage>("input/actuators", 0);
   joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 0, &JoystickPublisher::joyCallback, this);
@@ -41,8 +43,9 @@ void JoystickPublisher::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
   actuators.leftNozzle = 0;
   actuators.rightDeflector = 100;
   actuators.leftDeflector = 100;
+  actuators.bowThruster = joy->axes[left_bowthruster]-joy->axes[right_bowthruster];
   actuators.header.stamp = ros::Time::now();
-  actuators.header.frame_id = "/jolner";
+  actuators.header.frame_id = "/vessel";
   vel_pub_.publish(actuators);
 }
 

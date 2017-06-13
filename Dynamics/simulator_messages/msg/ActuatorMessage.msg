@@ -5,3 +5,4 @@ float64 rightNozzle
 float64 leftNozzle
 float64 rightDeflector
 float64 leftDeflector
+float64 bowThruster

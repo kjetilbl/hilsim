@@ -65,7 +65,7 @@ public:
 
   void setGpsCoordinates(double _lat, double _long);
 
-  Vector4d getActuatorPositions();
+  Vector5d getActuatorPositions();
 
   double getLength();
 
@@ -172,7 +172,7 @@ private:
       N_rrr, N_vv, N_vvv, N_rv, N_vr, M_qq;
 
   // Other
-  double K_thruster, T_n, T_alpha, T_beta, n_min, n_max, alpha_max, l_y_1, l_y_2, l_x_1, l_x_2, L_pp, C_d_2d, T, X_uu_c;
+  double K_thruster, K_bowthruster, T_n, T_alpha, T_beta, T_b, n_min, n_max, n_b_min, n_b_max, alpha_max, l_y_1, l_y_2, l_x_1, l_x_2, l_b, L_pp, C_d_2d, T, X_uu_c;
   double surge_max;
 
   // Update frequency for onboard sensors.

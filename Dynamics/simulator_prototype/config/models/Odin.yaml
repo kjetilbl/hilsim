@@ -139,6 +139,11 @@ N_vr: 0
 M_qq: 0
 
 K_thruster: 0.0025
+K_bowthruster: 0.001
+T_b: 0.1
+l_b: 4
+n_b_min: 100
+n_b_max: 2000
 T_n: 0.4
 T_alpha: 1
 T_beta: 0.1

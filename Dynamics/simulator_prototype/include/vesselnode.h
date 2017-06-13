@@ -12,6 +12,9 @@
 #include "vessel.h"
 #include <queue>
 
+typedef Matrix<double, 7, 1> Vector7d;
+typedef Matrix<double, 5, 1> Vector5d;
+
 class VesselNode{
 public:
 	VesselNode();
@@ -21,9 +24,10 @@ public:
 	double getDT();
 private:
 	bool paused = false;
-	Vector6d eta, nu, desired_actuator_states;
+	Vector6d eta, nu;
+	Vector7d desired_actuator_states;
 	Vector6d tau_control = Vector6d::Zero();
-	Vector4d actuator_positions;
+	Vector5d actuator_positions;
 
 	void receiveEnvironmentMessage(const simulator_messages::Environment::ConstPtr &environment_msg);
 
@@ -52,6 +56,7 @@ private:
 
 	visualization_msgs::Marker actuator_1_marker;
 	visualization_msgs::Marker actuator_2_marker;
+	visualization_msgs::Marker actuator_bow_marker;
 
 	tf::TransformBroadcaster tf = tf::TransformBroadcaster();
   	std::string tf_name = "simulated_vessel";
@@ -64,7 +69,7 @@ private:
 	  log_handle.advertise<geometry_msgs::Twist>("log/thrust", 0);
 
 	ros::NodeHandle actuator_handle;
-	ros::Publisher marker_pub = actuator_handle.advertise<visualization_msgs::Marker>("actuator_markers", 1);
+	ros::Publisher marker_pub = actuator_handle.advertise<visualization_msgs::Marker>("actuator_markers", 0);
 	// Used to receive info about the desired actuator states, update the simulated states, and get the corresponding forces and moments
 	ros::Subscriber actuator_message_rec = actuator_handle.subscribe<simulator_messages::ActuatorMessage>(
 	  "input/actuators", 0, &VesselNode::receiveActuatorInfo, this);

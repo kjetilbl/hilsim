@@ -6,7 +6,7 @@ Vessel::Vessel(){
 	ros::NodeHandle nh;
 	readParameters(nh);
 	K_wave << K_1_w, K_2_w, K_3_w, K_4_w, K_5_w, K_6_w;
-	actuators.initializeActuatorModel(K_thruster, T_alpha, T_beta, T_n, l_x_1, l_x_2, l_y_1, l_y_2, dt, n_max, n_min, alpha_max);
+	actuators.initializeActuatorModel(K_thruster, K_bowthruster, T_alpha, T_beta, T_n, T_b, l_x_1, l_x_2, l_y_1, l_y_2, l_b, dt, n_max, n_min, n_b_max, n_b_min, alpha_max);
 	initializeSensors();
 	initializeMatrices();
 	solver.initializeSolver(dt);
@@ -60,9 +60,9 @@ Vector6d Vessel::getThrust(){
 	return tau_control;
 }
 
-Vector4d Vessel::getActuatorPositions(){
-	Vector4d actuator_positions;
-	actuator_positions << l_x_1, l_y_1, l_x_2, l_y_2;
+Vector5d Vessel::getActuatorPositions(){
+	Vector5d actuator_positions;
+	actuator_positions << l_x_1, l_y_1, l_x_2, l_y_2, l_b;
 	return actuator_positions;
 }
 
@@ -885,6 +885,16 @@ bool Vessel::readParameters(ros::NodeHandle nh) {
 	if (!nh.getParam("l_x_1", l_x_1))
 		parameterFail=true;
 	if (!nh.getParam("l_x_2", l_x_2))
+		parameterFail=true;
+	if (!nh.getParam("l_b", l_b))
+		parameterFail=true;
+	if (!nh.getParam("T_b", T_b))
+		parameterFail=true;
+	if (!nh.getParam("n_b_min", n_b_min))
+		parameterFail=true;
+	if (!nh.getParam("n_b_max", n_b_max))
+		parameterFail=true;
+	if (!nh.getParam("K_bowthruster", K_bowthruster))
 		parameterFail=true;
 	if (!nh.getParam("T_n", T_n))
 		parameterFail=true;

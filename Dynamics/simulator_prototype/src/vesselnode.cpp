@@ -107,18 +107,24 @@ void VesselNode::initializeActuatorMarkers(){
     actuator_1_marker.header.stamp = ros::Time::now();
 	actuator_2_marker.header.frame_id = tf_name;
     actuator_2_marker.header.stamp = ros::Time::now();
+    actuator_bow_marker.header.frame_id = tf_name;
+    actuator_bow_marker.header.stamp = ros::Time::now();
 
     actuator_1_marker.ns = "Actuator 1 Visualization";
     actuator_1_marker.id = 0; 
 	actuator_2_marker.ns = "Actuator 2 Visualization";
     actuator_2_marker.id = 1; 
-    Vector6d actuator_states = vessel.actuators.getActuatorState();
+    actuator_bow_marker.ns = "Actuator bow Visualization";
+    actuator_bow_marker.id = 3; 
+    Vector7d actuator_states = vessel.actuators.getActuatorState();
 
     actuator_1_marker.type = visualization_msgs::Marker::ARROW;
  	actuator_2_marker.type = visualization_msgs::Marker::ARROW;
+ 	actuator_bow_marker.type = visualization_msgs::Marker::ARROW;
 
     actuator_1_marker.action = visualization_msgs::Marker::ADD;
 	actuator_2_marker.action = visualization_msgs::Marker::ADD;
+	actuator_bow_marker.action = visualization_msgs::Marker::ADD;
 
     actuator_1_marker.pose.position.x = actuator_positions(0);
     actuator_1_marker.pose.position.y = actuator_positions(1);
@@ -130,6 +136,11 @@ void VesselNode::initializeActuatorMarkers(){
     actuator_2_marker.pose.position.z = 0;
     actuator_2_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI);
 
+    actuator_bow_marker.pose.position.x = actuator_positions(4);
+    actuator_bow_marker.pose.position.y = 0;
+    actuator_bow_marker.pose.position.z = 0;
+    actuator_bow_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
+
     double L_pp = vessel.getLength();
     actuator_1_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(1)));
     actuator_1_marker.scale.y = L_pp*0.02;
@@ -138,6 +149,10 @@ void VesselNode::initializeActuatorMarkers(){
 	actuator_2_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(0)));
     actuator_2_marker.scale.y = L_pp*0.02;
     actuator_2_marker.scale.z = L_pp*0.02;
+
+    actuator_bow_marker.scale.x = 0;
+    actuator_bow_marker.scale.y = L_pp*0.02;
+    actuator_bow_marker.scale.z = L_pp*0.02;
 
     actuator_1_marker.color.r = 1.0f;
     actuator_1_marker.color.g = 0.1f;
@@ -149,27 +164,43 @@ void VesselNode::initializeActuatorMarkers(){
     actuator_2_marker.color.b = 0.1f;
     actuator_2_marker.color.a = 1.0;
 
+    actuator_bow_marker.color.r = 0.1f;
+    actuator_bow_marker.color.g = 0.1f;
+    actuator_bow_marker.color.b = 1.0f;
+    actuator_bow_marker.color.a = 1.0;
+
 
     actuator_1_marker.lifetime = ros::Duration();
 	actuator_2_marker.lifetime = ros::Duration();
+	actuator_bow_marker.lifetime = ros::Duration();
 }
 
 void VesselNode::publishActuatorMarkers(){
     actuator_1_marker.header.stamp = ros::Time::now();
     actuator_2_marker.header.stamp = ros::Time::now();
+    actuator_bow_marker.header.stamp = ros::Time::now();
 
-    Vector6d actuator_states = vessel.actuators.getActuatorState();
+    Vector7d actuator_states = vessel.actuators.getActuatorState();
 
     actuator_1_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI - actuator_states(3));
     actuator_2_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI - actuator_states(2));
 
+    if(actuator_states(6)<0){
+    	actuator_bow_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
+    }else{
+    	actuator_bow_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
+    }
+    std::cout << actuator_bow_marker.pose.orientation << std::endl;
+    
     double L_pp = vessel.getLength();
 
     actuator_1_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(1)));
 	actuator_2_marker.scale.x = L_pp*(0.03 + 0.2*(actuator_states(0)));
+	actuator_bow_marker.scale.x = L_pp*(0.2*(actuator_states(6)));
 
 	marker_pub.publish(actuator_1_marker);
 	marker_pub.publish(actuator_2_marker);
+	marker_pub.publish(actuator_bow_marker);
 }
 
 void VesselNode::receiveForcesAndMoments(const geometry_msgs::Twist::ConstPtr &thrust_msg){
@@ -178,7 +209,7 @@ void VesselNode::receiveForcesAndMoments(const geometry_msgs::Twist::ConstPtr &t
 }
 
 void VesselNode::receiveActuatorInfo(const simulator_messages::ActuatorMessage::ConstPtr &actuator_msg){
-	desired_actuator_states << actuator_msg->rightRPM, actuator_msg->leftRPM, actuator_msg->rightNozzle, actuator_msg->leftNozzle, actuator_msg->rightDeflector, actuator_msg->leftDeflector;
+	desired_actuator_states << actuator_msg->rightRPM, actuator_msg->leftRPM, actuator_msg->rightNozzle, actuator_msg->leftNozzle, actuator_msg->rightDeflector, actuator_msg->leftDeflector, actuator_msg->bowThruster;
 	vessel.actuators.getForcesAndMoments(tau_control, desired_actuator_states);
 	time_since_last_message = 0;
 }
