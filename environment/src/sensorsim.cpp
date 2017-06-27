@@ -595,7 +595,7 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 	cout << "X_hat:\n" << X_hat << endl;
 	*/
 
-	cout << "Fusion position error: " << e_p << endl;
+	//cout << "Fusion position error: " << e_p << endl;
 
 	Eigen::VectorXd X_hat_short = Eigen::VectorXd::Zero(n);
 	double positionErrorTreshold = 50;

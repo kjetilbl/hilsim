@@ -190,7 +190,7 @@ void VesselNode::publishActuatorMarkers(){
     }else{
     	actuator_bow_marker.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI/2);
     }
-    std::cout << actuator_bow_marker.pose.orientation << std::endl;
+    //std::cout << actuator_bow_marker.pose.orientation << std::endl;
     
     double L_pp = vessel.getLength();
 

@@ -68,7 +68,7 @@ void obstacleHandler::run()
 	simObjectsThread = new QThread();
 	simObjectsThread->start();
 
-	spawn_obstacles();
+	//spawn_obstacles();
 
 	// ros::AsyncSpinner spinner(1);
 	// spinner.start();
