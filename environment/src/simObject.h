@@ -140,7 +140,6 @@ private:
 	void run();
 	QTimer *stepTimer = NULL;
 	uint16_t stepIntervalMs;
-	gpsPoint3DOF calculate_next_eta();
 	vector<gpsPoint> waypoints;
 
 private slots:

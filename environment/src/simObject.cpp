@@ -367,19 +367,24 @@ void ship::run()
 	QThread::exec();
 }
 
-gpsPoint3DOF ship::calculate_next_eta(){
+
+void ship::step()
+{
 	gpsPoint3DOF Eta = this->get_eta();
 	gpsPoint nextWaypoint; 
 
-	if(!waypoints.empty()){
+	while(!waypoints.empty()){
 		nextWaypoint = waypoints.front();
 		if(distance_m(Eta, nextWaypoint) < 50){
 			waypoints.erase(waypoints.begin());
 		}
+		else{
+			break;
+		}
 	}
-	else{
+	if(waypoints.empty()){
 		this->set_SOG(0);
-		return Eta;
+		return;
 	}
 
 	double Speed = this->get_SOG();			// ms
@@ -392,15 +397,27 @@ gpsPoint3DOF ship::calculate_next_eta(){
 	nextEta.longitude = Eta.longitude + dE*longitude_degs_pr_meter(Eta.latitude);
 	nextEta.latitude = Eta.latitude + dN*latitude_degs_pr_meter();
 
-	// Calculate bearing to next waypoint
+	// Calculate next heading and turn rate
+	double turnRateRef = 5; //degs/second
+	double turnRate = this->get_ROT(); //degs/second
 	double WPbearing = compass_bearing(Eta, nextWaypoint);
-	nextEta.heading = Eta.heading + dt*0.1*(WPbearing - Eta.heading);
+	if(abs(WPbearing - Eta.heading) < 2){
+		nextEta.heading = WPbearing;
+		turnRateRef = 0;
+	}
+	else if( WPbearing - Eta.heading > 180){
+		turnRateRef *= -1;
+	}
+	else if( Eta.heading > WPbearing && Eta.heading - WPbearing < 180){
+		turnRateRef *= -1;
+	}
+	turnRate = turnRateRef;
+	nextEta.heading = fmod(Eta.heading + dt*turnRate, 360.0);
+	while(nextEta.heading < 0){
+		nextEta.heading += 360;
+	}
 
-	return nextEta;
-}
 
-void ship::step()
-{
-	gpsPoint3DOF nextEta = this->calculate_next_eta();
+	this->set_ROT(turnRate);
 	this->set_eta(nextEta);
 }

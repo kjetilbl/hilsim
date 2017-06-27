@@ -176,7 +176,7 @@ void rvizInterface::show_detected_target(	int targetID,
 	    marker.color.b = 0;
     }
 
-	marker.color.a = 0.5;
+	marker.color.a = 0.3;
 
     marker.lifetime = ros::Duration(2);
     objectPub.publish(marker);

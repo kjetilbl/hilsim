@@ -51,8 +51,6 @@ void sensorSim::run()
 	AIStimer->start(2000);
 	DTtimer->start(100);
 
-	// ros::AsyncSpinner spinner(1);
-	// spinner.start();
 	QThread::exec();
 }
 
@@ -69,18 +67,12 @@ void sensorSim::print_USV_AIS_msg()
 {
 	std::lock_guard<std::mutex> lock(m);
 	USVnavData.set_time(QTime::currentTime());
-	/*
-	qDebug() << "\n---------------------Publish USV AIS message---------------------";
-	USVnavData.print_data();
-	qDebug() << "-----------------------------------------------------------------\n";
-	*/
 }
 
 
 void sensorSim::publish_detected_targets()
 {
 	std::lock_guard<std::mutex> lock(m);
-	qDebug() << "publish_detected_targets start";
 
 	vector<string> outdatedObstacles;
 
@@ -88,28 +80,17 @@ void sensorSim::publish_detected_targets()
 	for( auto & obst : unidentifiedObjects )
 	{
 		string obstID = obst.first;
-		if( obst.second.msecs_since_last_update() > 3000)
+		if( !obst.second.AIS_ON && !obst.second.radar_ON )
 		{
 			outdatedObstacles.push_back(obstID);
 		}
 		else
 		{
-			qDebug() << 1;
 			double distanceToObject = distance_m(USVnavData.get_position(), obst.second.get_true_position());
-			qDebug() << 2;
-			obst.second.generate_radar_measurement(distanceToObject);
-			qDebug() << 3;
+			obst.second.estimate_states(distanceToObject);
 			simulator_messages::detectedTarget dt = obst.second.makeDTmsg();
-			qDebug() << 4;
 
 			detectedTargetPub.publish(dt);
-			//ros::spinOnce();
-			qDebug() << 5;
-			/*
-			QTime now = QTime::currentTime();
-			qDebug() 	<< "Publishing detected target" << obst.second.get_target_number() << "at time" 
-				<< now.hour() << ":" << now.minute() << ":" << now.second() << ":" << now.msec();
-			*/
 		}
 	}
 	// Delete old obstacles
@@ -117,7 +98,6 @@ void sensorSim::publish_detected_targets()
 	{
     	unidentifiedObjects.erase(ID);
 	}
-	qDebug() << "publish_detected_targets end";
 }
 
 
@@ -138,7 +118,6 @@ void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstP
 {
 	std::lock_guard<std::mutex> lock(m);
 
-	qDebug() << "obstacle_update_parser start";
 	string objectDescriptor = obstUpdateMsg->objectDescriptor;
 	gpsPoint obstPos(obstUpdateMsg->longitude, obstUpdateMsg->latitude);
 	double crossSection = obstUpdateMsg->size*6;
@@ -151,9 +130,7 @@ void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstP
 	map<string, detectedObject>::iterator it = unidentifiedObjects.find(objectID);
 	if( it != unidentifiedObjects.end() ) // Object already detected
 	{
-		unidentifiedObjects[objectID].set_true_position(obstPos);
-		// unidentifiedObjects[objectID].set_true_COG(COG);
-		unidentifiedObjects[objectID].set_true_cross_section(crossSection);
+		unidentifiedObjects[objectID].set_radar_data(obstPos, crossSection);
 	}else
 	{
 		if (objectDescriptor == "fixed_obstacle")
@@ -165,8 +142,7 @@ void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstP
 			unidentifiedObjects[objectID] = detectedObject(*nh, "vessel", obstPos, 0, 0, crossSection);
 		}
 	}
-	qDebug() << "obstacle_update_parser end";
-	
+	unidentifiedObjects[objectID].radar_ON = true;
 }
 
 void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
@@ -187,34 +163,17 @@ void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
 
 	double COG = AISmsg->COG;
 	double SOG = AISmsg->SOG;
+	double ROT = AISmsg->ROT;
 	double crossSection = pow(150,2);
 	map<string, detectedObject>::iterator it = unidentifiedObjects.find(objectID);
 	if( it != unidentifiedObjects.end() ) // Object already detected
 	{
-		crossSection = unidentifiedObjects[objectID].get_true_CS();
-		unidentifiedObjects[objectID].AIS_ON = true;
-		unidentifiedObjects[objectID].set_AIS_data(SOG, COG, position);
-
-		if( is_within_visibility(position, crossSection, objectID) ){
-			unidentifiedObjects[objectID].radar_ais_fusion = true;
-		}
-		else{
-			unidentifiedObjects[objectID].radar_ais_fusion = false;
-		}
-		/*unidentifiedObjects[objectID].set_true_SOG(SOG);
-		if( !is_within_visibility(position, crossSection, objectID) ){
-			unidentifiedObjects[objectID].set_true_position(position);
-			unidentifiedObjects[objectID].set_true_COG(COG);
-		}
-		else{
-			unidentifiedObjects[objectID].noiseEnabled = false;
-			// Dont update nav data, trust radar and lidar.
-		}*/
+		unidentifiedObjects[objectID].set_AIS_data(SOG, COG, ROT, position);
 	}else
 	{
 		unidentifiedObjects[objectID] = detectedObject(*nh, objectDescriptor, position, COG, SOG, crossSection);
-		unidentifiedObjects[objectID].noiseEnabled = false;
 	}
+	unidentifiedObjects[objectID].AIS_ON = true;
 }
 
 bool sensorSim::is_within_visibility(gpsPoint newPos, double crossSection, string objectID = "unknown"){
@@ -267,54 +226,67 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 {
 	descriptor = objectDescriptor;
 	targetNumber = targetIterator++;
-	int n = 5;
 	X = Eigen::VectorXd(n);
-	Xm = Eigen::VectorXd(n);
-	b = Eigen::VectorXd::Zero(n);
-	Td = Eigen::MatrixXd::Zero(n, n); // discretize at each time step (varying sample time)
+	Xe = Eigen::VectorXd(n);
+	br = Eigen::VectorXd::Zero(nr);
+	Tdr = Eigen::MatrixXd::Zero(nr, nr);
 
-	Za = Eigen::VectorXd(4);
-	Za << trueSOG, trueCOG, truePosition.longitude, truePosition.latitude;
-	Za_prev = Eigen::VectorXd::Zero(4);
-	Xr_bar = Eigen::VectorXd(10);
-	Xr_bar << Za, Eigen::VectorXd::Zero(6);
+	Za = Eigen::VectorXd(na);
+	Za << trueSOG, trueCOG, 0, truePosition.longitude, truePosition.latitude;
+	Za_prev = Eigen::VectorXd::Zero(na);
+	Xr_bar = Eigen::VectorXd(nk);
+	Xr_bar << Za, Eigen::VectorXd::Zero(7);
 	Xr_hat = Xr_bar;
 	Xa_bar = Xr_bar;
 	Xa_hat = Xr_bar;
-	cout << "First Xa_hat:\n" << Xa_hat << endl;
-	Pa_bar = 10*Eigen::MatrixXd::Identity(10,10);
-	Pr_bar = 100*Eigen::MatrixXd::Identity(10,10);
+	Pa_bar = 10*Eigen::MatrixXd::Identity(nk,nk);
+	Pr_bar = 100*Eigen::MatrixXd::Identity(nk,nk);
 	Pr_bar(0,0) = 1000000;
 	Pr_bar(1,1) = 1000000;
+	Pr_bar(2,2) = 1000000;
 	double u = Xa_hat(0);
 	double psi = deg2rad( Xa_hat(1) );
-	fa_hat = Eigen::VectorXd(10);
-	fa_hat << 0, 0, u*sin(psi)*longitude_degs_pr_meter(truePosition.latitude), u*cos(psi)*latitude_degs_pr_meter(), 0, 0, 0, 0, 0, 0;
-
+	double rot = deg2rad( Xa_hat(2) );
+	fa_hat = Eigen::VectorXd(nk);
+	fa_hat << 0, rot, 0, u*sin(psi)*longitude_degs_pr_meter(truePosition.latitude), u*cos(psi)*latitude_degs_pr_meter(), 0, 0, 0, 0, 0, 0, 0;
 	
 	if(!read_sensor_config(nh, truePosition)){
 		qDebug() << "detectedObject read sensor config failed.";
 		exit(-1);
 	}
+
 	update_true_states(truePosition, trueCOG, trueSOG, trueCrossSection);
+	lastAISupdate = QTime::currentTime();
+	lastRADARupdate = QTime::currentTime();
+}
+
+Eigen::VectorXd detectedObject::estimate_states( double distanceFromUSV_m ){
+	QTime now = QTime::currentTime();
+	if (lastAISupdate.msecsTo(now) > 5000)
+	{
+		AIS_ON = false;
+	}
+	if (lastRADARupdate.msecsTo(now) > 2000)
+	{
+		radar_ON = false;
+	}
+
+	if( radar_ON ){
+		Zr = generate_radar_measurement(distanceFromUSV_m);
+	}
+	Xe = KalmanFusion();
+	return Xe;
 }
 
 Eigen::VectorXd detectedObject::generate_radar_measurement( double distanceFromUSV_m ){
-	if (AIS_ON && radar_ais_fusion == false){
-		double cs = get_estimated_CS();
-		Xm << Za(2), Za(3), Za(0), Za(1), cs; 
-		return Xm;
-	}
-
-	int n = Xm.rows();
 	static std::default_random_engine randomGenerator;
 	static std::normal_distribution<double> gaussianWhiteNoise(0,1);
 
 	if (firstTimeParamEstimate)
 	{
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < nr; i++)
 		{
-			b(i) = gaussianWhiteNoise(randomGenerator)*biasSigmas(i)*25;
+			br(i) = gaussianWhiteNoise(randomGenerator)*brSigmas(i);
 		}
 		firstTimeParamEstimate = false;
 		lastEstimateTime = QTime::currentTime();
@@ -323,48 +295,32 @@ Eigen::VectorXd detectedObject::generate_radar_measurement( double distanceFromU
 	QTime now = QTime::currentTime();
 	double dt = (double)(lastEstimateTime.msecsTo( now ))/1000;
 
-	Eigen::VectorXd e(n);
-	Eigen::VectorXd w(n);
-	Eigen::VectorXd v(n);
-	for (int i = 0; i < n; i++)
+	Eigen::VectorXd e(nr);
+	Eigen::VectorXd w(nr);
+	Eigen::VectorXd v(nr);
+	for (int i = 0; i < nr; i++)
 	{
-		Td(i,i) = exp(-1/T(i,i)*dt);
-		w(i) = gaussianWhiteNoise(randomGenerator)*biasSigmas(i);
-		v(i) = gaussianWhiteNoise(randomGenerator)*measureSigmas(i);
+		Tdr(i,i) = exp(-1/Tr(i,i)*dt);
+		w(i) = gaussianWhiteNoise(randomGenerator)*brSigmas(i);
+		v(i) = gaussianWhiteNoise(randomGenerator)*ZrSigmas(i);
 	}
 
 	// Make artificial deviations
-	b = Td*b + w;
-	e = b + v;
+	br = Tdr*br + w;
+	e = br + v;
 	// e = errorPrDistanceGain * distanceFromUSV_m * e;
-	e(3) = max(-X(3), (double)e(3));
-	e(4) = max(-X(4) + 1, (double)e(4));
+	e(2) = max(-X(2) + 1, (double)e(2));
 
-	// Update artificial measurements:
-	Xm = X + e;
 
-	// Keep estimated COG in valid range:
-	while (Xm(2) < 0)
-	{
-		Xm(2) += 360.0;
-	}
-	while (Xm(2) > 360.0)
-	{
-		Xm(2) -= 360.0;
-	}
+	// Make artificial measurements:
+	Eigen::VectorXd Z(nr);
+	Eigen::VectorXd trueStates(nr);
+	trueStates << X(0), X(1), X(4);
+	Z = trueStates + e;
 
 	lastEstimateTime = now;
 
-	if(radar_ais_fusion == true){
-		Eigen::VectorXd Zr(2);
-		Zr << Xm(0), Xm(1);
-		Eigen::VectorXd X_hat(4);
-		X_hat = KalmanFusion(Zr, 0.1, 2);
-		double cs = Xm(4);
-		Xm << X_hat(2), X_hat(3), X_hat(1), X_hat(0), cs;
-	}
-
-	return Xm;
+	return Z;
 }
 
 void detectedObject::update_true_states(gpsPoint pos, double COG, double SOG, double crossSection){
@@ -388,102 +344,63 @@ simulator_messages::detectedTarget detectedObject::makeDTmsg(){
 
 bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePosition){
 	bool successfulRead = true;
-	int n = 5;
-	biasSigmas = Eigen::VectorXd(n);
+	brSigmas = Eigen::VectorXd(nr);
 	double positionBiasSigma = 0;
-	if(!nh.getParam("DTM_position_bias_sigma", positionBiasSigma)){
+	if(!nh.getParam("radar_position_bias_sigma", positionBiasSigma)){
 		successfulRead = false;
 	}
-	biasSigmas(0) = positionBiasSigma*longitude_degs_pr_meter(truePosition.latitude);
-	biasSigmas(1) = positionBiasSigma*latitude_degs_pr_meter();
+	brSigmas(0) = positionBiasSigma*longitude_degs_pr_meter(truePosition.latitude);
+	brSigmas(1) = positionBiasSigma*latitude_degs_pr_meter();
 
-	if(!nh.getParam("DTM_COG_bias_sigma", biasSigmas(2))){
+
+	if(!nh.getParam("radar_size_bias_sigma", brSigmas(2))){
 		successfulRead = false;
-		biasSigmas(2) = 0;
+		brSigmas(2) = 0;
 	}
 
-	if(!nh.getParam("DTM_SOG_bias_sigma", biasSigmas(3))){
-		successfulRead = false;
-		biasSigmas(3) = 0;
-	}
-
-	if(!nh.getParam("DTM_size_bias_sigma", biasSigmas(4))){
-		successfulRead = false;
-		biasSigmas(4) = 0;
-	}
-
-	measureSigmas = Eigen::VectorXd(n);
+	ZrSigmas = Eigen::VectorXd(nr);
 	double positionMeasureSigma = 0;
-	if(!nh.getParam("DTM_position_measure_sigma", positionMeasureSigma)){
+	if(!nh.getParam("radar_position_measure_sigma", positionMeasureSigma)){
 		successfulRead = false;
 	}
-	measureSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(truePosition.latitude);
-	measureSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
+	ZrSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(truePosition.latitude);
+	ZrSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
 
-	if(!nh.getParam("DTM_COG_measure_sigma", measureSigmas(2))){
+	if(!nh.getParam("radar_size_measure_sigma", ZrSigmas(2))){
 		successfulRead = false;
-		measureSigmas(2) = 0;
-	}
-
-	if(!nh.getParam("DTM_SOG_measure_sigma", measureSigmas(3))){
-		successfulRead = false;
-		measureSigmas(3) = 0;
-	}
-
-	if(!nh.getParam("DTM_size_measure_sigma", measureSigmas(4))){
-		successfulRead = false;
-		measureSigmas(4) = 0;
+		ZrSigmas(2) = 0;
 	}
 
 
-	Eigen::VectorXd k(n);
+	Eigen::VectorXd k(nr);
 	double posErrorPrDistanceGain = 0;
-	if(!nh.getParam("DTM_position_error_pr_distance_gain", posErrorPrDistanceGain)){
+	if(!nh.getParam("radar_position_error_pr_distance_gain", posErrorPrDistanceGain)){
 		successfulRead = false;
 	}
 	k(0) = posErrorPrDistanceGain;
 	k(1) = posErrorPrDistanceGain;
 
-	if(!nh.getParam("DTM_COG_error_pr_distance_gain", k(2))){
+
+	if(!nh.getParam("radar_size_error_pr_distance_gain", k(2))){
 		successfulRead = false;
 		k(2) = 0;
-	}
-
-	if(!nh.getParam("DTM_SOG_error_pr_distance_gain", k(3))){
-		successfulRead = false;
-		k(3) = 0;
-	}
-
-	if(!nh.getParam("DTM_size_error_pr_distance_gain", k(4))){
-		successfulRead = false;
-		k(4) = 0;
 	}
 	errorPrDistanceGain = k.asDiagonal();
 
 
-	Eigen::VectorXd biasTimeConstants(n);
+	Eigen::VectorXd biasTimeConstants(nr);
 	double posBiasTimeConstant = 1;
-	if(!nh.getParam("DTM_position_bias_time_constant", posBiasTimeConstant)){
+	if(!nh.getParam("radar_position_bias_time_constant", posBiasTimeConstant)){
 		successfulRead = false;
 	}
 	biasTimeConstants(0) = posBiasTimeConstant;
 	biasTimeConstants(1) = posBiasTimeConstant;
 
-	if(!nh.getParam("DTM_COG_bias_time_constant", biasTimeConstants(2))){
+	if(!nh.getParam("radar_size_bias_time_constant", biasTimeConstants(2))){
 		successfulRead = false;
 		biasTimeConstants(2) = 0;
 	}
-
-	if(!nh.getParam("DTM_SOG_bias_time_constant", biasTimeConstants(3))){
-		successfulRead = false;
-		biasTimeConstants(3) = 0;
-	}
-
-	if(!nh.getParam("DTM_size_bias_time_constant", biasTimeConstants(4))){
-		successfulRead = false;
-		biasTimeConstants(4) = 0;
-	}
-	T = biasTimeConstants.asDiagonal();
+	Tr = biasTimeConstants.asDiagonal();
 
 	return successfulRead;
 }
@@ -509,75 +426,90 @@ void detectedObject::set_true_cross_section(double trueCS){
 	lastUpdate = QTime::currentTime();
 }
 
-void detectedObject::set_AIS_data(double SOG, double COG, gpsPoint position){
-	Za = Eigen::VectorXd(4);
-	Za << SOG, COG, position.longitude, position.latitude;
+
+void detectedObject::set_radar_data(gpsPoint pos, double crossSection){
+	set_true_position(pos);
+	set_true_cross_section(crossSection);
+	lastRADARupdate = QTime::currentTime();
 }
 
-Eigen::VectorXd detectedObject::KalmanFusion(Eigen::VectorXd Zr, double hr, double ha){
-	if(Zr.rows() != 2){
-		cout << "Invalid Zr:\n" << Zr << endl;
-		exit(-1);
-	}
+void detectedObject::set_AIS_data(double SOG, double COG, double ROT, gpsPoint position){
+	Za = Eigen::VectorXd(5);
+	Za << SOG, COG, ROT, position.longitude, position.latitude;
+	lastAISupdate = QTime::currentTime();
+}
 
-	Eigen::MatrixXd Ha(4, 10);
-	Ha << Eigen::MatrixXd::Identity(4, 4), Eigen::MatrixXd::Zero(4, 2), Eigen::MatrixXd::Identity(4,4);
-	Eigen::MatrixXd Hr(2,10);
-	Hr << Eigen::MatrixXd::Zero(2, 2), Eigen::MatrixXd::Identity(2, 2), Eigen::MatrixXd::Identity(2, 2), Eigen::MatrixXd::Zero(2, 4);
+Eigen::VectorXd detectedObject::KalmanFusion(){
+	double crossSection = Zr(2);
+
+	Eigen::MatrixXd Ha(5, 12);
+	Ha << 	Eigen::MatrixXd::Identity(5, 5), 
+			Eigen::MatrixXd::Zero(5, 2), 
+			Eigen::MatrixXd::Identity(5,2), 
+			Eigen::MatrixXd::Zero(5,3);
+	Ha(3,9) = 1;
+	Ha(4,10) = 1;
+	Eigen::MatrixXd Hr(2,12);
+	Hr << Eigen::MatrixXd::Zero(2, 3), Eigen::MatrixXd::Identity(2, 2), Eigen::MatrixXd::Identity(2, 2), Eigen::MatrixXd::Zero(2, 5);
 
 
-	Eigen::VectorXd Tb_trace(6);
-	Tb_trace << -0.1, -0.1, -0.05, -0.1, -0.05, -0.05;
+	Eigen::VectorXd Tb_trace(7);
+	Tb_trace << -0.1, -0.1, -0.05, -0.1, -0.05, -0.05, -0.05;
 	Eigen::MatrixXd Tb = Tb_trace.asDiagonal();
 
 	Eigen::VectorXd Zr_sigmas(2);
-	Eigen::VectorXd Za_sigmas(4);
-	Zr_sigmas << 0.01*longitude_degs_pr_meter(Xa_bar(3)),
-				 0.01*latitude_degs_pr_meter(); 
+	Eigen::VectorXd Za_sigmas(5);
+	Zr_sigmas << 0.001*longitude_degs_pr_meter(Xa_bar(4)),
+				 0.001*latitude_degs_pr_meter(); 
 	Eigen::MatrixXd Rr = Zr_sigmas.asDiagonal();
 	Za_sigmas << 0.000001, 
-				 0.000001, 
-				 0.000001*longitude_degs_pr_meter(Xa_bar(3)), 
-				 0.000001*latitude_degs_pr_meter(); 
+				 0.1,  
+				 3, 
+				 0.001*longitude_degs_pr_meter(Xa_bar(4)), 
+				 0.001*latitude_degs_pr_meter(); 
 	Eigen::MatrixXd Ra = Za_sigmas.asDiagonal();
-	Eigen::VectorXd Q_diag(10);
+	Eigen::VectorXd Q_diag(12);
 	Q_diag << 	0.0000001, 
+				10, 
 				1, 
-				0.0000001, 
-				0.0000001, 
+				1, 
+				1, 
 				0.5*longitude_degs_pr_meter(Zr(1)), 
 				0.5*latitude_degs_pr_meter(), 
 				0.5*longitude_degs_pr_meter(Zr(1)), 
 				0.2, 
 				0.01*longitude_degs_pr_meter(Zr(1)), 
-				0.01*latitude_degs_pr_meter();
+				0.01*latitude_degs_pr_meter(),
+				8;
 	Eigen::MatrixXd Q = Q_diag.asDiagonal();
 	
-	Eigen::MatrixXd E(10,10);
-	E << 	Eigen::MatrixXd::Zero(4,10),
-			Eigen::MatrixXd::Zero(6,4), Eigen::MatrixXd::Identity(6,6);
-	Eigen::MatrixXd I_10 = Eigen::MatrixXd::Identity(10,10);
+	Eigen::MatrixXd E(12,12);
+	E << 	Eigen::MatrixXd::Zero(5,12),
+			Eigen::MatrixXd::Zero(7,5), Eigen::MatrixXd::Identity(7,7);
+	Eigen::MatrixXd I_12 = Eigen::MatrixXd::Identity(12,12);
 
 	double longDegsPrM = longitude_degs_pr_meter(Zr(1));
 	double latDegsPrM = latitude_degs_pr_meter();
-	if( Za != Za_prev){
+	if( Za != Za_prev && AIS_ON){
 		Eigen::MatrixXd K = Pa_bar*Ha.transpose()*(Ha*Pa_bar*Ha.transpose() + Ra ).inverse();
 		Xa_hat = Xa_bar + K*(Za - Ha*Xa_bar);
-		Pa = (I_10 -K*Ha)*Pa_bar*((I_10 - K*Ha).transpose()) + K*Ra*K.transpose();
+		Pa = (I_12 -K*Ha)*Pa_bar*((I_12 - K*Ha).transpose()) + K*Ra*K.transpose();
 
 		// Jacobian:
 		double u = Xa_hat(0);
 		double psi = deg2rad( Xa_hat(1) );
-		Eigen::VectorXd b(6);
-		b <<  Xa_hat(4), Xa_hat(5), Xa_hat(6), Xa_hat(7), Xa_hat(8), Xa_hat(9); 
-		fa_hat << 0, 0, u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, Tb*b;
-		Eigen::MatrixXd Ja(10,10);
-		Ja << 	Eigen::MatrixXd::Zero(2,10),
-				sin(psi)*longDegsPrM, u*cos(psi)*longDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,8),
-				cos(psi)*latDegsPrM, -u*sin(psi)*latDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,8),
-				Eigen::MatrixXd::Zero(6,4), Tb;
-
-		Eigen::MatrixXd PHIa = I_10 + ha*Ja;
+		double rot = Xa_hat(2);
+		Eigen::VectorXd b(7);
+		b <<  Xa_hat(5), Xa_hat(6), Xa_hat(7), Xa_hat(8), Xa_hat(9), Xa_hat(10), Xa_hat(11); 
+		fa_hat << 0, rot, b(6), u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, Tb*b;
+		Eigen::MatrixXd Ja(12,12);
+		Ja << 	Eigen::MatrixXd::Zero(1,12),
+				0, 0, 1, Eigen::MatrixXd::Zero(1,9),
+				Eigen::MatrixXd::Zero(1,11), 1, 
+				sin(psi)*longDegsPrM, u*cos(psi)*longDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
+				cos(psi)*latDegsPrM, -u*sin(psi)*latDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
+				Eigen::MatrixXd::Zero(7,5), Tb;
+		Eigen::MatrixXd PHIa = I_12 + ha*Ja;
 
 		// Project ahead:
 		Eigen::MatrixXd Gamma = ha*E;
@@ -586,52 +518,73 @@ Eigen::VectorXd detectedObject::KalmanFusion(Eigen::VectorXd Zr, double hr, doub
 		Za_prev = Za;
 
 	}
-	else{
+	else if(AIS_ON){
 		Xa_hat = Xa_hat + hr*fa_hat;
 	}
 
 	Eigen::MatrixXd K = Pr_bar*Hr.transpose()*(Hr*Pr_bar*Hr.transpose() + Rr).inverse();
-	Xr_hat = Xr_bar + K*(Zr - Hr*Xr_bar);
-	Pr = (I_10 - K*Hr)*Pr_bar*((I_10 - K*Hr).transpose()) + K*Rr*K.transpose();
+	Eigen::VectorXd Zr_short(2);
+	Zr_short << Zr(0), Zr(1); 
+	Xr_hat = Xr_bar + K*(Zr_short - Hr*Xr_bar);
+	Pr = (I_12 - K*Hr)*Pr_bar*((I_12 - K*Hr).transpose()) + K*Rr*K.transpose();
 	
-
 
 	// Jacobian:
 	double u = Xr_hat(0);
 	double psi = deg2rad( Xr_hat(1) );
-	Eigen::VectorXd b(6);
-	b <<  Xr_hat(4), Xr_hat(5), Xr_hat(6), Xr_hat(7), Xr_hat(8), Xr_hat(9);
-	Eigen::VectorXd fr_hat(10);
-	fr_hat << 0, 0, u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, Tb*b;
-	Eigen::MatrixXd Jr(10,10);
-	Jr << 	Eigen::MatrixXd::Zero(2,10),
-			sin(psi)*longDegsPrM, u*cos(psi)*longDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,8),
-			cos(psi)*latDegsPrM, -u*sin(psi)*latDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,8),
-			Eigen::MatrixXd::Zero(6,4), Tb;
-	Eigen::MatrixXd PHIr = I_10 + hr*Jr;
+	double rot = Xr_hat(2);
+	Eigen::VectorXd b(7);
+	b <<  Xr_hat(5), Xr_hat(6), Xr_hat(7), Xr_hat(8), Xr_hat(9), Xr_hat(10), Xr_hat(11);
+	Eigen::VectorXd fr_hat(12);
+	fr_hat << 0, rot, b(6), u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, Tb*b;
+	Eigen::MatrixXd Jr(12,12);
+	Jr << 	Eigen::MatrixXd::Zero(1,12),
+			0, 0, 1, Eigen::MatrixXd::Zero(1,9),
+			Eigen::MatrixXd::Zero(1,11), 1, 
+			sin(psi)*longDegsPrM, u*cos(psi)*longDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
+			cos(psi)*latDegsPrM, -u*sin(psi)*latDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
+			Eigen::MatrixXd::Zero(7,5), Tb;
+	Eigen::MatrixXd PHIr = I_12 + hr*Jr;
 
 	// Project ahead:
 	Eigen::MatrixXd Gamma = hr*E;
 	Xr_bar = Xr_hat + hr*fr_hat;
 	Pr_bar = PHIr*Pr*PHIr.transpose() + Gamma*Q*Gamma;
 
-	Eigen::MatrixXd Pr_w = Pr/hr;
-	Eigen::MatrixXd Pa_w = Pa/ha;
+	Eigen::VectorXd X_hat(nk);
+	if(AIS_ON && !radar_ON){
+		//qDebug() << "Using AIS only.";
+		X_hat = Xa_hat;
+		//cout << "Za:\n" << Za << endl;
+	}
+	else if( radar_ON && !AIS_ON){
+		//qDebug() << "Using RADAR only.";
+		X_hat = Xr_hat;
+	}
+	else if(AIS_ON && radar_ON){
+		//qDebug() << "Using SENSOR FUSION.";
+		Eigen::MatrixXd Pr_w = Pr/hr;
+		Eigen::MatrixXd Pa_w = Pa/ha;
+		X_hat = (Pr_w.inverse() + Pa_w.inverse()).inverse()*(Pr_w.inverse()*Xr_hat + Pa_w.inverse()*Xa_hat);
+		//cout << "Za:\n" << Za << endl;
+	}
 
-	Eigen::VectorXd X_hat = (Pr_w.inverse() + Pa_w.inverse()).inverse()*(Pr_w.inverse()*Xr_hat + Pa_w.inverse()*Xa_hat);
+	//cout << "X_hat:\n" << X_hat << endl;
 
-	double e_longr = (Xr_hat(2) - X(0))/longitude_degs_pr_meter(Zr(1));
-	double e_latr = (Xr_hat(3) - X(1))/latitude_degs_pr_meter();
+	double e_longr = (Xr_hat(3) - X(0))/longitude_degs_pr_meter(Zr(1));
+	double e_latr = (Xr_hat(4) - X(1))/latitude_degs_pr_meter();
 	double e_pr = sqrt(pow(e_longr,2) + pow(e_latr,2));
-	double e_longa = (Xa_hat(2) - X(0))/longitude_degs_pr_meter(Zr(1));
-	double e_lata = (Xa_hat(3) - X(1))/latitude_degs_pr_meter();
+	double e_longa = (Xa_hat(3) - X(0))/longitude_degs_pr_meter(Zr(1));
+	double e_lata = (Xa_hat(4) - X(1))/latitude_degs_pr_meter();
 	double e_pa = sqrt(pow(e_longa,2) + pow(e_lata,2));
 	double e_hr = Za(1) - Xr_hat(1);
 	double e_ha = Za(1) - Xa_hat(1);
-	double e_long = (X_hat(2) - X(0))/longitude_degs_pr_meter(Zr(1));
-	double e_lat = (X_hat(3) - X(1))/latitude_degs_pr_meter();
+	double e_long = (X_hat(3) - X(0))/longitude_degs_pr_meter(Zr(1));
+	double e_lat = (X_hat(4) - X(1))/latitude_degs_pr_meter();
 	double e_p = sqrt(pow(e_long,2) + pow(e_lat,2));
 	double e_h = Za(1) - X_hat(1);
+	
+	/*
 	cout << "Radar  position error: " << e_pr << endl;
 	cout << "Radar  heading  error: " << e_hr << endl;
 	cout << "AIS    position error: " << e_pa << endl;
@@ -640,9 +593,25 @@ Eigen::VectorXd detectedObject::KalmanFusion(Eigen::VectorXd Zr, double hr, doub
 	cout << "Fusion heading  error: " << e_h << endl;
 	cout << "Za:\n" << Za << endl;
 	cout << "X_hat:\n" << X_hat << endl;
-	cout << "Pr_w:\n" << (Pr_w.inverse() + Pa_w.inverse()).inverse()*Pr_w.inverse() << endl;
+	*/
 
-	return X_hat;
+	cout << "Fusion position error: " << e_p << endl;
+
+	Eigen::VectorXd X_hat_short = Eigen::VectorXd::Zero(n);
+	double positionErrorTreshold = 50;
+	if (abs(e_p) > positionErrorTreshold )
+	{
+		if (AIS_ON){
+			X_hat_short << Za(3), Za(4), Za(1), Za(0), crossSection;
+		}
+		else if(radar_ON){
+			X_hat_short << Zr(0), Zr(1), 0, 0, crossSection;
+		}
+	}
+	else{
+		X_hat_short << X_hat(3), X_hat(4), X_hat(1), X_hat(0), crossSection;
+	}
+	return X_hat_short;
 }
 
 

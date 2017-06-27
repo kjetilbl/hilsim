@@ -112,18 +112,23 @@ void obstacleHandler::spawn_obstacles(){
 	   			qDebug() << "Unknown key" << key.c_str() << "in ship parameters.";
 	   		}
 	    }
-	   	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, 0);
-	   	ship* newShip = new ship(nh, eta0, pow(size,2), speed);
-	   	for (auto const& WP: waypoints)
-	   	{
-	   		newShip->add_waypoint(WP);
-	   	}
+	    if(waypoints.empty()){
+	    	qDebug() << "Error in ship parameters. Ship must have at least one waypoint.";
+	    }
+	    else{
+	    	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, 0);
+	    	waypoints.erase(waypoints.begin());
+		   	ship* newShip = new ship(nh, eta0, pow(size,2), speed);
+		   	for (auto const& WP: waypoints)
+		   	{
+		   		newShip->add_waypoint(WP);
+		   	}
 
-	   	newShip->moveToThread(simObjectsThread);
-		QObject::connect(simObjectsThread, SIGNAL(finished()), newShip, SLOT(deleteLater()) );
-		newShip->start();
-		simObjects.push_back( newShip );
-		break;
+		   	newShip->moveToThread(simObjectsThread);
+			QObject::connect(simObjectsThread, SIGNAL(finished()), newShip, SLOT(deleteLater()) );
+			newShip->start();
+			simObjects.push_back( newShip );
+	    }
 	}
 
 
