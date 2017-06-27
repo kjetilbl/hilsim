@@ -128,7 +128,7 @@ private:
 	Eigen::MatrixXd Pr;
 	Eigen::MatrixXd Pa_bar;
 	Eigen::MatrixXd Pr_bar;
-	Eigen::MatrixXd fa_hat;
+	Eigen::VectorXd fa_hat;
 };
 
 

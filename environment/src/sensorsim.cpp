@@ -249,7 +249,7 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 	double rot = deg2rad( Xa_hat(2) );
 	fa_hat = Eigen::VectorXd(nk);
 	fa_hat << 0, rot, 0, u*sin(psi)*longitude_degs_pr_meter(truePosition.latitude), u*cos(psi)*latitude_degs_pr_meter(), 0, 0, 0, 0, 0, 0, 0;
-	
+	cout << Xa_hat;
 	if(!read_sensor_config(nh, truePosition)){
 		qDebug() << "detectedObject read sensor config failed.";
 		exit(-1);
@@ -439,6 +439,39 @@ void detectedObject::set_AIS_data(double SOG, double COG, double ROT, gpsPoint p
 	lastAISupdate = QTime::currentTime();
 }
 
+void Kalman_project_ahead(	Eigen::VectorXd &X_bar,
+							Eigen::VectorXd X_hat, 
+							Eigen::VectorXd &f_hat,
+							Eigen::MatrixXd &P_bar,
+							Eigen::MatrixXd P, 
+							Eigen::MatrixXd T_b, 
+							double h, 
+							Eigen::MatrixXd E, 
+							Eigen::MatrixXd Q){
+	Eigen::MatrixXd I_12 = Eigen::MatrixXd::Identity(12,12);
+	double longDegsPrM = longitude_degs_pr_meter(X_hat(1));
+	double latDegsPrM = latitude_degs_pr_meter();
+
+	double u = X_hat(0);
+	double psi = deg2rad( X_hat(1) );
+	double rot = X_hat(2);
+	Eigen::VectorXd b(7);
+	b <<  X_hat(5), X_hat(6), X_hat(7), X_hat(8), X_hat(9), X_hat(10), X_hat(11); 
+	f_hat << 0, rot, b(6), u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, T_b*b;
+	Eigen::MatrixXd J(12,12);
+	J << 	Eigen::MatrixXd::Zero(1,12),
+			0, 0, 1, Eigen::MatrixXd::Zero(1,9),
+			Eigen::MatrixXd::Zero(1,11), 1, 
+			sin(psi)*longDegsPrM, u*cos(psi)*longDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
+			cos(psi)*latDegsPrM, -u*sin(psi)*latDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
+			Eigen::MatrixXd::Zero(7,5), T_b;
+	Eigen::MatrixXd PHI = I_12 + h*J;
+
+	Eigen::MatrixXd Gamma = h*E;
+	X_bar = X_hat + h*f_hat;
+	P_bar = PHI*P*PHI.transpose() + Gamma*Q*Gamma;
+}
+
 Eigen::VectorXd detectedObject::KalmanFusion(){
 	double crossSection = Zr(2);
 
@@ -495,26 +528,7 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 		Xa_hat = Xa_bar + K*(Za - Ha*Xa_bar);
 		Pa = (I_12 -K*Ha)*Pa_bar*((I_12 - K*Ha).transpose()) + K*Ra*K.transpose();
 
-		// Jacobian:
-		double u = Xa_hat(0);
-		double psi = deg2rad( Xa_hat(1) );
-		double rot = Xa_hat(2);
-		Eigen::VectorXd b(7);
-		b <<  Xa_hat(5), Xa_hat(6), Xa_hat(7), Xa_hat(8), Xa_hat(9), Xa_hat(10), Xa_hat(11); 
-		fa_hat << 0, rot, b(6), u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, Tb*b;
-		Eigen::MatrixXd Ja(12,12);
-		Ja << 	Eigen::MatrixXd::Zero(1,12),
-				0, 0, 1, Eigen::MatrixXd::Zero(1,9),
-				Eigen::MatrixXd::Zero(1,11), 1, 
-				sin(psi)*longDegsPrM, u*cos(psi)*longDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
-				cos(psi)*latDegsPrM, -u*sin(psi)*latDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
-				Eigen::MatrixXd::Zero(7,5), Tb;
-		Eigen::MatrixXd PHIa = I_12 + ha*Ja;
-
-		// Project ahead:
-		Eigen::MatrixXd Gamma = ha*E;
-		Xa_bar = Xa_hat + ha*fa_hat;
-		Pa_bar = PHIa*Pa*PHIa.transpose() + Gamma*Q*Gamma;
+		Kalman_project_ahead(Xa_bar, Xa_hat, fa_hat, Pa_bar, Pa, Tb, ha, E, Q);
 		Za_prev = Za;
 
 	}
@@ -528,29 +542,9 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 	Xr_hat = Xr_bar + K*(Zr_short - Hr*Xr_bar);
 	Pr = (I_12 - K*Hr)*Pr_bar*((I_12 - K*Hr).transpose()) + K*Rr*K.transpose();
 	
-
-	// Jacobian:
-	double u = Xr_hat(0);
-	double psi = deg2rad( Xr_hat(1) );
-	double rot = Xr_hat(2);
-	Eigen::VectorXd b(7);
-	b <<  Xr_hat(5), Xr_hat(6), Xr_hat(7), Xr_hat(8), Xr_hat(9), Xr_hat(10), Xr_hat(11);
 	Eigen::VectorXd fr_hat(12);
-	fr_hat << 0, rot, b(6), u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, Tb*b;
-	Eigen::MatrixXd Jr(12,12);
-	Jr << 	Eigen::MatrixXd::Zero(1,12),
-			0, 0, 1, Eigen::MatrixXd::Zero(1,9),
-			Eigen::MatrixXd::Zero(1,11), 1, 
-			sin(psi)*longDegsPrM, u*cos(psi)*longDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
-			cos(psi)*latDegsPrM, -u*sin(psi)*latDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
-			Eigen::MatrixXd::Zero(7,5), Tb;
-	Eigen::MatrixXd PHIr = I_12 + hr*Jr;
-
-	// Project ahead:
-	Eigen::MatrixXd Gamma = hr*E;
-	Xr_bar = Xr_hat + hr*fr_hat;
-	Pr_bar = PHIr*Pr*PHIr.transpose() + Gamma*Q*Gamma;
-
+	Kalman_project_ahead(Xr_bar, Xr_hat, fr_hat, Pr_bar, Pr, Tb, hr, E, Q);
+	
 	Eigen::VectorXd X_hat(nk);
 	if(AIS_ON && !radar_ON){
 		//qDebug() << "Using AIS only.";
@@ -595,7 +589,7 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 	cout << "X_hat:\n" << X_hat << endl;
 	*/
 
-	//cout << "Fusion position error: " << e_p << endl;
+	cout << "Fusion position error: " << e_p << endl;
 
 	Eigen::VectorXd X_hat_short = Eigen::VectorXd::Zero(n);
 	double positionErrorTreshold = 50;
