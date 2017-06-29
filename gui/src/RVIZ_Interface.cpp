@@ -103,7 +103,7 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double cr
 	    marker.color.a = 1;
     }
     else if(marker.ns == "fixed_obstacle"){
-    	marker.type = visualization_msgs::Marker::CUBE;
+    	marker.type = visualization_msgs::Marker::CYLINDER;
 	    // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
 	    marker.pose.position.x = x;
 	    marker.pose.position.y = y;
@@ -116,7 +116,7 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double cr
 	    // Set the scale of the marker -- 1x1x1 here means 1m on a side
 	    marker.scale.x = sqrt(crossSection);
 	    marker.scale.y = sqrt(crossSection);
-	    marker.scale.z = sqrt(crossSection);
+	    marker.scale.z = sqrt(crossSection)*2;
 
 	    // Set the color -- be sure to set alpha to something non-zero!
 	    marker.color.r = 1;
@@ -156,27 +156,22 @@ void rvizInterface::show_detected_target(	int targetID,
     marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
 
     if(objectDescriptor == "fixed_obstacle"){
-	marker.type = visualization_msgs::Marker::SPHERE;
+	marker.type = visualization_msgs::Marker::CYLINDER;
 	    marker.scale.x = sqrt(crossSection);
 	    marker.scale.y = sqrt(crossSection);
-	    marker.scale.z = sqrt(crossSection);
-
-	    marker.color.r = 1;
-	    marker.color.g = 0;
-	    marker.color.b = 0;
+	    marker.scale.z = 1;
     }
     else if( objectDescriptor == "vessel"){
-	marker.type = visualization_msgs::Marker::SPHERE;
+	marker.type = visualization_msgs::Marker::CYLINDER;
 	    marker.scale.x = sqrt(crossSection);
 	    marker.scale.y = sqrt(crossSection)/3;
-	    marker.scale.z = sqrt(crossSection)/2;
-
-	    marker.color.r = 1;
-	    marker.color.g = 0;
-	    marker.color.b = 0;
+	    marker.scale.z = 1;// sqrt(crossSection)/2;
     }
 
-	marker.color.a = 0.3;
+    marker.color.r = 0.9;
+    marker.color.g = 0.5;
+    marker.color.b = 0;
+	marker.color.a = 0.6;
 
     marker.lifetime = ros::Duration(2);
     objectPub.publish(marker);

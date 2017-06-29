@@ -1,27 +1,6 @@
-radar_range: 5000
 AIS_range: 10000
-
-## DTM error parameters
-DTM_position_bias_sigma: 0.5
-DTM_COG_bias_sigma: 2
-DTM_SOG_bias_sigma: 0.2
-DTM_size_bias_sigma: 10
-
-DTM_position_measure_sigma: 0
-DTM_COG_measure_sigma: 0
-DTM_SOG_measure_sigma: 0
-DTM_size_measure_sigma: 0
-
-DTM_position_error_pr_distance_gain: 0.002
-DTM_COG_error_pr_distance_gain: 0.002
-DTM_SOG_error_pr_distance_gain: 0.001
-DTM_size_error_pr_distance_gain: 0.003
-
-DTM_position_bias_time_constant: 5
-DTM_COG_bias_time_constant: 10
-DTM_SOG_bias_time_constant: 10
-DTM_size_bias_time_constant: 100
-
+radar_range: 5000
+lidar_range: 5000
 
 ## AIS error parameters
 AIS_position_bias_sigma: 1
@@ -30,8 +9,8 @@ AIS_track_bias_sigma: 2
 AIS_ROT_bias_sigma: 0.01
 AIS_SOG_bias_sigma: 0.5
 
-AIS_position_measure_sigma: 0
-AIS_COG_measure_sigma: 0
+AIS_position_measure_sigma: 0.1
+AIS_COG_measure_sigma: 0.1
 AIS_track_measure_sigma: 0.5
 AIS_ROT_measure_sigma: 0.01
 AIS_SOG_measure_sigma: 0.5
@@ -49,9 +28,22 @@ radar_size_bias_sigma: 10
 radar_position_bias_time_constant: 5
 radar_size_bias_time_constant: 100
 
-radar_position_measure_sigma: 0
-radar_size_measure_sigma: 0
+radar_position_measure_sigma: 1
+radar_size_measure_sigma: 1
 
 radar_position_error_pr_distance_gain: 0.002
 radar_size_error_pr_distance_gain: 0.003
+
+## LiDAR error parameters
+lidar_position_bias_sigma: 0.1
+lidar_size_bias_sigma: 10
+
+lidar_position_bias_time_constant: 5
+lidar_size_bias_time_constant: 100
+
+lidar_position_measure_sigma: 0.1
+lidar_size_measure_sigma: 1
+
+lidar_position_error_pr_distance_gain: 0.002
+lidar_size_error_pr_distance_gain: 0.003
 

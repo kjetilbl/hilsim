@@ -116,7 +116,7 @@ void obstacleHandler::spawn_obstacles(){
 	    	qDebug() << "Error in ship parameters. Ship must have at least one waypoint.";
 	    }
 	    else{
-	    	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, 0);
+	    	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, 290);
 	    	waypoints.erase(waypoints.begin());
 		   	ship* newShip = new ship(nh, eta0, pow(size,2), speed);
 		   	for (auto const& WP: waypoints)

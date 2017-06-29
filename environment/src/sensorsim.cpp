@@ -32,7 +32,6 @@ sensorSim::sensorSim(ros::NodeHandle *n, QThread *parent) : QThread(parent)
 
 sensorSim::~sensorSim()
 {
-	delete AIStimer;
 	delete DTtimer;
 }
 
@@ -44,11 +43,8 @@ void sensorSim::run()
 	ros::Subscriber AISsub = nh->subscribe("sensors/ais", 1000, &sensorSim::AIS_parser, this);
 	detectedTargetPub = nh->advertise<simulator_messages::detectedTarget>("sensors/target_detection", 1000);
 
-	AIStimer = new QTimer();
 	DTtimer = new QTimer();
-	QObject::connect( AIStimer, SIGNAL(timeout()), this, SLOT(print_USV_AIS_msg()) );
 	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(publish_detected_targets()) );
-	AIStimer->start(2000);
 	DTtimer->start(100);
 
 	QThread::exec();
@@ -60,43 +56,39 @@ bool sensorSim::read_sensor_config(){
 		radarRange = 200;
 		successfulRead = false;
 	}
+	if(!nh->getParam("lidar_range", lidarRange)){
+		radarRange = 100;
+		successfulRead = false;
+	}
 	return successfulRead;
 }
-
-void sensorSim::print_USV_AIS_msg()
-{
-	std::lock_guard<std::mutex> lock(m);
-	USVnavData.set_time(QTime::currentTime());
-}
-
 
 void sensorSim::publish_detected_targets()
 {
 	std::lock_guard<std::mutex> lock(m);
-
-	vector<string> outdatedObstacles;
+	vector<string> inactiveTargets;
 
 	// Publish obstacle position info and find outdated obstacles
-	for( auto & obst : unidentifiedObjects )
+	for( auto & target : detectedTargets )
 	{
-		string obstID = obst.first;
-		if( !obst.second.AIS_ON && !obst.second.radar_ON )
+		string targetID = target.first;
+		if( !target.second.is_active() )
 		{
-			outdatedObstacles.push_back(obstID);
+			inactiveTargets.push_back(targetID);
 		}
 		else
 		{
-			double distanceToObject = distance_m(USVnavData.get_position(), obst.second.get_true_position());
-			obst.second.estimate_states(distanceToObject);
-			simulator_messages::detectedTarget dt = obst.second.makeDTmsg();
+			double distanceToObject = distance_m(USVnavData.get_position(), target.second.get_true_position());
+			target.second.estimate_states(distanceToObject);
+			simulator_messages::detectedTarget dt = target.second.makeDTmsg();
 
 			detectedTargetPub.publish(dt);
 		}
 	}
 	// Delete old obstacles
-	for ( auto const& ID : outdatedObstacles ) 
+	for ( auto const& ID : inactiveTargets ) 
 	{
-    	unidentifiedObjects.erase(ID);
+    	detectedTargets.erase(ID);
 	}
 }
 
@@ -120,42 +112,47 @@ void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstP
 
 	string objectDescriptor = obstUpdateMsg->objectDescriptor;
 	gpsPoint obstPos(obstUpdateMsg->longitude, obstUpdateMsg->latitude);
-	double crossSection = obstUpdateMsg->size*6;
+	double crossSection = obstUpdateMsg->size;
 	double COG = obstUpdateMsg->heading;
 	string objectID = obstUpdateMsg->objectID;
 
-	if( !is_within_visibility(obstPos, crossSection, objectID) ){
+	if( !is_within_range(obstPos, radarRange) && !is_within_range(obstPos, lidarRange) ){
+		return;
+	}else if ( !is_visible(obstPos, objectID) )
+	{
 		return;
 	}
-	map<string, detectedObject>::iterator it = unidentifiedObjects.find(objectID);
-	if( it != unidentifiedObjects.end() ) // Object already detected
+
+	map<string, detectedObject>::iterator it = detectedTargets.find(objectID);
+	if( it != detectedTargets.end() ) // Object already detected
 	{
-		unidentifiedObjects[objectID].set_radar_data(obstPos, crossSection);
+		detectedTargets[objectID].set_true_position(obstPos);
+		detectedTargets[objectID].set_true_cross_section(crossSection);
 	}else
 	{
 		if (objectDescriptor == "fixed_obstacle")
 		{
-			unidentifiedObjects[objectID] = detectedObject(*nh, objectDescriptor, obstPos, 0, 0, crossSection);
+			detectedTargets[objectID] = detectedObject(*nh, objectDescriptor, obstPos, COG, 0, crossSection);
 		}
 		else if (objectDescriptor == "ship")
 		{
-			unidentifiedObjects[objectID] = detectedObject(*nh, "vessel", obstPos, 0, 0, crossSection);
+			detectedTargets[objectID] = detectedObject(*nh, "vessel", obstPos, COG, 5, crossSection);
 		}
 	}
-	unidentifiedObjects[objectID].radar_ON = true;
+	if (is_within_range(obstPos, radarRange))
+	{
+		detectedTargets[objectID].set_radar_active(true);
+	}
+	if (is_within_range(obstPos, lidarRange))
+	{
+		detectedTargets[objectID].set_lidar_active(true);
+	}
 }
 
 void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
 {
 
 	std::lock_guard<std::mutex> lock(m);
-	navData nd(AISmsg->MMSI, AISmsg->longitude, AISmsg->latitude, AISmsg->SOG, AISmsg->track);
-	nd.set_nav_status((navStatus)AISmsg->status);
-	nd.set_ROT(AISmsg->ROT);
-	nd.set_position_accuracy((posAccuracy)AISmsg->positionAccuracy);
-	nd.set_COG(AISmsg->COG);
-	nd.set_time(QTime(AISmsg->hour, AISmsg->minute, AISmsg->second));
-	detectedAISusers[AISmsg->MMSI] = nd;
 
 	string objectDescriptor = "vessel";
 	string objectID = "AIS_user_" + to_string(AISmsg->MMSI);
@@ -165,32 +162,30 @@ void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
 	double SOG = AISmsg->SOG;
 	double ROT = AISmsg->ROT;
 	double crossSection = pow(150,2);
-	map<string, detectedObject>::iterator it = unidentifiedObjects.find(objectID);
-	if( it != unidentifiedObjects.end() ) // Object already detected
+	map<string, detectedObject>::iterator it = detectedTargets.find(objectID);
+	if( it == detectedTargets.end() )
 	{
-		unidentifiedObjects[objectID].set_AIS_data(SOG, COG, ROT, position);
-	}else
-	{
-		unidentifiedObjects[objectID] = detectedObject(*nh, objectDescriptor, position, COG, SOG, crossSection);
+		detectedTargets[objectID] = detectedObject(*nh, objectDescriptor, position, COG, SOG, crossSection);
 	}
-	unidentifiedObjects[objectID].AIS_ON = true;
+	detectedTargets[objectID].set_AIS_data(SOG, COG, ROT, position);
 }
 
-bool sensorSim::is_within_visibility(gpsPoint newPos, double crossSection, string objectID = "unknown"){
-	//Check range
+bool sensorSim::is_within_range(gpsPoint pos, double range){
+	gpsPointStamped usvPos = USVnavData.get_position();
+	double distToNewPos = distance_m(usvPos, pos);
+	if (distToNewPos > range)
+	{
+		return false;
+	}
+	return true;
+}
+
+bool sensorSim::is_visible(gpsPoint newPos, string objectID = "unknown"){
 	gpsPointStamped usvPos = USVnavData.get_position();
 	double distToNewPos = distance_m(usvPos, newPos);
-	if (distToNewPos > radarRange)
-	{
-		return false;
-	}
-	if (sqrt(crossSection)/distToNewPos < 0.01)
-	{
-		return false;
-	}
 
 	// Check if behind other objects
-	for( auto & mapPair : unidentifiedObjects ){
+	for( auto & mapPair : detectedTargets ){
 		gpsPoint objectPos = mapPair.second.get_true_position();
 		double distToObject = distance_m(usvPos, objectPos);
 		double objectRadius = sqrt(mapPair.second.get_true_CS())/2;
@@ -210,8 +205,6 @@ bool sensorSim::is_within_visibility(gpsPoint newPos, double crossSection, strin
 			return false;
 		}
 	}
-
-	//
 	return true;
 }
 
@@ -229,27 +222,91 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 	X = Eigen::VectorXd(n);
 	Xe = Eigen::VectorXd(n);
 	br = Eigen::VectorXd::Zero(nr);
-	Tdr = Eigen::MatrixXd::Zero(nr, nr);
-
+	bl = Eigen::VectorXd::Zero(nr);
 	Za = Eigen::VectorXd(na);
-	Za << trueSOG, trueCOG, 0, truePosition.longitude, truePosition.latitude;
+	Za << truePosition.longitude, truePosition.latitude, trueCOG, trueSOG, 0;
 	Za_prev = Eigen::VectorXd::Zero(na);
 	Xr_bar = Eigen::VectorXd(nk);
-	Xr_bar << Za, Eigen::VectorXd::Zero(7);
+	Xr_bar << Za, trueCrossSection, Eigen::VectorXd::Zero(nk - na - 1);
 	Xr_hat = Xr_bar;
+	Xl_bar = Xr_bar;
+	Xl_hat = Xr_bar;
 	Xa_bar = Xr_bar;
 	Xa_hat = Xr_bar;
+
+	Ha = Eigen::MatrixXd(5, 19);
+	Ha << 	Eigen::MatrixXd::Identity(5, 5), 
+			Eigen::MatrixXd::Zero(5, 3), 
+			Eigen::MatrixXd::Identity(5,5), 
+			Eigen::MatrixXd::Zero(5,6);
+	Ha(4,12) = 0;
+	Hr = Eigen::MatrixXd(3,19);
+	Hr << Eigen::MatrixXd::Identity(3, 2), Eigen::MatrixXd::Zero(3, 11), Eigen::MatrixXd::Identity(3, 3), Eigen::MatrixXd::Zero(3, 3);
+	Hr(2,5) = 1;
+	Hl = Hr;
+	
 	Pa_bar = 10*Eigen::MatrixXd::Identity(nk,nk);
-	Pr_bar = 100*Eigen::MatrixXd::Identity(nk,nk);
-	Pr_bar(0,0) = 1000000;
-	Pr_bar(1,1) = 1000000;
-	Pr_bar(2,2) = 1000000;
-	double u = Xa_hat(0);
-	double psi = deg2rad( Xa_hat(1) );
-	double rot = deg2rad( Xa_hat(2) );
+	Pa_bar(0,0) = 1*longitude_degs_pr_meter(truePosition.latitude);
+	Pa_bar(1,1) = 1*latitude_degs_pr_meter();
+	Pa_bar(2,2) = 1; // Heading
+	Pa_bar(3,3) = 1;  // Speed
+	Pa_bar(4,4) = 5;  // ROT
+	Pa_bar(5,5) = 10; // CS
+	Pa = Pa_bar;
+
+	Pr_bar = 10*Eigen::MatrixXd::Identity(nk,nk);
+	Pr_bar(0,0) = 100*longitude_degs_pr_meter(truePosition.latitude);
+	Pr_bar(1,1) = 100*latitude_degs_pr_meter();
+	Pr_bar(2,2) = 100; 		// Heading
+	Pr_bar(3,3) = 1000000;  // Speed
+	Pr_bar(4,4) = 50;  		// ROT
+	Pr_bar(5,5) = 1000; 	// CS
+	Pr = Pr_bar;
+
+	Pl_bar = 10*Eigen::MatrixXd::Identity(nk,nk);
+	Pl_bar(0,0) = 100*longitude_degs_pr_meter(truePosition.latitude);
+	Pl_bar(1,1) = 100*latitude_degs_pr_meter();
+	Pl_bar(2,2) = 100; 		// Heading
+	Pl_bar(3,3) = 1000000;  // Speed
+	Pl_bar(4,4) = 50;  		// ROT
+	Pl_bar(5,5) = 10; 		// CS
+	Pl = Pl_bar;
+
+	Eigen::VectorXd Q_diag(nk);
+	Q_diag << 	0.005,
+				0.005,
+				0.0001,
+				0.0001,
+				0.0001,
+				0.0001,
+				10000000000, 
+				0.1, 
+				0.5*longitude_degs_pr_meter(truePosition.latitude), 
+				0.5*latitude_degs_pr_meter(), 
+				0.5,
+				0.5,
+				0.5, 
+				1,
+				1,
+				1,
+				1,
+				1,
+				1;
+	Q = Q_diag.asDiagonal();
+
+	E = Eigen::MatrixXd(19,19);
+	E << 	Eigen::MatrixXd::Zero(6,19),
+			Eigen::MatrixXd::Zero(13,6), Eigen::MatrixXd::Identity(13,13);
+	
+	double u = Xa_hat(3);
+	double psi = deg2rad( Xa_hat(2) );
+	double rot = deg2rad( Xa_hat(4) );
+	qDebug() << "u = " << u;
+	qDebug() << "psi = " << psi;
+	qDebug() << "rot = " << rot;
+	
 	fa_hat = Eigen::VectorXd(nk);
-	fa_hat << 0, rot, 0, u*sin(psi)*longitude_degs_pr_meter(truePosition.latitude), u*cos(psi)*latitude_degs_pr_meter(), 0, 0, 0, 0, 0, 0, 0;
-	cout << Xa_hat;
+	fa_hat << u*sin(psi)*longitude_degs_pr_meter(truePosition.latitude), u*cos(psi)*latitude_degs_pr_meter(), rot, 0, 0, 0, Eigen::VectorXd::Zero(nk-6);
 	if(!read_sensor_config(nh, truePosition)){
 		qDebug() << "detectedObject read sensor config failed.";
 		exit(-1);
@@ -257,7 +314,11 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 
 	update_true_states(truePosition, trueCOG, trueSOG, trueCrossSection);
 	lastAISupdate = QTime::currentTime();
-	lastRADARupdate = QTime::currentTime();
+	lastRadarUpdate = QTime::currentTime();
+	lastLidarUpdate = QTime::currentTime();
+	lastRadarEstimateTime = QTime::currentTime();
+	lastlidarEstimateTime = QTime::currentTime();
+	qDebug() << "detectedObject initialized.";
 }
 
 Eigen::VectorXd detectedObject::estimate_states( double distanceFromUSV_m ){
@@ -266,13 +327,19 @@ Eigen::VectorXd detectedObject::estimate_states( double distanceFromUSV_m ){
 	{
 		AIS_ON = false;
 	}
-	if (lastRADARupdate.msecsTo(now) > 2000)
+	if (lastRadarUpdate.msecsTo(now) > 2000)
 	{
 		radar_ON = false;
 	}
-
+	if (lastLidarUpdate.msecsTo(now) > 2000)
+	{
+		lidar_ON = false;
+	}
 	if( radar_ON ){
 		Zr = generate_radar_measurement(distanceFromUSV_m);
+	}
+	if( lidar_ON ){
+		Zl = generate_lidar_measurement(distanceFromUSV_m);
 	}
 	Xe = KalmanFusion();
 	return Xe;
@@ -281,35 +348,59 @@ Eigen::VectorXd detectedObject::estimate_states( double distanceFromUSV_m ){
 Eigen::VectorXd detectedObject::generate_radar_measurement( double distanceFromUSV_m ){
 	static std::default_random_engine randomGenerator;
 	static std::normal_distribution<double> gaussianWhiteNoise(0,1);
-
-	if (firstTimeParamEstimate)
-	{
-		for (int i = 0; i < nr; i++)
-		{
-			br(i) = gaussianWhiteNoise(randomGenerator)*brSigmas(i);
-		}
-		firstTimeParamEstimate = false;
-		lastEstimateTime = QTime::currentTime();
-	}
 	
 	QTime now = QTime::currentTime();
-	double dt = (double)(lastEstimateTime.msecsTo( now ))/1000;
+	double dt = (double)(lastRadarEstimateTime.msecsTo( now ))/1000;
 
 	Eigen::VectorXd e(nr);
 	Eigen::VectorXd w(nr);
 	Eigen::VectorXd v(nr);
+	Eigen::MatrixXd Tdr = Eigen::MatrixXd::Zero(nr, nr);
 	for (int i = 0; i < nr; i++)
 	{
-		Tdr(i,i) = exp(-1/Tr(i,i)*dt);
+		Tdr(i,i) = exp(Tb(i+7, i+7)*dt);
 		w(i) = gaussianWhiteNoise(randomGenerator)*brSigmas(i);
-		v(i) = gaussianWhiteNoise(randomGenerator)*ZrSigmas(i);
+		v(i) = gaussianWhiteNoise(randomGenerator)*Ra(i,i);
 	}
-
 	// Make artificial deviations
 	br = Tdr*br + w;
 	e = br + v;
-	// e = errorPrDistanceGain * distanceFromUSV_m * e;
-	e(2) = max(-X(2) + 1, (double)e(2));
+	e = errorPrDistanceGain * distanceFromUSV_m * e;
+	e(2) = max(-X(4) + 10, (double)e(2));
+
+
+	// Make artificial measurements:
+	Eigen::VectorXd Z(nr);
+	Eigen::VectorXd trueStates(nr);
+	trueStates << X(0), X(1), X(4);
+	Z = trueStates + e;
+	lastRadarEstimateTime = now;
+
+	return Z;
+}
+
+Eigen::VectorXd detectedObject::generate_lidar_measurement( double distanceFromUSV_m ){
+	static std::default_random_engine randomGenerator;
+	static std::normal_distribution<double> gaussianWhiteNoise(0,1);
+	
+	QTime now = QTime::currentTime();
+	double dt = (double)(lastlidarEstimateTime.msecsTo( now ))/1000;
+
+	Eigen::VectorXd e(nr);
+	Eigen::VectorXd w(nr);
+	Eigen::VectorXd v(nr);
+	Eigen::MatrixXd Tdl = Eigen::MatrixXd::Zero(nr, nr);
+	for (int i = 0; i < nr; i++)
+	{
+		Tdl(i,i) = exp(Tb(i+10, i+10)*dt);
+		w(i) = gaussianWhiteNoise(randomGenerator)*blSigmas(i);
+		v(i) = gaussianWhiteNoise(randomGenerator)*Rl(i,i);
+	}
+	// Make artificial deviations
+	bl = Tdl*bl + w;
+	e = bl + v;
+	e = errorPrDistanceGain * distanceFromUSV_m * e;
+	e(2) = max( -X(4)+10, (double)e(2));
 
 
 	// Make artificial measurements:
@@ -318,7 +409,7 @@ Eigen::VectorXd detectedObject::generate_radar_measurement( double distanceFromU
 	trueStates << X(0), X(1), X(4);
 	Z = trueStates + e;
 
-	lastEstimateTime = now;
+	lastlidarEstimateTime = now;
 
 	return Z;
 }
@@ -338,14 +429,44 @@ simulator_messages::detectedTarget detectedObject::makeDTmsg(){
 	dt.latitude = get_estimated_position().latitude;
 	dt.COG = round( get_estimated_COG() );
 	dt.SOG = round( get_estimated_SOG() );
-	dt.crossSection = get_estimated_CS();
+	dt.crossSection = get_estimated_CS()*3;
 	return dt;
 }
 
 bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePosition){
 	bool successfulRead = true;
+
+	blSigmas = Eigen::VectorXd(nr);
+	double positionBiasSigma = 1;
+	if(!nh.getParam("lidar_position_bias_sigma", positionBiasSigma)){
+		successfulRead = false;
+	}
+	blSigmas(0) = positionBiasSigma*longitude_degs_pr_meter(truePosition.latitude);
+	blSigmas(1) = positionBiasSigma*latitude_degs_pr_meter();
+
+
+	if(!nh.getParam("lidar_size_bias_sigma", blSigmas(2))){
+		successfulRead = false;
+		blSigmas(2) = 0;
+	}
+
+	Eigen::VectorXd ZlSigmas = Eigen::VectorXd(nr);
+	double positionMeasureSigma = 0;
+	if(!nh.getParam("lidar_position_measure_sigma", positionMeasureSigma)){
+		successfulRead = false;
+	}
+	ZlSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(truePosition.latitude);
+	ZlSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
+
+	if(!nh.getParam("lidar_size_measure_sigma", ZlSigmas(2))){
+		successfulRead = false;
+		ZlSigmas(2) = 0;
+	}
+
+	Rl = ZlSigmas.asDiagonal();
+
 	brSigmas = Eigen::VectorXd(nr);
-	double positionBiasSigma = 0;
+	positionBiasSigma = 1;
 	if(!nh.getParam("radar_position_bias_sigma", positionBiasSigma)){
 		successfulRead = false;
 	}
@@ -358,8 +479,8 @@ bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePositio
 		brSigmas(2) = 0;
 	}
 
-	ZrSigmas = Eigen::VectorXd(nr);
-	double positionMeasureSigma = 0;
+	Eigen::VectorXd ZrSigmas = Eigen::VectorXd(nr);
+	positionMeasureSigma = 1;
 	if(!nh.getParam("radar_position_measure_sigma", positionMeasureSigma)){
 		successfulRead = false;
 	}
@@ -371,6 +492,7 @@ bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePositio
 		ZrSigmas(2) = 0;
 	}
 
+	Rr = ZrSigmas.asDiagonal();
 
 	Eigen::VectorXd k(nr);
 	double posErrorPrDistanceGain = 0;
@@ -387,20 +509,79 @@ bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePositio
 	}
 	errorPrDistanceGain = k.asDiagonal();
 
+	// AIS params:
+	Eigen::VectorXd ZaSigmas(n);
+	positionMeasureSigma = 0.01;
+	if(!nh.getParam("AIS_position_measure_sigma", positionMeasureSigma)){
+		successfulRead = false;
+	}
+	ZaSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(truePosition.latitude);
+	ZaSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
 
-	Eigen::VectorXd biasTimeConstants(nr);
+	if(!nh.getParam("AIS_COG_measure_sigma", ZaSigmas(2))){
+		successfulRead = false;
+		ZaSigmas(2) = 0;
+	}
+
+	if(!nh.getParam("AIS_SOG_measure_sigma", ZaSigmas(3))){
+		successfulRead = false;
+		ZaSigmas(3) = 0;
+	}
+
+	if(!nh.getParam("AIS_ROT_measure_sigma", ZaSigmas(4))){
+		successfulRead = false;
+		ZaSigmas(4) = 0;
+	}
+	Ra = ZaSigmas.asDiagonal();
+
+
+	// Bias time constants:
+	Eigen::VectorXd biasTimeConstants(nb);
 	double posBiasTimeConstant = 1;
-	if(!nh.getParam("radar_position_bias_time_constant", posBiasTimeConstant)){
+	biasTimeConstants(0) = 10;
+	biasTimeConstants(1) = 100;
+	if(!nh.getParam("AIS_position_bias_time_constant", posBiasTimeConstant)){
 		successfulRead = false;
 	}
-	biasTimeConstants(0) = posBiasTimeConstant;
-	biasTimeConstants(1) = posBiasTimeConstant;
+	biasTimeConstants(2) = posBiasTimeConstant;
+	biasTimeConstants(3) = posBiasTimeConstant;
 
-	if(!nh.getParam("radar_size_bias_time_constant", biasTimeConstants(2))){
+	if(!nh.getParam("AIS_COG_bias_time_constant", biasTimeConstants(4))){
 		successfulRead = false;
-		biasTimeConstants(2) = 0;
+		biasTimeConstants(4) = 1;
 	}
-	Tr = biasTimeConstants.asDiagonal();
+
+	if(!nh.getParam("AIS_SOG_bias_time_constant", biasTimeConstants(5))){
+		successfulRead = false;
+		biasTimeConstants(5) = 1;
+	}
+
+	if(!nh.getParam("AIS_ROT_bias_time_constant", biasTimeConstants(6))){
+		successfulRead = false;
+		biasTimeConstants(6) = 1;
+	}
+
+	if(!nh.getParam("radar_position_bias_time_constant", biasTimeConstants(7))){
+		successfulRead = false;
+		biasTimeConstants(7) = 1;
+	}
+
+	if(!nh.getParam("radar_position_bias_time_constant", biasTimeConstants(8))){
+		successfulRead = false;
+		biasTimeConstants(8) = 1;
+	}
+
+	if(!nh.getParam("radar_size_bias_time_constant", biasTimeConstants(9))){
+		successfulRead = false;
+		biasTimeConstants(9) = 1;
+	}
+	biasTimeConstants(10) = 1;
+	biasTimeConstants(11) = 1;
+	biasTimeConstants(12) = 1;
+	Tb = Eigen::MatrixXd::Zero(nb,nb);
+	for(int i = 0; i < nb; i++){
+		Tb(i,i) = -1/biasTimeConstants(i);
+	}
 
 	return successfulRead;
 }
@@ -408,35 +589,40 @@ bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePositio
 void detectedObject::set_true_position(gpsPoint truePos){
 	X(0) = truePos.longitude;
 	X(1) = truePos.latitude;
-	lastUpdate = QTime::currentTime();
 }
 
 void detectedObject::set_true_COG(double trueCOG){
 	X(2) = trueCOG;
-	lastUpdate = QTime::currentTime();
 }
 
 void detectedObject::set_true_SOG(double trueSOG){
 	X(3) = trueSOG;
-	lastUpdate = QTime::currentTime();
 }
 
 void detectedObject::set_true_cross_section(double trueCS){
 	X(4) = trueCS;
-	lastUpdate = QTime::currentTime();
 }
 
-
-void detectedObject::set_radar_data(gpsPoint pos, double crossSection){
-	set_true_position(pos);
-	set_true_cross_section(crossSection);
-	lastRADARupdate = QTime::currentTime();
-}
 
 void detectedObject::set_AIS_data(double SOG, double COG, double ROT, gpsPoint position){
 	Za = Eigen::VectorXd(5);
-	Za << SOG, COG, ROT, position.longitude, position.latitude;
+	Za << position.longitude, position.latitude, COG, SOG, ROT;
 	lastAISupdate = QTime::currentTime();
+	AIS_ON = true;
+}
+
+void detectedObject::set_lidar_active(bool active){
+	lidar_ON = active;
+	if(active){ lastLidarUpdate = QTime::currentTime(); }
+}
+
+void detectedObject::set_radar_active(bool active){
+	radar_ON = active;
+	if(active){ lastRadarUpdate = QTime::currentTime(); }
+}
+
+bool detectedObject::is_active(){
+	return AIS_ON || radar_ON || lidar_ON;
 }
 
 void Kalman_project_ahead(	Eigen::VectorXd &X_bar,
@@ -447,88 +633,56 @@ void Kalman_project_ahead(	Eigen::VectorXd &X_bar,
 							Eigen::MatrixXd T_b, 
 							double h, 
 							Eigen::MatrixXd E, 
-							Eigen::MatrixXd Q){
-	Eigen::MatrixXd I_12 = Eigen::MatrixXd::Identity(12,12);
+							Eigen::MatrixXd Q,
+							bool fromAIS)
+{
+	Eigen::MatrixXd I_19 = Eigen::MatrixXd::Identity(19,19);
 	double longDegsPrM = longitude_degs_pr_meter(X_hat(1));
 	double latDegsPrM = latitude_degs_pr_meter();
 
-	double u = X_hat(0);
-	double psi = deg2rad( X_hat(1) );
-	double rot = X_hat(2);
-	Eigen::VectorXd b(7);
-	b <<  X_hat(5), X_hat(6), X_hat(7), X_hat(8), X_hat(9), X_hat(10), X_hat(11); 
-	f_hat << 0, rot, b(6), u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, T_b*b;
-	Eigen::MatrixXd J(12,12);
-	J << 	Eigen::MatrixXd::Zero(1,12),
-			0, 0, 1, Eigen::MatrixXd::Zero(1,9),
-			Eigen::MatrixXd::Zero(1,11), 1, 
-			sin(psi)*longDegsPrM, u*cos(psi)*longDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
-			cos(psi)*latDegsPrM, -u*sin(psi)*latDegsPrM*M_PI/180, Eigen::MatrixXd::Zero(1,10),
-			Eigen::MatrixXd::Zero(7,5), T_b;
-	Eigen::MatrixXd PHI = I_12 + h*J;
+	Eigen::VectorXd b(13);
+	b <<  X_hat(6), X_hat(7), X_hat(8), X_hat(9), X_hat(10), X_hat(11), X_hat(12), X_hat(13), X_hat(14), X_hat(15), X_hat(16), X_hat(17), X_hat(18); 
+	double psi = deg2rad( X_hat(2) );
+	double u = X_hat(3);
+	double rot = b(0);
+	f_hat << u*sin(psi)*longDegsPrM, u*cos(psi)*latDegsPrM, rot, 0, b(1), 0, T_b*b;
+	Eigen::MatrixXd J(19,19);
+	J << 	0, 0, u*cos(psi)*longDegsPrM, sin(psi)*longDegsPrM, Eigen::MatrixXd::Zero(1,15),
+			0, 0, -u*sin(psi)*latDegsPrM, cos(psi)*latDegsPrM, Eigen::MatrixXd::Zero(1,15),
+			Eigen::MatrixXd::Zero(1,6), 1, Eigen::MatrixXd::Zero(1,12), 
+			Eigen::MatrixXd::Zero(1,6), 0, Eigen::MatrixXd::Zero(1,12),
+			Eigen::MatrixXd::Zero(1,7), 1, Eigen::MatrixXd::Zero(1,11),
+			Eigen::MatrixXd::Zero(1,19),
+			Eigen::MatrixXd::Zero(13,6),  T_b;
+
+	Eigen::MatrixXd PHI = I_19 + h*J;
 
 	Eigen::MatrixXd Gamma = h*E;
 	X_bar = X_hat + h*f_hat;
 	P_bar = PHI*P*PHI.transpose() + Gamma*Q*Gamma;
 }
 
+void print_X(Eigen::VectorXd X, string s){
+	qDebug() << "-----------------------------------";
+	cout << "\n" << s << "\n";
+	qDebug() << "Pos:\t\t" << X(0) << "," << X(1);
+	qDebug() << "Heading:\t" << X(2);
+	qDebug() << "Speed:\t\t" << X(3);
+	qDebug() << "ROT:\t\t" << X(4);
+	qDebug() << "CS:\t\t" << X(5);
+	qDebug() << "-----------------------------------";
+}
+
 Eigen::VectorXd detectedObject::KalmanFusion(){
-	double crossSection = Zr(2);
+	Eigen::MatrixXd I_19 = Eigen::MatrixXd::Identity(19,19);
 
-	Eigen::MatrixXd Ha(5, 12);
-	Ha << 	Eigen::MatrixXd::Identity(5, 5), 
-			Eigen::MatrixXd::Zero(5, 2), 
-			Eigen::MatrixXd::Identity(5,2), 
-			Eigen::MatrixXd::Zero(5,3);
-	Ha(3,9) = 1;
-	Ha(4,10) = 1;
-	Eigen::MatrixXd Hr(2,12);
-	Hr << Eigen::MatrixXd::Zero(2, 3), Eigen::MatrixXd::Identity(2, 2), Eigen::MatrixXd::Identity(2, 2), Eigen::MatrixXd::Zero(2, 5);
-
-
-	Eigen::VectorXd Tb_trace(7);
-	Tb_trace << -0.1, -0.1, -0.05, -0.1, -0.05, -0.05, -0.05;
-	Eigen::MatrixXd Tb = Tb_trace.asDiagonal();
-
-	Eigen::VectorXd Zr_sigmas(2);
-	Eigen::VectorXd Za_sigmas(5);
-	Zr_sigmas << 0.001*longitude_degs_pr_meter(Xa_bar(4)),
-				 0.001*latitude_degs_pr_meter(); 
-	Eigen::MatrixXd Rr = Zr_sigmas.asDiagonal();
-	Za_sigmas << 0.000001, 
-				 0.1,  
-				 3, 
-				 0.001*longitude_degs_pr_meter(Xa_bar(4)), 
-				 0.001*latitude_degs_pr_meter(); 
-	Eigen::MatrixXd Ra = Za_sigmas.asDiagonal();
-	Eigen::VectorXd Q_diag(12);
-	Q_diag << 	0.0000001, 
-				10, 
-				1, 
-				1, 
-				1, 
-				0.5*longitude_degs_pr_meter(Zr(1)), 
-				0.5*latitude_degs_pr_meter(), 
-				0.5*longitude_degs_pr_meter(Zr(1)), 
-				0.2, 
-				0.01*longitude_degs_pr_meter(Zr(1)), 
-				0.01*latitude_degs_pr_meter(),
-				8;
-	Eigen::MatrixXd Q = Q_diag.asDiagonal();
-	
-	Eigen::MatrixXd E(12,12);
-	E << 	Eigen::MatrixXd::Zero(5,12),
-			Eigen::MatrixXd::Zero(7,5), Eigen::MatrixXd::Identity(7,7);
-	Eigen::MatrixXd I_12 = Eigen::MatrixXd::Identity(12,12);
-
-	double longDegsPrM = longitude_degs_pr_meter(Zr(1));
-	double latDegsPrM = latitude_degs_pr_meter();
+	// AIS
 	if( Za != Za_prev && AIS_ON){
 		Eigen::MatrixXd K = Pa_bar*Ha.transpose()*(Ha*Pa_bar*Ha.transpose() + Ra ).inverse();
 		Xa_hat = Xa_bar + K*(Za - Ha*Xa_bar);
-		Pa = (I_12 -K*Ha)*Pa_bar*((I_12 - K*Ha).transpose()) + K*Ra*K.transpose();
+		Pa = (I_19 -K*Ha)*Pa_bar*((I_19 - K*Ha).transpose()) + K*Ra*K.transpose();
 
-		Kalman_project_ahead(Xa_bar, Xa_hat, fa_hat, Pa_bar, Pa, Tb, ha, E, Q);
+		Kalman_project_ahead(Xa_bar, Xa_hat, fa_hat, Pa_bar, Pa, Tb, ha, E, Q, true);
 		Za_prev = Za;
 
 	}
@@ -536,75 +690,109 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 		Xa_hat = Xa_hat + hr*fa_hat;
 	}
 
-	Eigen::MatrixXd K = Pr_bar*Hr.transpose()*(Hr*Pr_bar*Hr.transpose() + Rr).inverse();
-	Eigen::VectorXd Zr_short(2);
-	Zr_short << Zr(0), Zr(1); 
-	Xr_hat = Xr_bar + K*(Zr_short - Hr*Xr_bar);
-	Pr = (I_12 - K*Hr)*Pr_bar*((I_12 - K*Hr).transpose()) + K*Rr*K.transpose();
-	
-	Eigen::VectorXd fr_hat(12);
-	Kalman_project_ahead(Xr_bar, Xr_hat, fr_hat, Pr_bar, Pr, Tb, hr, E, Q);
-	
+	// Radar
+	if (radar_ON){
+		Eigen::MatrixXd Kr = Pr_bar*Hr.transpose()*(Hr*Pr_bar*Hr.transpose() + Rr).inverse();
+		Xr_hat = Xr_bar + Kr*(Zr - Hr*Xr_bar);
+		Pr = (I_19 - Kr*Hr)*Pr_bar*((I_19 - Kr*Hr).transpose()) + Kr*Rr*Kr.transpose();
+		Eigen::VectorXd fr_hat(19);
+
+		Kalman_project_ahead(Xr_bar, Xr_hat, fr_hat, Pr_bar, Pr, Tb, hr, E, Q, false);
+	}
+
+	// lidar
+	if (lidar_ON)
+	{
+		Eigen::MatrixXd Kl = Pl_bar*Hl.transpose()*(Hl*Pl_bar*Hl.transpose() + Rl).inverse();
+		Xl_hat = Xl_bar + Kl*(Zl - Hl*Xl_bar);
+		Pl = (I_19 - Kl*Hl)*Pl_bar*((I_19 - Kl*Hl).transpose()) + Kl*Rl*Kl.transpose();
+		Eigen::VectorXd fl_hat(19);
+
+		Kalman_project_ahead(Xl_bar, Xl_hat, fl_hat, Pl_bar, Pl, Tb, hl, E, Q, false);
+	}
+
+
+	// Simple Fusion Algorithm:
 	Eigen::VectorXd X_hat(nk);
-	if(AIS_ON && !radar_ON){
-		//qDebug() << "Using AIS only.";
+	Eigen::MatrixXd Pa_w = (Pa*pow(ha,-2)).inverse();
+	Eigen::MatrixXd Pr_w = (Pr*pow(hr,-2)).inverse();
+	Eigen::MatrixXd Pl_w = (Pl*pow(hl,-2)).inverse();
+
+	if( AIS_ON && !radar_ON && !lidar_ON ){
+		qDebug() << "Using AIS only.";
 		X_hat = Xa_hat;
 		//cout << "Za:\n" << Za << endl;
 	}
-	else if( radar_ON && !AIS_ON){
-		//qDebug() << "Using RADAR only.";
+	else if( !AIS_ON && radar_ON && !lidar_ON ){
+		qDebug() << "Using RADAR only.";
 		X_hat = Xr_hat;
 	}
+	else if( !AIS_ON && !radar_ON && lidar_ON){
+		qDebug() << "Using LiDAR only.";
+		X_hat = Xr_hat;
+	}
+	else if(AIS_ON && radar_ON && lidar_ON){
+		qDebug() << "Using SENSOR FUSION: AIS, Radar, LiDAR.";
+		X_hat = (Pa_w + Pr_w + Pl_w).inverse()*(Pa_w*Xa_hat + Pr_w*Xr_hat + Pl_w*Xl_hat);
+	}
 	else if(AIS_ON && radar_ON){
-		//qDebug() << "Using SENSOR FUSION.";
-		Eigen::MatrixXd Pr_w = Pr/hr;
-		Eigen::MatrixXd Pa_w = Pa/ha;
-		X_hat = (Pr_w.inverse() + Pa_w.inverse()).inverse()*(Pr_w.inverse()*Xr_hat + Pa_w.inverse()*Xa_hat);
-		//cout << "Za:\n" << Za << endl;
+		qDebug() << "Using SENSOR FUSION: AIS, Radar.";
+		X_hat = (Pa_w + Pr_w).inverse()*(Pa_w*Xa_hat + Pr_w*Xr_hat);
+	}
+	else if(AIS_ON && lidar_ON){
+		qDebug() << "Using SENSOR FUSION: AIS, LiDAR.";
+		X_hat = (Pa_w + Pl_w).inverse()*(Pa_w*Xa_hat + Pl_w*Xl_hat);
+	}
+	else if(radar_ON && lidar_ON){
+		qDebug() << "Using SENSOR FUSION: Radar, LiDAR.";
+		X_hat = (Pr_w + Pl_w).inverse()*(Pr_w*Xr_hat + Pl_w*Xl_hat);
 	}
 
-	//cout << "X_hat:\n" << X_hat << endl;
-
-	double e_longr = (Xr_hat(3) - X(0))/longitude_degs_pr_meter(Zr(1));
-	double e_latr = (Xr_hat(4) - X(1))/latitude_degs_pr_meter();
+	double e_longr = (Xr_hat(0) - X(0))/longitude_degs_pr_meter(Zr(1));
+	double e_latr = (Xr_hat(1) - X(1))/latitude_degs_pr_meter();
 	double e_pr = sqrt(pow(e_longr,2) + pow(e_latr,2));
-	double e_longa = (Xa_hat(3) - X(0))/longitude_degs_pr_meter(Zr(1));
-	double e_lata = (Xa_hat(4) - X(1))/latitude_degs_pr_meter();
+	double e_longl = (Xl_hat(0) - X(0))/longitude_degs_pr_meter(Zr(1));
+	double e_latl = (Xl_hat(1) - X(1))/latitude_degs_pr_meter();
+	double e_pl = sqrt(pow(e_longl,2) + pow(e_latl,2));
+
+	double e_longa = (Xa_hat(0) - X(0))/longitude_degs_pr_meter(Zr(1));
+	double e_lata = (Xa_hat(1) - X(1))/latitude_degs_pr_meter();
 	double e_pa = sqrt(pow(e_longa,2) + pow(e_lata,2));
 	double e_hr = Za(1) - Xr_hat(1);
 	double e_ha = Za(1) - Xa_hat(1);
-	double e_long = (X_hat(3) - X(0))/longitude_degs_pr_meter(Zr(1));
-	double e_lat = (X_hat(4) - X(1))/latitude_degs_pr_meter();
+	double e_long = (X_hat(0) - X(0))/longitude_degs_pr_meter(Zr(1));
+	double e_lat = (X_hat(1) - X(1))/latitude_degs_pr_meter();
 	double e_p = sqrt(pow(e_long,2) + pow(e_lat,2));
 	double e_h = Za(1) - X_hat(1);
-	
-	/*
-	cout << "Radar  position error: " << e_pr << endl;
-	cout << "Radar  heading  error: " << e_hr << endl;
-	cout << "AIS    position error: " << e_pa << endl;
-	cout << "AIS    heading  error: " << e_ha << endl;
-	cout << "Fusion position error: " << e_p << endl;
-	cout << "Fusion heading  error: " << e_h << endl;
-	cout << "Za:\n" << Za << endl;
-	cout << "X_hat:\n" << X_hat << endl;
-	*/
+	double e_r = sqrt(pow((Zr(0) - X(0))/longitude_degs_pr_meter(Zr(1)) ,2) + pow((Zr(1) - X(1))/latitude_degs_pr_meter() ,2));
+	double e_a = sqrt(pow((Za(0) - X(0))/longitude_degs_pr_meter(Zr(1)) ,2) + pow((Za(1) - X(1))/latitude_degs_pr_meter() ,2));
 
-	cout << "Fusion position error: " << e_p << endl;
+	cout << "\nFusion position  error: " << e_p << endl;
+	cout << "\nAIS position  error: " << e_pa << endl;
+	cout << "\nRadar position  error: " << e_pr << endl;
+	cout << "\nLiDAR position  error: " << e_pl << endl;
+
 
 	Eigen::VectorXd X_hat_short = Eigen::VectorXd::Zero(n);
 	double positionErrorTreshold = 50;
 	if (abs(e_p) > positionErrorTreshold )
 	{
 		if (AIS_ON){
-			X_hat_short << Za(3), Za(4), Za(1), Za(0), crossSection;
+			X_hat_short << Za(0), Za(1), Za(2), Za(3), pow(200,2);
 		}
 		else if(radar_ON){
-			X_hat_short << Zr(0), Zr(1), 0, 0, crossSection;
+			X_hat_short << Zr(0), Zr(1), 0, 0, Zr(2);
 		}
 	}
 	else{
-		X_hat_short << X_hat(3), X_hat(4), X_hat(1), X_hat(0), crossSection;
+		X_hat_short << X_hat(0), X_hat(1), X_hat(2), X_hat(3), X_hat(5);
 	}
+	Eigen::VectorXd Xr_hat_short = Eigen::VectorXd::Zero(n);
+	Eigen::VectorXd Xa_hat_short = Eigen::VectorXd::Zero(n);
+	Xr_hat_short << Xr_hat(0), Xr_hat(1), fmod(Xr_hat(2), 360.0), Xr_hat(3), Xr_hat(5);
+	Xa_hat_short << Xa_hat(0), Xa_hat(1), fmod(Xa_hat(2), 360.0), Xa_hat(3), Xa_hat(5);
+	//print_X(Xr_hat,"Xr_hat");
+	print_X(Xl_hat,"Xl_hat");
 	return X_hat_short;
 }
 

@@ -45,7 +45,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 1
+      Cell Size: 5
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -131,6 +131,7 @@ Visualization Manager:
       Namespaces:
         Actuator 1 Visualization: true
         Actuator 2 Visualization: true
+        Actuator bow Visualization: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -138,7 +139,12 @@ Visualization Manager:
       Marker Topic: visualization_marker
       Name: Marker
       Namespaces:
-        {}
+        AIS_user: true
+        detected_fixed_obstacle: true
+        detected_fixed_obstacle_info: true
+        detected_vessel: true
+        detected_vessel_info: true
+        fixed_obstacle: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -187,22 +193,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 776.347656
+      Distance: 911.519287
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -5.60550022
-        Y: 0.487019986
-        Z: 3.42849994
+        X: -115.39959
+        Y: -2.36439705
+        Z: 3.2295835
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Name: Current View
       Near Clip Distance: 0.00999999978
       Pitch: 1.56979632
-      Target Frame: simulated_vessel
+      Target Frame: map
       Value: Orbit (rviz)
       Yaw: 3.1400001
     Saved:

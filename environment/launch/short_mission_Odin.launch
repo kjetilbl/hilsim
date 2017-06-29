@@ -18,7 +18,9 @@
     <node pkg="simulator_prototype" type="hil_simulator_node" name="simulated_vessel" output="screen"/>
 
     <node pkg="environment" type="environment" name="environment_node" output="screen"/>
+    
     <node pkg="gui" type="gui" name="gui_node" output="screen"/>
-	
      
 </launch>
+
+
