@@ -27,6 +27,8 @@ add_message_files(
   ActuatorMessage.msg
   AIS.msg
   detectedTarget.msg
+  obstacleUpdate.msg
+  obstacleCmd.msg
 )
 
 

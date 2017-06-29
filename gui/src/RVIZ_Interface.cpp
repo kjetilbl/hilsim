@@ -187,8 +187,8 @@ void rvizInterface::show_detected_target(	int targetID,
     textMarker.id = targetID;
     textMarker.text = 	objectDescriptor 
     					+ "\nID: " + to_string(targetID)
-    					+ "\nCOG: " + to_string((int)position.heading)
-    					+ "\nSOG: " + to_string((int)SOG);
+    					+ "\nCOG: " + to_string((int)position.heading) + " [deg]"
+    					+ "\nSOG: " + to_string((int)SOG) + " [kts]";
 
     textMarker.action = visualization_msgs::Marker::ADD;
 	textMarker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;

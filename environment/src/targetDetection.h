@@ -1,5 +1,5 @@
-#ifndef SENSORSIM_H
-#define SENSORSIM_H
+#ifndef targetDetectionModule_H
+#define targetDetectionModule_H
 
 #include <QTimer>
 #include <QObject>
@@ -24,12 +24,12 @@ using namespace std;
 
 class detectedObject;
 
-class sensorSim : public QThread
+class targetDetectionModule : public QThread
 {
 	Q_OBJECT 
 public:
-	sensorSim( ros::NodeHandle *n, QThread *parent = 0 );
-	~sensorSim();
+	targetDetectionModule( ros::NodeHandle *n, QThread *parent = 0 );
+	~targetDetectionModule();
 
 private slots:
 	void publish_detected_targets();
@@ -74,7 +74,7 @@ public:
 	double get_estimated_SOG(){ return Xe(3); }
 	double get_estimated_CS(){ return Xe(4); }
 	void update_true_states(gpsPoint pos, double COG, double SOG, double crossSection);
-	simulator_messages::detectedTarget makeDTmsg();
+	simulator_messages::detectedTarget make_DT_msg();
 	void set_true_position(gpsPoint truePos);
 	void set_true_COG(double trueCOG);
 	void set_true_SOG(double trueSOG);
@@ -152,4 +152,4 @@ private:
 };
 
 
-#endif // SENSORSIM_H
+#endif // targetDetectionModule_H

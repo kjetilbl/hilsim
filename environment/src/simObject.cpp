@@ -11,7 +11,7 @@ simObject::simObject( const simObject& other )
 {
 	this->nh = other.nh;
 	//this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
-	this->posUpdatePub = nh->advertise<environment::obstacleUpdate>("/simObject/position", 1000);
+	this->posUpdatePub = nh->advertise<simulator_messages::obstacleUpdate>("/simObject/position", 1000);
 
 	this->ID = other.ID;
 	this->eta = other.eta;
@@ -21,7 +21,7 @@ simObject::simObject(ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, doubl
 {
 	this->nh = n;
 	//this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
-	this->posUpdatePub = nh->advertise<environment::obstacleUpdate>("/simObject/position", 1000);
+	this->posUpdatePub = nh->advertise<simulator_messages::obstacleUpdate>("/simObject/position", 1000);
 
 	this->ID = obstID;
 	this->eta = eta0;
@@ -47,22 +47,22 @@ void simObject::run()
 
 void simObject::publish_position_report()
 {
-	environment::obstacleUpdate posUpdate = make_position_update_msg();
+	simulator_messages::obstacleUpdate posUpdate = make_position_update_msg();
 	//qDebug() << "Publishing pos report from: " << this->ID.c_str();
 	this->posUpdatePub.publish(posUpdate);
 }
 
-void simObject::command_parser(const environment::obstacleCmd::ConstPtr& cmd)
+void simObject::command_parser(const simulator_messages::obstacleCmd::ConstPtr& cmd)
 {
 	// Forbeholdt terminate-kommando
 }
 
 
-environment::obstacleUpdate simObject::make_position_update_msg()
+simulator_messages::obstacleUpdate simObject::make_position_update_msg()
 {
 	lock_guard<mutex> lock(m);
 
-	environment::obstacleUpdate posUpdate;
+	simulator_messages::obstacleUpdate posUpdate;
 	posUpdate.msgDescriptor = "position_update";
 	posUpdate.objectDescriptor = this->objectDescriptor;
 	posUpdate.objectID = this->ID;
@@ -116,6 +116,7 @@ void aisUser::broadcast_AIS_msg()
 
 	navData nd( this->get_MMSI(), Xm(0), Xm(1), Xm(5), Xm(3) );
 	nd.set_COG( Xm(2) );
+	nd.set_track( Xm(2) );
 	nd.set_ROT( Xm(4) );
 	nd.set_nav_status( this->get_status() );
 	nd.set_position_accuracy( this->get_pos_accuracy() );

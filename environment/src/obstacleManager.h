@@ -13,16 +13,16 @@
 #include <QMainWindow>
 
 #include "ros/ros.h"
-#include "environment/obstacleCmd.h"
+#include "simulator_messages/obstacleCmd.h"
 
 using namespace std;
 
-class obstacleHandler : public QThread
+class obstacleManager : public QThread
 {
 	Q_OBJECT
 public:
-	obstacleHandler(ros::NodeHandle *n, QThread *parent = 0);
-	~obstacleHandler();
+	obstacleManager(ros::NodeHandle *n, QThread *parent = 0);
+	~obstacleManager();
 
 private:
 	void run();
@@ -30,7 +30,7 @@ private:
 	void spawn_fixed_obstacle(gpsPoint3DOF eta, double size);
 	gpsPoint mapOrigin;
 	void get_origin_from_sim_params(ros::NodeHandle nh);
-	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);
+	void command_parser(const simulator_messages::obstacleCmd::ConstPtr& cmd);
 	ros::NodeHandle *nh;
 	ros::Subscriber cmdSub;
 	QThread *simObjectsThread = NULL;

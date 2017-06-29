@@ -5,8 +5,8 @@
 
 #include "ros/ros.h"
 
-#include "obstacleControl.h"
-#include "sensorsim.h"
+#include "obstacleManager.h"
+#include "targetDetection.h"
 #include <signal.h>
 
 using namespace std;
@@ -20,20 +20,20 @@ int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 
-	ros::init(argc, argv, "obstacleControl");
+	ros::init(argc, argv, "obstacleManager");
 	ros::NodeHandle nh;
 
 	// Start simulation of sensors:
 	QThread *sensorThread = new QThread();
-    sensorSim *sensorSimulator = new sensorSim(&nh);
-    sensorSimulator->moveToThread(sensorThread);
-    QObject::connect(sensorThread, SIGNAL(finished()), sensorSimulator, SLOT(deleteLater()) );
+    targetDetectionModule *targetDetectionModuleulator = new targetDetectionModule(&nh);
+    targetDetectionModuleulator->moveToThread(sensorThread);
+    QObject::connect(sensorThread, SIGNAL(finished()), targetDetectionModuleulator, SLOT(deleteLater()) );
     sensorThread->start();
-    sensorSimulator->start();
+    targetDetectionModuleulator->start();
 
     // Start simulation of obstacles:
     QThread *obstacleThread = new QThread();
-    obstacleHandler *oh = new obstacleHandler(&nh);
+    obstacleManager *oh = new obstacleManager(&nh);
     oh->moveToThread(obstacleThread);
     QObject::connect(obstacleThread, SIGNAL(finished()), oh, SLOT(deleteLater()) );
     obstacleThread->start();
@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
 
     oh->quit();
     oh->wait();
-    sensorSimulator->quit();
-    sensorSimulator->wait();
+    targetDetectionModuleulator->quit();
+    targetDetectionModuleulator->wait();
 
     obstacleThread->quit();
     obstacleThread->wait();

@@ -122,8 +122,6 @@ void navData::set_time(QTime t)
 	time = t;
 }
 
-
-
 int32_t decimal_degrees_to_AIS_minutes(double decimalDeg)
 {
 
@@ -170,13 +168,12 @@ int32_t get_AIS_communication_state(int8_t syncState, int8_t slotTimeOut, QTime 
 	// source: https://github.com/dma-ais/AisLib/blob/master/ais-lib-messages/src/main/java/dk/dma/ais/message/AisMessage1.java
 }
 
-
 string navData::get_AIS_class_A_position_report() const
 {
 	uint8_t msgID = 1;
 	uint8_t repeatIndicator = 0;
-	int8_t aisROT = (int8_t) (4.733*sqrt(abs(ROT))*sign(ROT));
-	uint16_t aisSOG = (uint16_t) (SOG*10);
+	int8_t aisROT = (int8_t) (4.733*sqrt(abs(ROT * 60))*sign(ROT));
+	uint16_t aisSOG = (uint16_t) (SOG*10*1.94384449);
 	int32_t aisLongitude = decimal_degrees_to_AIS_minutes(longitude);
 	int32_t aisLatitude = decimal_degrees_to_AIS_minutes(latitude);
 	int16_t aisCOG = (int16_t) (COG*10);
@@ -240,7 +237,7 @@ string navData::get_AIS_class_A_position_report() const
 	char checksumAsString[3];
 	sprintf(checksumAsString, "%X", checksum);
 	AISmsg += checksumAsString;
-
+	qDebug() << AISmsg.c_str();
 	return AISmsg;
 }
 
@@ -248,8 +245,8 @@ simulator_messages::AIS navData::get_AIS_ros_msg(){
 	simulator_messages::AIS AISmsg;
 	AISmsg.MMSI = this->MMSI;
 	AISmsg.status = this->status;
-	AISmsg.ROT = this->ROT;
-	AISmsg.SOG = this->SOG;
+	AISmsg.ROT = this->ROT/60; //deg/min
+	AISmsg.SOG = this->SOG*1.94384449; // knots
 	AISmsg.positionAccuracy = this->positionAccuracy;
 	AISmsg.longitude = this->longitude;
 	AISmsg.latitude = this->latitude;
@@ -262,7 +259,6 @@ simulator_messages::AIS navData::get_AIS_ros_msg(){
 	AISmsg.raw_data = this->get_AIS_class_A_position_report();
 	return AISmsg;
 }
-
 
 void navData::print_data() const
 {
@@ -320,50 +316,5 @@ void navData::print_data() const
 	s += "\nAIS message:\t\t";
 	s += get_AIS_class_A_position_report();
 
-	qDebug() << s.c_str();
-}
-
-
-
-
-gpsData::gpsData(double Longitude, double Latitude, double Heading, double HeadingRate, double Speed, double Altitude, QTime Time)
-{
-	longitude = Longitude;
-	latitude = Latitude;
-	heading = Heading;
-	headingRate = HeadingRate;
-	speed = Speed;
-	altitude = Altitude;
-	time = Time;
-}
-
-gpsData::gpsData()
-{
-	longitude = 0;
-	latitude = 0;
-	heading = 0;
-	headingRate = 0;
-	speed = 0;
-	altitude = 0;
-	time = QTime::currentTime();
-}
-
-void gpsData::print() const
-{
-	string s = "";
-	s += "Time:\t\t";
-	s += time.toString().toUtf8().constData();
-	s += "\nLong:\t\t";
-	s += to_string(longitude);
-	s += "\nLat:\t\t";
-	s += to_string(latitude);
-	s += "\nHeading:\t";
-	s += to_string(heading);
-	s += "\nHdgRate:\t";
-	s += to_string(headingRate);
-	s += "\nSpeed:\t\t";
-	s += to_string(speed);
-	s += "\nAltitude:\t";
-	s += to_string(altitude);
 	qDebug() << s.c_str();
 }

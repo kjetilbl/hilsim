@@ -1,5 +1,5 @@
 
-#include "sensorsim.h"
+#include "targetDetection.h"
 #include "simulator_messages/Gps.h"
 #include <QTime>
 #include "stdint.h"
@@ -17,30 +17,30 @@
 uint32_t detectedObject::targetIterator = 0;
 
 //----------------------------------------------------------------------------------------
-//----------------------------------------sensorSim----------------------------------------
+//----------------------------------------targetDetectionModule----------------------------------------
 //----------------------------------------------------------------------------------------
 
 
-sensorSim::sensorSim(ros::NodeHandle *n, QThread *parent) : QThread(parent)
+targetDetectionModule::targetDetectionModule(ros::NodeHandle *n, QThread *parent) : QThread(parent)
 {
 	nh = n;
 	if( !read_sensor_config() ){
-		qDebug() << "sensorSim read sensor config failed.";
+		qDebug() << "targetDetectionModule read sensor config failed.";
 		exit(0);
 	}
 }
 
-sensorSim::~sensorSim()
+targetDetectionModule::~targetDetectionModule()
 {
 	delete DTtimer;
 }
 
-void sensorSim::run()
+void targetDetectionModule::run()
 {
 	USVnavData = navData(316001245, 123.8777500, 49.2002817, 19.6, 235.0);
-	ros::Subscriber USVupdateSub = nh->subscribe("sensors/gps", 1000, &sensorSim::USV_gps_parser, this);
-	ros::Subscriber obstUpdateSub = nh->subscribe("/simObject/position", 1000, &sensorSim::obstacle_update_parser, this);
-	ros::Subscriber AISsub = nh->subscribe("sensors/ais", 1000, &sensorSim::AIS_parser, this);
+	ros::Subscriber USVupdateSub = nh->subscribe("sensors/gps", 1000, &targetDetectionModule::USV_gps_parser, this);
+	ros::Subscriber obstUpdateSub = nh->subscribe("/simObject/position", 1000, &targetDetectionModule::obstacle_update_parser, this);
+	ros::Subscriber AISsub = nh->subscribe("sensors/ais", 1000, &targetDetectionModule::AIS_parser, this);
 	detectedTargetPub = nh->advertise<simulator_messages::detectedTarget>("sensors/target_detection", 1000);
 
 	DTtimer = new QTimer();
@@ -50,7 +50,7 @@ void sensorSim::run()
 	QThread::exec();
 }
 
-bool sensorSim::read_sensor_config(){
+bool targetDetectionModule::read_sensor_config(){
 	bool successfulRead = true;
 	if(!nh->getParam("radar_range", radarRange)){
 		radarRange = 200;
@@ -63,7 +63,7 @@ bool sensorSim::read_sensor_config(){
 	return successfulRead;
 }
 
-void sensorSim::publish_detected_targets()
+void targetDetectionModule::publish_detected_targets()
 {
 	std::lock_guard<std::mutex> lock(m);
 	vector<string> inactiveTargets;
@@ -80,7 +80,7 @@ void sensorSim::publish_detected_targets()
 		{
 			double distanceToObject = distance_m(USVnavData.get_position(), target.second.get_true_position());
 			target.second.estimate_states(distanceToObject);
-			simulator_messages::detectedTarget dt = target.second.makeDTmsg();
+			simulator_messages::detectedTarget dt = target.second.make_DT_msg();
 
 			detectedTargetPub.publish(dt);
 		}
@@ -93,7 +93,7 @@ void sensorSim::publish_detected_targets()
 }
 
 
-void sensorSim::USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg)
+void targetDetectionModule::USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg)
 {
 	std::lock_guard<std::mutex> lock(m);
 	USVnavData.set_position_accuracy(HIGH);
@@ -106,7 +106,7 @@ void sensorSim::USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMs
 	USVnavData.set_time(QTime::currentTime());
 }
 
-void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg)
+void targetDetectionModule::obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg)
 {
 	std::lock_guard<std::mutex> lock(m);
 
@@ -149,9 +149,8 @@ void sensorSim::obstacle_update_parser(const environment::obstacleUpdate::ConstP
 	}
 }
 
-void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
+void targetDetectionModule::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
 {
-
 	std::lock_guard<std::mutex> lock(m);
 
 	string objectDescriptor = "vessel";
@@ -159,8 +158,8 @@ void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
 	gpsPoint position(AISmsg->longitude, AISmsg->latitude);
 
 	double COG = AISmsg->COG;
-	double SOG = AISmsg->SOG;
-	double ROT = AISmsg->ROT;
+	double SOG = AISmsg->SOG/1.94384449; // [m/s]
+	double ROT = AISmsg->ROT*60; // [deg/sec]
 	double crossSection = pow(150,2);
 	map<string, detectedObject>::iterator it = detectedTargets.find(objectID);
 	if( it == detectedTargets.end() )
@@ -170,7 +169,7 @@ void sensorSim::AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg)
 	detectedTargets[objectID].set_AIS_data(SOG, COG, ROT, position);
 }
 
-bool sensorSim::is_within_range(gpsPoint pos, double range){
+bool targetDetectionModule::is_within_range(gpsPoint pos, double range){
 	gpsPointStamped usvPos = USVnavData.get_position();
 	double distToNewPos = distance_m(usvPos, pos);
 	if (distToNewPos > range)
@@ -180,7 +179,7 @@ bool sensorSim::is_within_range(gpsPoint pos, double range){
 	return true;
 }
 
-bool sensorSim::is_visible(gpsPoint newPos, string objectID = "unknown"){
+bool targetDetectionModule::is_visible(gpsPoint newPos, string objectID = "unknown"){
 	gpsPointStamped usvPos = USVnavData.get_position();
 	double distToNewPos = distance_m(usvPos, newPos);
 
@@ -301,10 +300,6 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 	double u = Xa_hat(3);
 	double psi = deg2rad( Xa_hat(2) );
 	double rot = deg2rad( Xa_hat(4) );
-	qDebug() << "u = " << u;
-	qDebug() << "psi = " << psi;
-	qDebug() << "rot = " << rot;
-	
 	fa_hat = Eigen::VectorXd(nk);
 	fa_hat << u*sin(psi)*longitude_degs_pr_meter(truePosition.latitude), u*cos(psi)*latitude_degs_pr_meter(), rot, 0, 0, 0, Eigen::VectorXd::Zero(nk-6);
 	if(!read_sensor_config(nh, truePosition)){
@@ -318,7 +313,6 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 	lastLidarUpdate = QTime::currentTime();
 	lastRadarEstimateTime = QTime::currentTime();
 	lastlidarEstimateTime = QTime::currentTime();
-	qDebug() << "detectedObject initialized.";
 }
 
 Eigen::VectorXd detectedObject::estimate_states( double distanceFromUSV_m ){
@@ -421,14 +415,14 @@ void detectedObject::update_true_states(gpsPoint pos, double COG, double SOG, do
 	set_true_cross_section(crossSection);
 }
 
-simulator_messages::detectedTarget detectedObject::makeDTmsg(){
+simulator_messages::detectedTarget detectedObject::make_DT_msg(){
 	simulator_messages::detectedTarget dt;
 	dt.targetID = get_target_number();
 	dt.objectDescriptor = descriptor;
 	dt.longitude = get_estimated_position().longitude;
 	dt.latitude = get_estimated_position().latitude;
 	dt.COG = round( get_estimated_COG() );
-	dt.SOG = round( get_estimated_SOG() );
+	dt.SOG = round( get_estimated_SOG() * 1.94384449 ); // knots
 	dt.crossSection = get_estimated_CS()*3;
 	return dt;
 }
@@ -719,32 +713,32 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 	Eigen::MatrixXd Pl_w = (Pl*pow(hl,-2)).inverse();
 
 	if( AIS_ON && !radar_ON && !lidar_ON ){
-		qDebug() << "Using AIS only.";
+		// qDebug() << "Using AIS only.";
 		X_hat = Xa_hat;
 		//cout << "Za:\n" << Za << endl;
 	}
 	else if( !AIS_ON && radar_ON && !lidar_ON ){
-		qDebug() << "Using RADAR only.";
+		// qDebug() << "Using RADAR only.";
 		X_hat = Xr_hat;
 	}
 	else if( !AIS_ON && !radar_ON && lidar_ON){
-		qDebug() << "Using LiDAR only.";
+		// qDebug() << "Using LiDAR only.";
 		X_hat = Xr_hat;
 	}
 	else if(AIS_ON && radar_ON && lidar_ON){
-		qDebug() << "Using SENSOR FUSION: AIS, Radar, LiDAR.";
+		// qDebug() << "Using SENSOR FUSION: AIS, Radar, LiDAR.";
 		X_hat = (Pa_w + Pr_w + Pl_w).inverse()*(Pa_w*Xa_hat + Pr_w*Xr_hat + Pl_w*Xl_hat);
 	}
 	else if(AIS_ON && radar_ON){
-		qDebug() << "Using SENSOR FUSION: AIS, Radar.";
+		// qDebug() << "Using SENSOR FUSION: AIS, Radar.";
 		X_hat = (Pa_w + Pr_w).inverse()*(Pa_w*Xa_hat + Pr_w*Xr_hat);
 	}
 	else if(AIS_ON && lidar_ON){
-		qDebug() << "Using SENSOR FUSION: AIS, LiDAR.";
+		// qDebug() << "Using SENSOR FUSION: AIS, LiDAR.";
 		X_hat = (Pa_w + Pl_w).inverse()*(Pa_w*Xa_hat + Pl_w*Xl_hat);
 	}
 	else if(radar_ON && lidar_ON){
-		qDebug() << "Using SENSOR FUSION: Radar, LiDAR.";
+		// qDebug() << "Using SENSOR FUSION: Radar, LiDAR.";
 		X_hat = (Pr_w + Pl_w).inverse()*(Pr_w*Xr_hat + Pl_w*Xl_hat);
 	}
 
@@ -766,12 +760,12 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 	double e_h = Za(1) - X_hat(1);
 	double e_r = sqrt(pow((Zr(0) - X(0))/longitude_degs_pr_meter(Zr(1)) ,2) + pow((Zr(1) - X(1))/latitude_degs_pr_meter() ,2));
 	double e_a = sqrt(pow((Za(0) - X(0))/longitude_degs_pr_meter(Zr(1)) ,2) + pow((Za(1) - X(1))/latitude_degs_pr_meter() ,2));
-
+/*
 	cout << "\nFusion position  error: " << e_p << endl;
 	cout << "\nAIS position  error: " << e_pa << endl;
 	cout << "\nRadar position  error: " << e_pr << endl;
 	cout << "\nLiDAR position  error: " << e_pl << endl;
-
+*/
 
 	Eigen::VectorXd X_hat_short = Eigen::VectorXd::Zero(n);
 	double positionErrorTreshold = 50;
@@ -791,8 +785,9 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 	Eigen::VectorXd Xa_hat_short = Eigen::VectorXd::Zero(n);
 	Xr_hat_short << Xr_hat(0), Xr_hat(1), fmod(Xr_hat(2), 360.0), Xr_hat(3), Xr_hat(5);
 	Xa_hat_short << Xa_hat(0), Xa_hat(1), fmod(Xa_hat(2), 360.0), Xa_hat(3), Xa_hat(5);
+
 	//print_X(Xr_hat,"Xr_hat");
-	print_X(Xl_hat,"Xl_hat");
+
 	return X_hat_short;
 }
 

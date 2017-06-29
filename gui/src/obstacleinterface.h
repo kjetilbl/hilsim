@@ -14,10 +14,7 @@
 #include "satelliteview.h"
 
 #include "/opt/ros/kinetic/include/ros/ros.h"
-#include "std_msgs/String.h"
-#include "std_msgs/Float64.h"
-#include "environment/obstacleUpdate.h"
-#include "environment/obstacleCmd.h"
+#include "simulator_messages/obstacleCmd.h"
 #include "simulator_messages/Gps.h"
 
 

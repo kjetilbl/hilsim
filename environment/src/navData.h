@@ -73,7 +73,6 @@ public:
 	void set_track(double degrees);
 	double get_track(){return track;}
 	void set_time(QTime t);
-
 	
 private:
 	uint32_t MMSI;
@@ -87,24 +86,6 @@ private:
 	double track;
 	QTime time;
 	specialManeuverIndicator SMI;
-};
-
-
-class gpsData
-{
-public:
-	double longitude;
-	double latitude;
-	double heading;
-	double headingRate;
-	double speed;
-	double altitude;
-	QTime time;
-	gpsData(double Longitude, double Latitude, double Heading = 0, double HeadingRate = 0, double Speed = 0, double Altitude = 0, QTime Time = QTime::currentTime());
-	gpsData();
-	void print() const;
-
-private:
 };
 
 #endif // NAVDATA_H

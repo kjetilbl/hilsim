@@ -14,9 +14,9 @@
 #include "gpsTools.h"
 
 #include "ros/ros.h"
-#include "environment/obstacleUpdate.h"
-#include "environment/obstacleCmd.h"
+#include "simulator_messages/obstacleCmd.h"
 #include "simulator_messages/AIS.h"
+#include "simulator_messages/obstacleUpdate.h"
 
 
 using namespace std;
@@ -34,8 +34,8 @@ public:
 
 protected:
 	virtual void run();
-	void command_parser(const environment::obstacleCmd::ConstPtr& cmd);
-	environment::obstacleUpdate make_position_update_msg();
+	void command_parser(const simulator_messages::obstacleCmd::ConstPtr& cmd);
+	simulator_messages::obstacleUpdate make_position_update_msg();
 	string objectDescriptor;
 	string ID;
 	ros::NodeHandle *nh;
@@ -44,8 +44,6 @@ private:
 	QTimer *posReportTimer = NULL;
 	mutex m;
 	double size;
-	bool stop = false;
-	bool running = false;
 	gpsPoint3DOF eta;
 	ros::Publisher posUpdatePub;
 	ros::Subscriber cmdSub;

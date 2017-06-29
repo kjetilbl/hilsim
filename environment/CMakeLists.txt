@@ -8,16 +8,16 @@ ADD_DEFINITIONS(${QT_DEFINITIONS})
 
 SET(environment_SOURCES 
 	src/environment.cpp 
-	src/obstacleControl.cpp
-	src/sensorsim.cpp
+	src/obstacleManager.cpp
+	src/targetDetection.cpp
 	src/navData.cpp
 	src/gpsTools.cpp
 	src/simObject.cpp
 	)
 
 SET(environment_HEADERS 
-	src/obstacleControl.h
-	src/sensorsim.h
+	src/obstacleManager.h
+	src/targetDetection.h
 	src/navData.h
 	src/gpsTools.h
 	src/simObject.h
@@ -40,8 +40,6 @@ add_message_files(
    DIRECTORY
    msg
    FILES
-   obstacleUpdate.msg
-   obstacleCmd.msg
 )
 
 ## Generate added messages and services

@@ -1,4 +1,4 @@
-#include "obstacleControl.h"
+#include "obstacleManager.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -29,15 +29,13 @@ vector<string> split_string(string myString, char splitChar){
    	return v;
 }
 
-
-obstacleHandler::obstacleHandler(ros::NodeHandle *n, QThread *parent ) : QThread(parent) {
+obstacleManager::obstacleManager(ros::NodeHandle *n, QThread *parent ) : QThread(parent) {
 	this->nh = n;
-	this->cmdSub = nh->subscribe("/simObject/command", 1000, &obstacleHandler::command_parser, this);
+	this->cmdSub = nh->subscribe("/simObject/command", 1000, &obstacleManager::command_parser, this);
 	get_origin_from_sim_params(*nh);
-	
 }
 
-obstacleHandler::~obstacleHandler(){
+obstacleManager::~obstacleManager(){
 
 	for(auto const& simObjectPtr: simObjects){
 		simObjectPtr->quit();
@@ -51,7 +49,7 @@ obstacleHandler::~obstacleHandler(){
 	}
 }
 
-void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& cmd)
+void obstacleManager::command_parser(const simulator_messages::obstacleCmd::ConstPtr& cmd)
 {
 	static int obstIterator = 2;
 	if(cmd->cmdSpecifier == "spawn")
@@ -63,7 +61,7 @@ void obstacleHandler::command_parser(const environment::obstacleCmd::ConstPtr& c
 	}
 }
 
-void obstacleHandler::run()
+void obstacleManager::run()
 {
 	simObjectsThread = new QThread();
 	simObjectsThread->start();
@@ -75,7 +73,7 @@ void obstacleHandler::run()
 	QThread::exec();
 }
 
-void obstacleHandler::spawn_obstacles(){
+void obstacleManager::spawn_obstacles(){
 
 	// Spawn ships requested in .yaml file
 	map<string, string> requestedShips;
@@ -106,7 +104,7 @@ void obstacleHandler::spawn_obstacles(){
 	   		}
 	   		else if (key == "SpeedInKnots")
 	   		{
-	   			speed = atof(value.c_str());
+	   			speed = atof(value.c_str()) / 1.94384449; // knots to [m/s]
 	   		}
 	   		else{
 	   			qDebug() << "Unknown key" << key.c_str() << "in ship parameters.";
@@ -131,21 +129,43 @@ void obstacleHandler::spawn_obstacles(){
 	    }
 	}
 
+	map<string, string> requestedObstacles;
+	nh->getParam("fixed_obstacles", requestedObstacles);
 
-	// Spawn obstacles in random places. As many as requested in .yaml file
-	gpsPoint3DOF eta0;
-	int numberOfObstacles;
-	nh->getParam("n_fixed_obstacles", numberOfObstacles);
-	for(int i = 0; i < numberOfObstacles; i++){
-		eta0.longitude = mapOrigin.longitude + (rand()%10000 - 5000)*longitude_degs_pr_meter(mapOrigin.latitude);
-		eta0.latitude = mapOrigin.latitude + (rand()%10000 - 5000)*latitude_degs_pr_meter();
-		uint16_t size = 500 + (rand() % 1000 - 400);
-		spawn_fixed_obstacle(eta0, size);
+	for(auto const& objectDescriptor: requestedObstacles){
+	    double radius = 0;
+	    gpsPoint3DOF eta0;
+
+	    vector<string> parameters = split_string(objectDescriptor.second, ' ');
+	    for (auto const& paramAsString: parameters)
+	    {
+	    	vector<string> paramPair = split_string(paramAsString, '=');
+	    	if (paramPair.size() != 2)
+	    	{
+	    		qDebug() << "Error in obstacle parameters.";
+	    	}
+	    	string key = paramPair.front();
+	    	string value = paramPair.back();
+	   		if (key == "RADIUS")
+	   		{
+	   			radius = atof(value.c_str());
+	   		}
+	   		else if (key == "COORD")
+	   		{
+	   			gpsPoint temp = get_coordinate_from_string(value);
+	   			eta0.longitude = temp.longitude;
+	   			eta0.latitude = temp.latitude;
+	   			eta0.heading = 180;
+	   		}
+	   		else{
+	   			qDebug() << "Unknown key" << key.c_str() << "in ship parameters.";
+	   		}
+	    }
+	   	spawn_fixed_obstacle(eta0, radius);
 	}
 }
 
-
-void obstacleHandler::spawn_fixed_obstacle(gpsPoint3DOF eta, double size){
+void obstacleManager::spawn_fixed_obstacle(gpsPoint3DOF eta, double size){
 	if ( simObjectsThread == NULL )
 	{
 		simObjectsThread = new QThread();
@@ -158,8 +178,7 @@ void obstacleHandler::spawn_fixed_obstacle(gpsPoint3DOF eta, double size){
 	this->simObjects.push_back( newObstacle );
 }
 
-
-void obstacleHandler::get_origin_from_sim_params(ros::NodeHandle nh){
+void obstacleManager::get_origin_from_sim_params(ros::NodeHandle nh){
 	nh.getParam("start_longitude", mapOrigin.longitude);
 	nh.getParam("start_latitude", mapOrigin.latitude);
 }

@@ -32,7 +32,7 @@ void posUpdateHandler::run()
 	QThread::exec();}
 
 
-void posUpdateHandler::obstUpdateParser(const environment::obstacleUpdate::ConstPtr& updateMsg)
+void posUpdateHandler::obstUpdateParser(const simulator_messages::obstacleUpdate::ConstPtr& updateMsg)
 {	
 	string ID = updateMsg->objectID;
 

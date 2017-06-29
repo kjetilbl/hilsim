@@ -3,9 +3,9 @@
 
 using namespace std;
 
-environment::obstacleCmd makeObstacleCommand(string CmdSpecifier, double x = 0, double y = 0, double psi = 0, string ID = "no_id")
+simulator_messages::obstacleCmd makeObstacleCommand(string CmdSpecifier, double x = 0, double y = 0, double psi = 0, string ID = "no_id")
 {
-	environment::obstacleCmd newCommand;
+	simulator_messages::obstacleCmd newCommand;
 	newCommand.cmdSpecifier = CmdSpecifier;
 	newCommand.receiverID = ID;
 	newCommand.x = x;
@@ -23,7 +23,7 @@ environment::obstacleCmd makeObstacleCommand(string CmdSpecifier, double x = 0, 
 obstacleInterface::obstacleInterface(ros::NodeHandle *nh, QGroupBox *interfaceWindow, satelliteView *Sv) 
 	: sv(Sv)
 {
-	cmdPub = nh->advertise<environment::obstacleCmd>("/simObject/command", 1000);
+	cmdPub = nh->advertise<simulator_messages::obstacleCmd>("/simObject/command", 1000);
 
 	spawnObstacleButton = new QPushButton("Spawn Obstacles");
 	QVBoxLayout *vbox = new QVBoxLayout;
@@ -34,7 +34,7 @@ obstacleInterface::obstacleInterface(ros::NodeHandle *nh, QGroupBox *interfaceWi
 
 void obstacleInterface::requestNewObstacle(double x, double y, double psi)
 {
-	environment::obstacleCmd newCommand = makeObstacleCommand("spawn", x, y, psi);
+	simulator_messages::obstacleCmd newCommand = makeObstacleCommand("spawn", x, y, psi);
 	cmdPub.publish(newCommand);
 }
 
