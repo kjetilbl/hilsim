@@ -16,7 +16,7 @@
 #include "gpsTools.h"
 
 #include "ros/ros.h"
-#include "environment/obstacleUpdate.h"
+#include "simulator_messages/obstacleUpdate.h"
 #include "simulator_messages/Gps.h"
 #include "simulator_messages/detectedTarget.h"
 
@@ -38,7 +38,7 @@ private:
 	void run();
 	bool read_sensor_config();
 	void USV_gps_parser(const simulator_messages::Gps::ConstPtr& USVgpsMsg);
-	void obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg);
+	void obstacle_update_parser(const simulator_messages::obstacleUpdate::ConstPtr& obstUpdateMsg);
 	void AIS_parser(const simulator_messages::AIS::ConstPtr& AISmsg);
 
 	bool is_within_range(gpsPoint pos, double range);
@@ -63,7 +63,7 @@ public:
 					gpsPoint truePosition,
 					double trueCOG, 
 					double trueSOG, 
-					double trueCrossSection);
+					double trueRadius);
 	detectedObject();
 	Eigen::VectorXd estimate_states( double distanceFromUSV_m );
 	uint32_t get_target_number() { return targetNumber; } 
@@ -72,13 +72,13 @@ public:
 	gpsPoint get_estimated_position(){ return gpsPoint(Xe(0), Xe(1)); }
 	double get_estimated_COG(){ return Xe(2); }
 	double get_estimated_SOG(){ return Xe(3); }
-	double get_estimated_CS(){ return Xe(4); }
-	void update_true_states(gpsPoint pos, double COG, double SOG, double crossSection);
+	double get_estimated_radius(){ return Xe(4); }
+	void update_true_states(gpsPoint pos, double COG, double SOG, double radius);
 	simulator_messages::detectedTarget make_DT_msg();
 	void set_true_position(gpsPoint truePos);
 	void set_true_COG(double trueCOG);
 	void set_true_SOG(double trueSOG);
-	void set_true_cross_section(double trueCS);
+	void set_true_radius(double trueCS);
 	void set_AIS_data(double SOG, double COG, double ROT, gpsPoint position);
 	void set_lidar_active(bool active);
 	void set_radar_active(bool active);

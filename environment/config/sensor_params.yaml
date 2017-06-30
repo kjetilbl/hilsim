@@ -23,7 +23,7 @@ AIS_SOG_bias_time_constant: 20
 
 ## Radar error parameters
 radar_position_bias_sigma: 0.5
-radar_size_bias_sigma: 10
+radar_size_bias_sigma: 1
 
 radar_position_bias_time_constant: 5
 radar_size_bias_time_constant: 100
@@ -36,7 +36,7 @@ radar_size_error_pr_distance_gain: 0.003
 
 ## LiDAR error parameters
 lidar_position_bias_sigma: 0.1
-lidar_size_bias_sigma: 10
+lidar_size_bias_sigma: 1
 
 lidar_position_bias_time_constant: 5
 lidar_size_bias_time_constant: 100

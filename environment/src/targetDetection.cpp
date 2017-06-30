@@ -106,13 +106,13 @@ void targetDetectionModule::USV_gps_parser(const simulator_messages::Gps::ConstP
 	USVnavData.set_time(QTime::currentTime());
 }
 
-void targetDetectionModule::obstacle_update_parser(const environment::obstacleUpdate::ConstPtr& obstUpdateMsg)
+void targetDetectionModule::obstacle_update_parser(const simulator_messages::obstacleUpdate::ConstPtr& obstUpdateMsg)
 {
 	std::lock_guard<std::mutex> lock(m);
 
 	string objectDescriptor = obstUpdateMsg->objectDescriptor;
 	gpsPoint obstPos(obstUpdateMsg->longitude, obstUpdateMsg->latitude);
-	double crossSection = obstUpdateMsg->size;
+	double radius = obstUpdateMsg->radius;
 	double COG = obstUpdateMsg->heading;
 	string objectID = obstUpdateMsg->objectID;
 
@@ -127,16 +127,16 @@ void targetDetectionModule::obstacle_update_parser(const environment::obstacleUp
 	if( it != detectedTargets.end() ) // Object already detected
 	{
 		detectedTargets[objectID].set_true_position(obstPos);
-		detectedTargets[objectID].set_true_cross_section(crossSection);
+		detectedTargets[objectID].set_true_radius(radius);
 	}else
 	{
 		if (objectDescriptor == "fixed_obstacle")
 		{
-			detectedTargets[objectID] = detectedObject(*nh, objectDescriptor, obstPos, COG, 0, crossSection);
+			detectedTargets[objectID] = detectedObject(*nh, objectDescriptor, obstPos, COG, 0, radius);
 		}
 		else if (objectDescriptor == "ship")
 		{
-			detectedTargets[objectID] = detectedObject(*nh, "vessel", obstPos, COG, 5, crossSection);
+			detectedTargets[objectID] = detectedObject(*nh, "vessel", obstPos, COG, 5, radius);
 		}
 	}
 	if (is_within_range(obstPos, radarRange))
@@ -160,11 +160,11 @@ void targetDetectionModule::AIS_parser(const simulator_messages::AIS::ConstPtr& 
 	double COG = AISmsg->COG;
 	double SOG = AISmsg->SOG/1.94384449; // [m/s]
 	double ROT = AISmsg->ROT*60; // [deg/sec]
-	double crossSection = pow(150,2);
+	double radius = 150;
 	map<string, detectedObject>::iterator it = detectedTargets.find(objectID);
 	if( it == detectedTargets.end() )
 	{
-		detectedTargets[objectID] = detectedObject(*nh, objectDescriptor, position, COG, SOG, crossSection);
+		detectedTargets[objectID] = detectedObject(*nh, objectDescriptor, position, COG, SOG, radius);
 	}
 	detectedTargets[objectID].set_AIS_data(SOG, COG, ROT, position);
 }
@@ -214,7 +214,7 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 								gpsPoint truePosition, 
 								double trueCOG, 
 								double trueSOG, 
-								double trueCrossSection)
+								double trueRadius)
 {
 	descriptor = objectDescriptor;
 	targetNumber = targetIterator++;
@@ -226,7 +226,7 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 	Za << truePosition.longitude, truePosition.latitude, trueCOG, trueSOG, 0;
 	Za_prev = Eigen::VectorXd::Zero(na);
 	Xr_bar = Eigen::VectorXd(nk);
-	Xr_bar << Za, trueCrossSection, Eigen::VectorXd::Zero(nk - na - 1);
+	Xr_bar << Za, trueRadius, Eigen::VectorXd::Zero(nk - na - 1);
 	Xr_hat = Xr_bar;
 	Xl_bar = Xr_bar;
 	Xl_hat = Xr_bar;
@@ -307,7 +307,7 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 		exit(-1);
 	}
 
-	update_true_states(truePosition, trueCOG, trueSOG, trueCrossSection);
+	update_true_states(truePosition, trueCOG, trueSOG, trueRadius);
 	lastAISupdate = QTime::currentTime();
 	lastRadarUpdate = QTime::currentTime();
 	lastLidarUpdate = QTime::currentTime();
@@ -360,7 +360,7 @@ Eigen::VectorXd detectedObject::generate_radar_measurement( double distanceFromU
 	br = Tdr*br + w;
 	e = br + v;
 	e = errorPrDistanceGain * distanceFromUSV_m * e;
-	e(2) = max(-X(4) + 10, (double)e(2));
+	e(2) = max(-X(4) + 2, (double)e(2));
 
 
 	// Make artificial measurements:
@@ -394,7 +394,7 @@ Eigen::VectorXd detectedObject::generate_lidar_measurement( double distanceFromU
 	bl = Tdl*bl + w;
 	e = bl + v;
 	e = errorPrDistanceGain * distanceFromUSV_m * e;
-	e(2) = max( -X(4)+10, (double)e(2));
+	e(2) = max( -X(4)+2, (double)e(2));
 
 
 	// Make artificial measurements:
@@ -408,11 +408,11 @@ Eigen::VectorXd detectedObject::generate_lidar_measurement( double distanceFromU
 	return Z;
 }
 
-void detectedObject::update_true_states(gpsPoint pos, double COG, double SOG, double crossSection){
+void detectedObject::update_true_states(gpsPoint pos, double COG, double SOG, double radius){
 	set_true_position(pos);
 	set_true_COG(COG);
 	set_true_SOG(SOG);
-	set_true_cross_section(crossSection);
+	set_true_radius(radius);
 }
 
 simulator_messages::detectedTarget detectedObject::make_DT_msg(){
@@ -423,7 +423,7 @@ simulator_messages::detectedTarget detectedObject::make_DT_msg(){
 	dt.latitude = get_estimated_position().latitude;
 	dt.COG = round( get_estimated_COG() );
 	dt.SOG = round( get_estimated_SOG() * 1.94384449 ); // knots
-	dt.crossSection = get_estimated_CS()*3;
+	dt.radius = get_estimated_radius()*2;
 	return dt;
 }
 
@@ -593,7 +593,7 @@ void detectedObject::set_true_SOG(double trueSOG){
 	X(3) = trueSOG;
 }
 
-void detectedObject::set_true_cross_section(double trueCS){
+void detectedObject::set_true_radius(double trueCS){
 	X(4) = trueCS;
 }
 

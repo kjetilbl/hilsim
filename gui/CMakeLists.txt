@@ -50,20 +50,6 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 
-
-## Declare ROS messages and services
- ##add_message_files(
-   ##DIRECTORY
-   ##/home/kjetil/Dropbox/master/simulator_ws/src/environment/msg
-   ##FILES
-   ##obstacleUpdate.msg
-   ##obstacleCmd.msg
- ##)
-# add_service_files(FILES AddTwoInts.srv)
-
-## Generate added messages and services
-# generate_messages(DEPENDENCIES std_msgs)
-
 ## Declare a catkin package
 catkin_package(
    CATKIN_DEPENDS roscpp std_msgs

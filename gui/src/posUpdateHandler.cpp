@@ -41,7 +41,7 @@ void posUpdateHandler::obstUpdateParser(const simulator_messages::obstacleUpdate
 		double longitude = updateMsg->longitude;
 		double latitude = updateMsg->latitude;
 		double heading = updateMsg->heading;
-		double crossSection = updateMsg->size;
+		double radius = updateMsg->radius;
 		
 		gpsPointStamped pos(updateMsg->longitude, updateMsg->latitude, updateMsg->heading);
 
@@ -54,7 +54,7 @@ void posUpdateHandler::obstUpdateParser(const simulator_messages::obstacleUpdate
 			sv->addSimObject(ID, objectDescriptor, longitude, latitude, heading);
 		}
 
-		rviz->set_object(ID, gpsPoint3DOF{longitude, latitude, heading}, crossSection);
+		rviz->set_object(ID, gpsPoint3DOF{longitude, latitude, heading}, radius);
 	}
 }
 
@@ -71,8 +71,8 @@ void posUpdateHandler::gpsParser(const simulator_messages::Gps::ConstPtr& gpsMsg
 	}
 	gpsPointStamped pos(gpsMsg->longitude, gpsMsg->latitude, gpsMsg->heading);
 	sv->simTargetMoveTo(pos);
-	headingPlot->updateValues(gpsMsg->heading, gpsMsg->heading - 1);
-	velocityPlot->updateValues(gpsMsg->speed, gpsMsg->speed - 0.5);
+	headingPlot->updateValues(gpsMsg->heading);
+	velocityPlot->updateValues(gpsMsg->speed);
 }
 
 
@@ -95,7 +95,7 @@ void posUpdateHandler::detectedTargetParser(const simulator_messages::detectedTa
 	string objectDescriptor = dtMsg->objectDescriptor;
 	gpsPointStamped pos(dtMsg->longitude, dtMsg->latitude, dtMsg->COG);
 	double SOG = dtMsg->SOG;
-	double crossSection = dtMsg->crossSection;
-	rviz->show_detected_target(targetID, objectDescriptor, pos, SOG, crossSection);
+	double radius = dtMsg->radius;
+	rviz->show_detected_target(targetID, objectDescriptor, pos, SOG, radius);
 }
 

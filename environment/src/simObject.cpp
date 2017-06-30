@@ -17,7 +17,7 @@ simObject::simObject( const simObject& other )
 	this->eta = other.eta;
 }
 
-simObject::simObject(ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, double Size, QThread *parent) : QThread(parent)
+simObject::simObject(ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, double Radius, QThread *parent) : QThread(parent)
 {
 	this->nh = n;
 	//this->cmdSub = nh->subscribe("/simObject/command", 1000, &simObject::command_parser, this);
@@ -25,7 +25,7 @@ simObject::simObject(ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, doubl
 
 	this->ID = obstID;
 	this->eta = eta0;
-	this->size = Size;
+	this->radius = Radius;
 
 }
 
@@ -69,7 +69,7 @@ simulator_messages::obstacleUpdate simObject::make_position_update_msg()
 	posUpdate.longitude = this->eta.longitude;
 	posUpdate.latitude = this->eta.latitude;
 	posUpdate.heading = this->eta.heading;
-	posUpdate.size = this->size;
+	posUpdate.radius = this->radius;
 	return posUpdate;
 }
 
@@ -86,8 +86,8 @@ gpsPoint3DOF simObject::get_eta()
 }
 
 
-fixedObstacle::fixedObstacle( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent ) 
-							: simObject( n, "fixed_obstacle_"+to_string(this->IDiterator++), eta0, Size, parent )
+fixedObstacle::fixedObstacle( ros::NodeHandle *n, gpsPoint3DOF eta0, double Radius, QThread *parent ) 
+							: simObject( n, "fixed_obstacle_"+to_string(this->IDiterator++), eta0, Radius, parent )
 {
 	this->objectDescriptor = "fixed_obstacle";
 }
@@ -98,8 +98,8 @@ void fixedObstacle::run(){
 }
 
 
-aisUser::aisUser( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent ) 
-				: simObject( n, "AIS_user_"+to_string(this->IDiterator), eta0, Size, parent )
+aisUser::aisUser( ros::NodeHandle *n, gpsPoint3DOF eta0, double Radius, QThread *parent ) 
+				: simObject( n, "AIS_user_"+to_string(this->IDiterator), eta0, Radius, parent )
 {
 	int N = 6;
 	b = Eigen::VectorXd::Zero(N);
@@ -339,10 +339,10 @@ Eigen::VectorXd aisUser::get_estimated_nav_parameters(){
 
 ship::ship( ros::NodeHandle *n, 
 			gpsPoint3DOF eta0, 
-			double Size, 
+			double Radius, 
 			double SpeedInKnots,
 			QThread *parent ) 
-	: aisUser( n, eta0, Size, parent )
+	: aisUser( n, eta0, Radius, parent )
 {
 	this->objectDescriptor = "ship";
 	this->set_status(UNDERWAY_USING_ENGINE);

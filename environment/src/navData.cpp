@@ -237,7 +237,6 @@ string navData::get_AIS_class_A_position_report() const
 	char checksumAsString[3];
 	sprintf(checksumAsString, "%X", checksum);
 	AISmsg += checksumAsString;
-	qDebug() << AISmsg.c_str();
 	return AISmsg;
 }
 

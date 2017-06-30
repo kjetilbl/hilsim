@@ -15,7 +15,7 @@ rvizInterface::rvizInterface(ros::NodeHandle *nh){
 }
 
 
-void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double crossSection){
+void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double radius){
 	/*
 	nav_msgs::OccupancyGrid myMap;
 	myMap.header.stamp = ros::Time();
@@ -81,7 +81,7 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double cr
 	    marker.type = visualization_msgs::Marker::MESH_RESOURCE;
 	    marker.mesh_resource = "file:///home/uss_deplorables_small.stl";
 
-	    double scale = sqrt(crossSection)*0.0013;
+	    double scale = radius*0.0013;
 	    // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
 	    marker.pose.position.x = x + 64*sqrt(2)*cos(deg2rad(position.heading + 36))*scale/0.1;
 	    marker.pose.position.y = y - 64*sqrt(2)*cos(deg2rad(position.heading - 54))*scale/0.1;
@@ -114,9 +114,9 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double cr
 	    marker.pose.orientation.w = cos(deg2rad(-position.heading/2));
 
 	    // Set the scale of the marker -- 1x1x1 here means 1m on a side
-	    marker.scale.x = sqrt(crossSection);
-	    marker.scale.y = sqrt(crossSection);
-	    marker.scale.z = sqrt(crossSection)*2;
+	    marker.scale.x = radius;
+	    marker.scale.y = radius;
+	    marker.scale.z = radius*2;
 
 	    // Set the color -- be sure to set alpha to something non-zero!
 	    marker.color.r = 1;
@@ -134,7 +134,7 @@ void rvizInterface::show_detected_target(	int targetID,
 											string objectDescriptor, 
 											gpsPointStamped position,
 											double SOG,
-											double crossSection){
+											double radius){
 	visualization_msgs::Marker marker;
     marker.header.frame_id = "map";
     marker.header.stamp = ros::Time();
@@ -157,15 +157,15 @@ void rvizInterface::show_detected_target(	int targetID,
 
     if(objectDescriptor == "fixed_obstacle"){
 	marker.type = visualization_msgs::Marker::CYLINDER;
-	    marker.scale.x = sqrt(crossSection);
-	    marker.scale.y = sqrt(crossSection);
+	    marker.scale.x = radius;
+	    marker.scale.y = radius;
 	    marker.scale.z = 1;
     }
     else if( objectDescriptor == "vessel"){
 	marker.type = visualization_msgs::Marker::CYLINDER;
-	    marker.scale.x = sqrt(crossSection);
-	    marker.scale.y = sqrt(crossSection)/3;
-	    marker.scale.z = 1;// sqrt(crossSection)/2;
+	    marker.scale.x = radius;
+	    marker.scale.y = radius/3;
+	    marker.scale.z = 1;// sqrt(radius)/2;
     }
 
     marker.color.r = 0.9;
@@ -199,7 +199,7 @@ void rvizInterface::show_detected_target(	int targetID,
     textMarker.pose.position.x = x;
     textMarker.pose.position.y = y;
 
-    textMarker.pose.position.z = sqrt(crossSection)/4 + 20;
+    textMarker.pose.position.z = radius/4 + 20;
 	textMarker.scale.z = 5;
 
 	textMarker.color.a = 1;

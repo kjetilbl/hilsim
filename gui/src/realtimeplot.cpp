@@ -9,8 +9,6 @@ realtimePlot::realtimePlot(QCustomPlot *plotWidget){
 
 	rtPlotWidget->addGraph(); // blue line
 	rtPlotWidget->graph(0)->setPen(QPen(QColor(40, 110, 255)));
-	rtPlotWidget->addGraph(); // red line
-	rtPlotWidget->graph(1)->setPen(QPen(QColor(255, 110, 40)));
 
 	QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
 	timeTicker->setTimeFormat("%h:%m:%s");
@@ -26,9 +24,8 @@ realtimePlot::realtimePlot(QCustomPlot *plotWidget){
 	plotTimer.start(0); // Interval 0 means to refresh as fast as possible
 }
 
-void realtimePlot::updateValues(double measured, double ref){
+void realtimePlot::updateValues(double measured){
 	measuredValue = measured;
-	refValue = ref;
 }
 
 void realtimePlot::updateRtPlot()
@@ -41,10 +38,8 @@ void realtimePlot::updateRtPlot()
 	{
 	// add data to lines:
 	rtPlotWidget->graph(0)->addData(key, measuredValue);
-	rtPlotWidget->graph(1)->addData(key, refValue);
 	// rescale value (vertical) axis to fit the current data:
 	rtPlotWidget->graph(0)->rescaleValueAxis();
-	rtPlotWidget->graph(1)->rescaleValueAxis(true);
 	lastPointKey = key;
 	}
 	// make key axis range scroll with the data (at a constant range size of 8):
@@ -65,5 +60,4 @@ void realtimePlot::ylabel(const QString label){
 void realtimePlot::clear()
 {
 	rtPlotWidget->graph(0)->data()->clear();
-	rtPlotWidget->graph(1)->data()->clear();
 }

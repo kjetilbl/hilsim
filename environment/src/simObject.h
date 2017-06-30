@@ -26,7 +26,7 @@ class simObject : public QThread
 	Q_OBJECT
 public:
 	simObject( const simObject& other );
-	simObject( ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, double Size, QThread *parent );
+	simObject( ros::NodeHandle *n, string obstID, gpsPoint3DOF eta0, double Radius, QThread *parent );
 	~simObject();
 	void set_eta(gpsPoint3DOF newEta);
 	gpsPoint3DOF get_eta();
@@ -43,7 +43,7 @@ protected:
 private:
 	QTimer *posReportTimer = NULL;
 	mutex m;
-	double size;
+	double radius;
 	gpsPoint3DOF eta;
 	ros::Publisher posUpdatePub;
 	ros::Subscriber cmdSub;
@@ -57,7 +57,7 @@ private slots:
 class fixedObstacle : public simObject
 {
 public:
-	fixedObstacle( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent = 0 );
+	fixedObstacle( ros::NodeHandle *n, gpsPoint3DOF eta0, double Radius, QThread *parent = 0 );
 	~fixedObstacle(){};
 
 private:
@@ -72,7 +72,7 @@ class aisUser : public simObject
 {
 	Q_OBJECT
 public:
-	aisUser( ros::NodeHandle *n, gpsPoint3DOF eta0, double Size, QThread *parent );
+	aisUser( ros::NodeHandle *n, gpsPoint3DOF eta0, double Radius, QThread *parent );
 
 private slots:
 	void broadcast_AIS_msg();
@@ -129,7 +129,7 @@ class ship : public aisUser
 public:
 	ship( 	ros::NodeHandle *n, 
 			gpsPoint3DOF eta0, 
-			double Size,
+			double Radius,
 			double SpeedInKnots, 
 			QThread *parent = 0 );
 	void add_waypoint(gpsPoint wp);

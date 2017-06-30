@@ -19,7 +19,7 @@ public:
 	~realtimePlot(){};
 	void title(const QString plotTitle);
 	void ylabel(const QString label);
-	void updateValues(double measured, double ref);
+	void updateValues(double measured);
 	void clear();
 
 private slots:
@@ -28,7 +28,7 @@ private slots:
 private:
 	QCustomPlot *rtPlotWidget;
 	QTimer plotTimer;
-	double measuredValue, refValue;
+	double measuredValue;
 };
 
 #endif // REALTIMEPLOT_H

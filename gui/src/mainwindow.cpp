@@ -24,12 +24,12 @@ MainWindow::MainWindow(ros::NodeHandle *nh, QWidget *parent) :
 	headingPlot = new realtimePlot(ui->headingPlot);
 	headingPlot->title("Heading");
 	headingPlot->ylabel("Heading");
-	headingPlot->updateValues(3,4);
+	headingPlot->updateValues(3);
 
 	velocityPlot = new realtimePlot(ui->velocityPlot);
 	velocityPlot->title("Velocity");
 	velocityPlot->ylabel("Velocity");
-	velocityPlot->updateValues(1,2);
+	velocityPlot->updateValues(1);
 
 	sv = new satelliteView(ui->satelliteView);
 

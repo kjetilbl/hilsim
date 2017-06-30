@@ -116,7 +116,7 @@ void obstacleManager::spawn_obstacles(){
 	    else{
 	    	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, 290);
 	    	waypoints.erase(waypoints.begin());
-		   	ship* newShip = new ship(nh, eta0, pow(size,2), speed);
+		   	ship* newShip = new ship(nh, eta0, size, speed);
 		   	for (auto const& WP: waypoints)
 		   	{
 		   		newShip->add_waypoint(WP);
