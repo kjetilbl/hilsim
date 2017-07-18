@@ -78,19 +78,7 @@ void posUpdateHandler::gpsParser(const simulator_messages::Gps::ConstPtr& gpsMsg
 
 
 void posUpdateHandler::detectedTargetParser(const simulator_messages::detectedTarget::ConstPtr& dtMsg)
-{	
-	/*
-	static QTime lastTime = QTime::currentTime();
-	static int count = 0;
-	QTime now = QTime::currentTime();
-	if (lastTime.msecsTo(now) > 700){
-		qDebug() << "GUI received" << count << "detected objects.";
-		count = 0;
-	}
-	count++;
-	lastTime = now;
-	*/
-	
+{		
 	int targetID = dtMsg->targetID;
 	string objectDescriptor = dtMsg->objectDescriptor;
 	gpsPointStamped pos(dtMsg->longitude, dtMsg->latitude, dtMsg->COG);

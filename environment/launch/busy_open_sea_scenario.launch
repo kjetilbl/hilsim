@@ -8,7 +8,7 @@
     <rosparam command="load" file="$(find simulator_prototype)/config/models/Odin.yaml" />
     <rosparam command="load" file="$(find environment)/config/dynamics_params.yaml" />
     <rosparam command="load" file="$(find environment)/config/obstacle_params_simple_scenario.yaml" />
-    <rosparam command="load" file="$(find environment)/config/sensor_params.yaml" />
+    <rosparam command="load" file="$(find environment)/config/sensor_params_zero_noise.yaml" />
 
     <param name="hil/robot_description" textfile="$(find simulator_prototype)/config/models/Odin.urdf" />
 

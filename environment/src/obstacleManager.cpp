@@ -81,7 +81,7 @@ void obstacleManager::spawn_obstacles(){
 
 	for(auto const& shipDescriptor: requestedShips){
 	    vector<gpsPoint> waypoints;
-	    double size = 1;
+	    double length = 1;
 	    double speed = 0;
 
 	    vector<string> shipParameters = split_string(shipDescriptor.second, ' ');
@@ -98,9 +98,9 @@ void obstacleManager::spawn_obstacles(){
 	   		{
 	   			waypoints.push_back( get_coordinate_from_string(value) );
 	   		}
-	   		else if (key == "Size")
+	   		else if (key == "LENGTH")
 	   		{
-	   			size = atof(value.c_str());
+	   			length = atof(value.c_str());
 	   		}
 	   		else if (key == "SpeedInKnots")
 	   		{
@@ -114,9 +114,14 @@ void obstacleManager::spawn_obstacles(){
 	    	qDebug() << "Error in ship parameters. Ship must have at least one waypoint.";
 	    }
 	    else{
-	    	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, 290);
+	    	double heading = 180;
+	    	if (waypoints.size() > 1)
+	    	{
+	    		heading = compass_bearing(waypoints[0], waypoints[1]);
+	    	}
+	    	gpsPoint3DOF eta0(waypoints.front().longitude, waypoints.front().latitude, heading);
 	    	waypoints.erase(waypoints.begin());
-		   	ship* newShip = new ship(nh, eta0, size, speed);
+		   	ship* newShip = new ship(nh, eta0, length, speed);
 		   	for (auto const& WP: waypoints)
 		   	{
 		   		newShip->add_waypoint(WP);

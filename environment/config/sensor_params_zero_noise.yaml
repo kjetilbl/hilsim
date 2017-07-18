@@ -1,0 +1,46 @@
+AIS_range_m: 10000
+radar_range_m: 1852
+lidar_range_m: 100
+TDM_update_rate_Hz: 1
+error_pr_distance_gain: 0.01
+
+## AIS error parameters
+AIS_position_measure_variance_m2: 0.001
+AIS_COG_measure_variance_deg2: 0.001
+AIS_track_measure_variance_deg2: 0.001
+AIS_ROT_measure_variance_deg2_pr_min2: 0.001
+AIS_SOG_measure_variance_knots2: 0.001
+
+AIS_position_bias_variance_m2: 0.001
+AIS_COG_bias_variance_deg2: 0.001
+AIS_track_bias_variance_deg2: 0.001
+AIS_ROT_bias_variance_deg2_pr_min2: 0.001
+AIS_SOG_bias_variance_knots2: 0.001
+
+AIS_position_bias_time_constant_sec: 10
+AIS_COG_bias_time_constant_sec: 10
+AIS_track_bias_time_constant_sec: 10
+AIS_ROT_bias_time_constant_sec: 10
+AIS_SOG_bias_time_constant_sec: 10
+
+## Radar error parameters
+radar_position_measure_variance_m2: 0.001
+radar_radius_measure_variance_m2: 0.001
+
+radar_position_bias_variance_m2: 0.001
+radar_radius_bias_variance_m2: 0.001
+
+radar_position_bias_time_constant_sec: 1
+radar_radius_bias_time_constant_sec: 1
+
+
+## LiDAR error parameters
+lidar_position_measure_variance_m2: 0.001
+lidar_radius_measure_variance_m2: 0.001
+
+lidar_position_bias_variance_m2: 0.001
+lidar_radius_bias_variance_m2: 0.001
+
+lidar_position_bias_time_constant_sec: 1
+lidar_radius_bias_time_constant_sec: 1
+

@@ -24,10 +24,6 @@ uint32_t detectedObject::targetIterator = 0;
 targetDetectionModule::targetDetectionModule(ros::NodeHandle *n, QThread *parent) : QThread(parent)
 {
 	nh = n;
-	if( !read_sensor_config() ){
-		qDebug() << "targetDetectionModule read sensor config failed.";
-		exit(0);
-	}
 }
 
 targetDetectionModule::~targetDetectionModule()
@@ -37,6 +33,10 @@ targetDetectionModule::~targetDetectionModule()
 
 void targetDetectionModule::run()
 {
+	if( !read_sensor_config() ){
+		qDebug() << "targetDetectionModule read sensor config failed.";
+		exit(-1);
+	}
 	USVnavData = navData(316001245, 123.8777500, 49.2002817, 19.6, 235.0);
 	ros::Subscriber USVupdateSub = nh->subscribe("sensors/gps", 1000, &targetDetectionModule::USV_gps_parser, this);
 	ros::Subscriber obstUpdateSub = nh->subscribe("/simObject/position", 1000, &targetDetectionModule::obstacle_update_parser, this);
@@ -45,19 +45,24 @@ void targetDetectionModule::run()
 
 	DTtimer = new QTimer();
 	QObject::connect( DTtimer, SIGNAL(timeout()), this, SLOT(publish_detected_targets()) );
-	DTtimer->start(100);
+	int updateInterval_ms = (int)(1/updateRate_Hz*1000);
+	DTtimer->start(updateInterval_ms);
 
 	QThread::exec();
 }
 
 bool targetDetectionModule::read_sensor_config(){
 	bool successfulRead = true;
-	if(!nh->getParam("radar_range", radarRange)){
-		radarRange = 200;
+	if(!nh->getParam("radar_range_m", radarRange_m)){
+		radarRange_m = 200;
 		successfulRead = false;
 	}
-	if(!nh->getParam("lidar_range", lidarRange)){
-		radarRange = 100;
+	if(!nh->getParam("lidar_range_m", lidarRange_m)){
+		radarRange_m = 100;
+		successfulRead = false;
+	}
+	if(!nh->getParam("TDM_update_rate_Hz", updateRate_Hz)){
+		updateRate_Hz = 1;
 		successfulRead = false;
 	}
 	return successfulRead;
@@ -67,7 +72,6 @@ void targetDetectionModule::publish_detected_targets()
 {
 	std::lock_guard<std::mutex> lock(m);
 	vector<string> inactiveTargets;
-
 	// Publish obstacle position info and find outdated obstacles
 	for( auto & target : detectedTargets )
 	{
@@ -116,7 +120,7 @@ void targetDetectionModule::obstacle_update_parser(const simulator_messages::obs
 	double COG = obstUpdateMsg->heading;
 	string objectID = obstUpdateMsg->objectID;
 
-	if( !is_within_range(obstPos, radarRange) && !is_within_range(obstPos, lidarRange) ){
+	if( !is_within_range(obstPos, radarRange_m) && !is_within_range(obstPos, lidarRange_m) ){
 		return;
 	}else if ( !is_visible(obstPos, objectID) )
 	{
@@ -139,11 +143,11 @@ void targetDetectionModule::obstacle_update_parser(const simulator_messages::obs
 			detectedTargets[objectID] = detectedObject(*nh, "vessel", obstPos, COG, 5, radius);
 		}
 	}
-	if (is_within_range(obstPos, radarRange))
+	if (is_within_range(obstPos, radarRange_m))
 	{
 		detectedTargets[objectID].set_radar_active(true);
 	}
-	if (is_within_range(obstPos, lidarRange))
+	if (is_within_range(obstPos, lidarRange_m))
 	{
 		detectedTargets[objectID].set_lidar_active(true);
 	}
@@ -245,8 +249,8 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 	Hl = Hr;
 	
 	Pa_bar = 10*Eigen::MatrixXd::Identity(nk,nk);
-	Pa_bar(0,0) = 1*longitude_degs_pr_meter(truePosition.latitude);
-	Pa_bar(1,1) = 1*latitude_degs_pr_meter();
+	Pa_bar(0,0) = 10*longitude_degs_pr_meter(truePosition.latitude);
+	Pa_bar(1,1) = 10*latitude_degs_pr_meter();
 	Pa_bar(2,2) = 1; // Heading
 	Pa_bar(3,3) = 1;  // Speed
 	Pa_bar(4,4) = 5;  // ROT
@@ -254,28 +258,28 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 	Pa = Pa_bar;
 
 	Pr_bar = 10*Eigen::MatrixXd::Identity(nk,nk);
-	Pr_bar(0,0) = 100*longitude_degs_pr_meter(truePosition.latitude);
-	Pr_bar(1,1) = 100*latitude_degs_pr_meter();
+	Pr_bar(0,0) = 50*longitude_degs_pr_meter(truePosition.latitude);
+	Pr_bar(1,1) = 50*latitude_degs_pr_meter();
 	Pr_bar(2,2) = 100; 		// Heading
-	Pr_bar(3,3) = 1000000;  // Speed
+	Pr_bar(3,3) = 10;  // Speed
 	Pr_bar(4,4) = 50;  		// ROT
 	Pr_bar(5,5) = 1000; 	// CS
 	Pr = Pr_bar;
 
 	Pl_bar = 10*Eigen::MatrixXd::Identity(nk,nk);
-	Pl_bar(0,0) = 100*longitude_degs_pr_meter(truePosition.latitude);
-	Pl_bar(1,1) = 100*latitude_degs_pr_meter();
+	Pl_bar(0,0) = 1*longitude_degs_pr_meter(truePosition.latitude);
+	Pl_bar(1,1) = 1*latitude_degs_pr_meter();
 	Pl_bar(2,2) = 100; 		// Heading
-	Pl_bar(3,3) = 1000000;  // Speed
+	Pl_bar(3,3) = 10;  // Speed
 	Pl_bar(4,4) = 50;  		// ROT
 	Pl_bar(5,5) = 10; 		// CS
 	Pl = Pl_bar;
 
 	Eigen::VectorXd Q_diag(nk);
-	Q_diag << 	0.005,
-				0.005,
-				0.0001,
-				0.0001,
+	Q_diag << 	1*longitude_degs_pr_meter(truePosition.latitude),
+				1*latitude_degs_pr_meter(),
+				0.1,
+				50,
 				0.0001,
 				0.0001,
 				10000000000, 
@@ -294,7 +298,7 @@ detectedObject::detectedObject(	ros::NodeHandle nh,
 	Q = Q_diag.asDiagonal();
 
 	E = Eigen::MatrixXd(19,19);
-	E << 	Eigen::MatrixXd::Zero(6,19),
+	E << 	Eigen::MatrixXd::Identity(6,19),
 			Eigen::MatrixXd::Zero(13,6), Eigen::MatrixXd::Identity(13,13);
 	
 	double u = Xa_hat(3);
@@ -421,111 +425,127 @@ simulator_messages::detectedTarget detectedObject::make_DT_msg(){
 	dt.objectDescriptor = descriptor;
 	dt.longitude = get_estimated_position().longitude;
 	dt.latitude = get_estimated_position().latitude;
-	dt.COG = round( get_estimated_COG() );
+	dt.COG = 0;
+	if (descriptor != "fixed_obstacle")
+	{
+		dt.COG = round( get_estimated_COG() );
+	}
 	dt.SOG = round( get_estimated_SOG() * 1.94384449 ); // knots
-	dt.radius = get_estimated_radius()*2;
+	dt.radius = get_estimated_radius()+2;
 	return dt;
 }
 
 bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePosition){
 	bool successfulRead = true;
 
+
+	if(!nh.getParam("TDM_update_rate_Hz", hr)){
+		successfulRead = false;
+		qDebug() << 1;
+	}
+	hl = hr;
+
+	double k = 0;
+	if(!nh.getParam("error_pr_distance_gain", k)){
+		successfulRead = false;
+		qDebug() << 2;
+	}
+	errorPrDistanceGain = Eigen::MatrixXd::Identity(3,3)*k;
+
 	blSigmas = Eigen::VectorXd(nr);
 	double positionBiasSigma = 1;
-	if(!nh.getParam("lidar_position_bias_sigma", positionBiasSigma)){
+	if(!nh.getParam("lidar_position_bias_variance_m2", positionBiasSigma)){
 		successfulRead = false;
+		qDebug() << 3;
 	}
 	blSigmas(0) = positionBiasSigma*longitude_degs_pr_meter(truePosition.latitude);
 	blSigmas(1) = positionBiasSigma*latitude_degs_pr_meter();
 
 
-	if(!nh.getParam("lidar_size_bias_sigma", blSigmas(2))){
+	if(!nh.getParam("lidar_radius_bias_variance_m2", blSigmas(2))){
 		successfulRead = false;
 		blSigmas(2) = 0;
+		qDebug() << 4;
 	}
 
 	Eigen::VectorXd ZlSigmas = Eigen::VectorXd(nr);
 	double positionMeasureSigma = 0;
-	if(!nh.getParam("lidar_position_measure_sigma", positionMeasureSigma)){
+	if(!nh.getParam("lidar_position_measure_variance_m2", positionMeasureSigma)){
 		successfulRead = false;
+		qDebug() << 5;
 	}
 	ZlSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(truePosition.latitude);
 	ZlSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
 
-	if(!nh.getParam("lidar_size_measure_sigma", ZlSigmas(2))){
+	if(!nh.getParam("lidar_radius_measure_variance_m2", ZlSigmas(2))){
 		successfulRead = false;
 		ZlSigmas(2) = 0;
+		qDebug() << 6;
 	}
 
 	Rl = ZlSigmas.asDiagonal();
 
 	brSigmas = Eigen::VectorXd(nr);
 	positionBiasSigma = 1;
-	if(!nh.getParam("radar_position_bias_sigma", positionBiasSigma)){
+	if(!nh.getParam("radar_position_bias_variance_m2", positionBiasSigma)){
 		successfulRead = false;
+		qDebug() << 7;
 	}
 	brSigmas(0) = positionBiasSigma*longitude_degs_pr_meter(truePosition.latitude);
 	brSigmas(1) = positionBiasSigma*latitude_degs_pr_meter();
 
 
-	if(!nh.getParam("radar_size_bias_sigma", brSigmas(2))){
+	if(!nh.getParam("radar_radius_bias_variance_m2", brSigmas(2))){
 		successfulRead = false;
 		brSigmas(2) = 0;
+		qDebug() << 8;
 	}
 
 	Eigen::VectorXd ZrSigmas = Eigen::VectorXd(nr);
 	positionMeasureSigma = 1;
-	if(!nh.getParam("radar_position_measure_sigma", positionMeasureSigma)){
+	if(!nh.getParam("radar_position_measure_variance_m2", positionMeasureSigma)){
 		successfulRead = false;
+		qDebug() << 9;
 	}
 	ZrSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(truePosition.latitude);
 	ZrSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
 
-	if(!nh.getParam("radar_size_measure_sigma", ZrSigmas(2))){
+	if(!nh.getParam("radar_radius_measure_variance_m2", ZrSigmas(2))){
 		successfulRead = false;
 		ZrSigmas(2) = 0;
+		qDebug() << 10;
 	}
 
 	Rr = ZrSigmas.asDiagonal();
 
-	Eigen::VectorXd k(nr);
-	double posErrorPrDistanceGain = 0;
-	if(!nh.getParam("radar_position_error_pr_distance_gain", posErrorPrDistanceGain)){
-		successfulRead = false;
-	}
-	k(0) = posErrorPrDistanceGain;
-	k(1) = posErrorPrDistanceGain;
-
-
-	if(!nh.getParam("radar_size_error_pr_distance_gain", k(2))){
-		successfulRead = false;
-		k(2) = 0;
-	}
-	errorPrDistanceGain = k.asDiagonal();
-
 	// AIS params:
 	Eigen::VectorXd ZaSigmas(n);
 	positionMeasureSigma = 0.01;
-	if(!nh.getParam("AIS_position_measure_sigma", positionMeasureSigma)){
+	if(!nh.getParam("AIS_position_measure_variance_m2", positionMeasureSigma)){
 		successfulRead = false;
+		qDebug() << 11;
 	}
 	ZaSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(truePosition.latitude);
 	ZaSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
 
-	if(!nh.getParam("AIS_COG_measure_sigma", ZaSigmas(2))){
+	if(!nh.getParam("AIS_COG_measure_variance_deg2", ZaSigmas(2))){
 		successfulRead = false;
 		ZaSigmas(2) = 0;
+		qDebug() << 12;
 	}
 
-	if(!nh.getParam("AIS_SOG_measure_sigma", ZaSigmas(3))){
+	if(!nh.getParam("AIS_SOG_measure_variance_knots2", ZaSigmas(3))){
 		successfulRead = false;
 		ZaSigmas(3) = 0;
+		qDebug() << 13;
 	}
 
-	if(!nh.getParam("AIS_ROT_measure_sigma", ZaSigmas(4))){
+	if(!nh.getParam("AIS_ROT_measure_variance_deg2_pr_min2", ZaSigmas(4))){
 		successfulRead = false;
 		ZaSigmas(4) = 0;
+		qDebug() << 14;
 	}
+	ZaSigmas(4) = ZaSigmas(4)/60/60;
 	Ra = ZaSigmas.asDiagonal();
 
 
@@ -534,44 +554,65 @@ bool detectedObject::read_sensor_config(ros::NodeHandle nh, gpsPoint truePositio
 	double posBiasTimeConstant = 1;
 	biasTimeConstants(0) = 10;
 	biasTimeConstants(1) = 100;
-	if(!nh.getParam("AIS_position_bias_time_constant", posBiasTimeConstant)){
+	if(!nh.getParam("AIS_position_bias_time_constant_sec", posBiasTimeConstant)){
 		successfulRead = false;
+		qDebug() << 15;
 	}
 	biasTimeConstants(2) = posBiasTimeConstant;
 	biasTimeConstants(3) = posBiasTimeConstant;
 
-	if(!nh.getParam("AIS_COG_bias_time_constant", biasTimeConstants(4))){
+	if(!nh.getParam("AIS_COG_bias_time_constant_sec", biasTimeConstants(4))){
 		successfulRead = false;
 		biasTimeConstants(4) = 1;
+		qDebug() << 16;
 	}
 
-	if(!nh.getParam("AIS_SOG_bias_time_constant", biasTimeConstants(5))){
+	if(!nh.getParam("AIS_SOG_bias_time_constant_sec", biasTimeConstants(5))){
 		successfulRead = false;
 		biasTimeConstants(5) = 1;
+		qDebug() << 17;
 	}
 
-	if(!nh.getParam("AIS_ROT_bias_time_constant", biasTimeConstants(6))){
+	if(!nh.getParam("AIS_ROT_bias_time_constant_sec", biasTimeConstants(6))){
 		successfulRead = false;
 		biasTimeConstants(6) = 1;
+		qDebug() << 18;
 	}
 
-	if(!nh.getParam("radar_position_bias_time_constant", biasTimeConstants(7))){
+	if(!nh.getParam("radar_position_bias_time_constant_sec", biasTimeConstants(7))){
 		successfulRead = false;
 		biasTimeConstants(7) = 1;
+		qDebug() << 19;
 	}
 
-	if(!nh.getParam("radar_position_bias_time_constant", biasTimeConstants(8))){
+	if(!nh.getParam("radar_position_bias_time_constant_sec", biasTimeConstants(8))){
 		successfulRead = false;
 		biasTimeConstants(8) = 1;
+		qDebug() << 20;
 	}
 
-	if(!nh.getParam("radar_size_bias_time_constant", biasTimeConstants(9))){
+	if(!nh.getParam("radar_radius_bias_time_constant_sec", biasTimeConstants(9))){
 		successfulRead = false;
 		biasTimeConstants(9) = 1;
+		qDebug() << 21;
 	}
-	biasTimeConstants(10) = 1;
-	biasTimeConstants(11) = 1;
-	biasTimeConstants(12) = 1;
+	if(!nh.getParam("lidar_position_bias_time_constant_sec", biasTimeConstants(10))){
+		successfulRead = false;
+		biasTimeConstants(7) = 1;
+		qDebug() << 22;
+	}
+
+	if(!nh.getParam("lidar_position_bias_time_constant_sec", biasTimeConstants(11))){
+		successfulRead = false;
+		biasTimeConstants(8) = 1;
+		qDebug() << 23;
+	}
+
+	if(!nh.getParam("lidar_radius_bias_time_constant_sec", biasTimeConstants(12))){
+		successfulRead = false;
+		biasTimeConstants(9) = 1;
+		qDebug() << 24;
+	}
 	Tb = Eigen::MatrixXd::Zero(nb,nb);
 	for(int i = 0; i < nb; i++){
 		Tb(i,i) = -1/biasTimeConstants(i);
@@ -772,7 +813,7 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 	if (abs(e_p) > positionErrorTreshold )
 	{
 		if (AIS_ON){
-			X_hat_short << Za(0), Za(1), Za(2), Za(3), pow(200,2);
+			X_hat_short << Za(0), Za(1), Za(2), Za(3), 200;
 		}
 		else if(radar_ON){
 			X_hat_short << Zr(0), Zr(1), 0, 0, Zr(2);
@@ -787,6 +828,7 @@ Eigen::VectorXd detectedObject::KalmanFusion(){
 	Xa_hat_short << Xa_hat(0), Xa_hat(1), fmod(Xa_hat(2), 360.0), Xa_hat(3), Xa_hat(5);
 
 	//print_X(Xr_hat,"Xr_hat");
+	//print_X(Xl_hat,"Xl_hat");
 
 	return X_hat_short;
 }

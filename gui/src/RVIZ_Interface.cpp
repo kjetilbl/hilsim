@@ -116,7 +116,7 @@ void rvizInterface::set_object(string objectID, gpsPoint3DOF position, double ra
 	    // Set the scale of the marker -- 1x1x1 here means 1m on a side
 	    marker.scale.x = radius;
 	    marker.scale.y = radius;
-	    marker.scale.z = radius*2;
+	    marker.scale.z = 5;
 
 	    // Set the color -- be sure to set alpha to something non-zero!
 	    marker.color.r = 1;
@@ -159,13 +159,13 @@ void rvizInterface::show_detected_target(	int targetID,
 	marker.type = visualization_msgs::Marker::CYLINDER;
 	    marker.scale.x = radius;
 	    marker.scale.y = radius;
-	    marker.scale.z = 1;
+	    marker.scale.z = 7;
     }
     else if( objectDescriptor == "vessel"){
 	marker.type = visualization_msgs::Marker::CYLINDER;
 	    marker.scale.x = radius;
 	    marker.scale.y = radius/3;
-	    marker.scale.z = 1;// sqrt(radius)/2;
+	    marker.scale.z = 2;// sqrt(radius)/2;
     }
 
     marker.color.r = 0.9;

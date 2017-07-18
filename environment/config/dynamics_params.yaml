@@ -1,8 +1,8 @@
-wind_speed: 20 #Mean wind speed in m/s at 10 metres above the surface
+wind_speed: 10 #Mean wind speed in m/s at 10 metres above the surface
 wind_direction: 90 #Mean wind direction, going to, in degrees, North = 0
 current_speed: 0.5 #Mean current speed in m/s
 current_direction: 270 #Mean current direction, going to, in degrees, North = 0
-wave_height: 0 #Significant wave height
+wave_height: 2 #Significant wave height
 wave_direction: 90 #Mean direction of waves, going to, in degrees, North = 0
 
 dt: 0.05

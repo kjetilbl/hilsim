@@ -273,7 +273,7 @@ void navData::print_data() const
 	s += "\nCOG:\t\t\t";
 	s += to_string(COG);
 	s += "\nROT:\t\t\t";
-	s += to_string(ROT);
+	s += to_string(ROT*60);
 	s += "\nSOG:\t\t\t";
 	s += to_string(SOG);
 	s += "\nNavigational status:\t";

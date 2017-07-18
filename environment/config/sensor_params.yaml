@@ -1,49 +1,46 @@
-AIS_range: 10000
-radar_range: 5000
-lidar_range: 5000
+AIS_range_m: 10000
+radar_range_m: 1852
+lidar_range_m: 100
+TDM_update_rate_Hz: 1
+error_pr_distance_gain: 0.01
 
 ## AIS error parameters
-AIS_position_bias_sigma: 1
-AIS_COG_bias_sigma: 2
-AIS_track_bias_sigma: 2
-AIS_ROT_bias_sigma: 0.01
-AIS_SOG_bias_sigma: 0.5
+AIS_position_measure_variance_m2: 5
+AIS_COG_measure_variance_deg2: 1
+AIS_track_measure_variance_deg2: 1
+AIS_ROT_measure_variance_deg2_pr_min2: 2000
+AIS_SOG_measure_variance_knots2: 0.5
 
-AIS_position_measure_sigma: 0.1
-AIS_COG_measure_sigma: 0.1
-AIS_track_measure_sigma: 0.5
-AIS_ROT_measure_sigma: 0.01
-AIS_SOG_measure_sigma: 0.5
+AIS_position_bias_variance_m2: 0.5
+AIS_COG_bias_variance_deg2: 0.5
+AIS_track_bias_variance_deg2: 0.5
+AIS_ROT_bias_variance_deg2_pr_min2: 500
+AIS_SOG_bias_variance_knots2: 0.1
 
-AIS_position_bias_time_constant: 20
-AIS_COG_bias_time_constant: 10
-AIS_track_bias_time_constant: 10
-AIS_ROT_bias_time_constant: 10
-AIS_SOG_bias_time_constant: 20
+AIS_position_bias_time_constant_sec: 20
+AIS_COG_bias_time_constant_sec: 10
+AIS_track_bias_time_constant_sec: 10
+AIS_ROT_bias_time_constant_sec: 10
+AIS_SOG_bias_time_constant_sec: 10
 
 ## Radar error parameters
-radar_position_bias_sigma: 0.5
-radar_size_bias_sigma: 1
+radar_position_measure_variance_m2: 10
+radar_radius_measure_variance_m2: 20
 
-radar_position_bias_time_constant: 5
-radar_size_bias_time_constant: 100
+radar_position_bias_variance_m2: 0.5
+radar_radius_bias_variance_m2: 3
 
-radar_position_measure_sigma: 1
-radar_size_measure_sigma: 1
+radar_position_bias_time_constant_sec: 10
+radar_radius_bias_time_constant_sec: 5
 
-radar_position_error_pr_distance_gain: 0.002
-radar_size_error_pr_distance_gain: 0.003
 
 ## LiDAR error parameters
-lidar_position_bias_sigma: 0.1
-lidar_size_bias_sigma: 1
+lidar_position_measure_variance_m2: 0.1
+lidar_radius_measure_variance_m2: 0.1
 
-lidar_position_bias_time_constant: 5
-lidar_size_bias_time_constant: 100
+lidar_position_bias_variance_m2: 0.1
+lidar_radius_bias_variance_m2: 0.1
 
-lidar_position_measure_sigma: 0.1
-lidar_size_measure_sigma: 1
-
-lidar_position_error_pr_distance_gain: 0.002
-lidar_size_error_pr_distance_gain: 0.003
+lidar_position_bias_time_constant_sec: 0.1
+lidar_radius_bias_time_constant_sec: 1
 

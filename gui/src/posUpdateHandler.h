@@ -12,7 +12,7 @@
 
 #include "/opt/ros/kinetic/include/ros/ros.h"
 #include "simulator_messages/obstacleUpdate.h"
-#include "environment/obstacleCmd.h"
+#include "simulator_messages/obstacleCmd.h"
 #include "simulator_messages/Gps.h"
 #include "simulator_messages/detectedTarget.h"
 

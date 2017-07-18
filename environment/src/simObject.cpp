@@ -121,7 +121,21 @@ void aisUser::broadcast_AIS_msg()
 	nd.set_nav_status( this->get_status() );
 	nd.set_position_accuracy( this->get_pos_accuracy() );
 	string rawAISdata = nd.get_AIS_class_A_position_report();
-
+/*	qDebug() << "--------------------------------------------------------------------";
+	nd.print_data();
+	string s = "";
+	s += "\nTrue position:";
+	s += "\nLong:\t\t\t";
+	s += to_string(get_eta().longitude);
+	s += "\nLat:\t\t\t";
+	s += to_string(get_eta().latitude);
+	qDebug() << s.c_str();
+	qDebug() << "True SOG:" << SOG*1.94384449;
+	qDebug() << "True cog:" << get_eta().heading;
+	qDebug() << "True ROT:" << ROT*60;
+	gpsPoint estimatedPos(Xm(0), Xm(1));
+	qDebug() << "Pos error:" <<  distance_m(estimatedPos, this->get_eta());
+	qDebug() << "--------------------------------------------------------------------";*/
 	simulator_messages::AIS newAISmsg = nd.get_AIS_ros_msg();
 	if (AISenabled)
 	{
@@ -195,28 +209,29 @@ bool aisUser::read_AIS_config(){
 	int n = 6;
 	biasSigmas = Eigen::VectorXd(n);
 	double positionBiasSigma = 0;
-	if(!nh->getParam("AIS_position_bias_sigma", positionBiasSigma)){
+	if(!nh->getParam("AIS_position_bias_variance_m2", positionBiasSigma)){
 		successfulRead = false;
 	}
 	biasSigmas(0) = positionBiasSigma*longitude_degs_pr_meter(this->get_eta().latitude);
 	biasSigmas(1) = positionBiasSigma*latitude_degs_pr_meter();
 
-	if(!nh->getParam("AIS_COG_bias_sigma", biasSigmas(2))){
+	if(!nh->getParam("AIS_COG_bias_variance_deg2", biasSigmas(2))){
 		successfulRead = false;
 		biasSigmas(2) = 0;
 	}
 
-	if(!nh->getParam("AIS_track_bias_sigma", biasSigmas(3))){
+	if(!nh->getParam("AIS_track_bias_variance_deg2", biasSigmas(3))){
 		successfulRead = false;
 		biasSigmas(3) = 0;
 	}
 
-	if(!nh->getParam("AIS_ROT_bias_sigma", biasSigmas(4))){
+	if(!nh->getParam("AIS_ROT_bias_variance_deg2_pr_min2", biasSigmas(4))){
 		successfulRead = false;
 		biasSigmas(4) = 0;
 	}
+	biasSigmas(4) = biasSigmas(4)/60/60;
 
-	if(!nh->getParam("AIS_SOG_bias_sigma", biasSigmas(5))){
+	if(!nh->getParam("AIS_SOG_bias_variance_knots2", biasSigmas(5))){
 		successfulRead = false;
 		biasSigmas(5) = 0;
 	}
@@ -224,28 +239,29 @@ bool aisUser::read_AIS_config(){
 
 	measureSigmas = Eigen::VectorXd(n);
 	double positionMeasureSigma = 0;
-	if(!nh->getParam("AIS_position_measure_sigma", positionMeasureSigma)){
+	if(!nh->getParam("AIS_position_measure_variance_m2", positionMeasureSigma)){
 		successfulRead = false;
 	}
 	measureSigmas(0) = positionMeasureSigma*longitude_degs_pr_meter(this->get_eta().latitude);
 	measureSigmas(1) = positionMeasureSigma*latitude_degs_pr_meter();
 
-	if(!nh->getParam("AIS_COG_measure_sigma", measureSigmas(2))){
+	if(!nh->getParam("AIS_COG_measure_variance_deg2", measureSigmas(2))){
 		successfulRead = false;
 		measureSigmas(2) = 0;
 	}
 
-	if(!nh->getParam("AIS_track_measure_sigma", measureSigmas(3))){
+	if(!nh->getParam("AIS_track_measure_variance_deg2", measureSigmas(3))){
 		successfulRead = false;
 		measureSigmas(3) = 0;
 	}
 
-	if(!nh->getParam("AIS_ROT_measure_sigma", measureSigmas(4))){
+	if(!nh->getParam("AIS_ROT_measure_variance_deg2_pr_min2", measureSigmas(4))){
 		successfulRead = false;
 		measureSigmas(4) = 0;
 	}
+	measureSigmas(4) = measureSigmas(4)/60/60;
 
-	if(!nh->getParam("AIS_SOG_measure_sigma", measureSigmas(5))){
+	if(!nh->getParam("AIS_SOG_measure_variance_knots2", measureSigmas(5))){
 		successfulRead = false;
 		measureSigmas(5) = 0;
 	}
@@ -253,28 +269,28 @@ bool aisUser::read_AIS_config(){
 
 	Eigen::VectorXd biasTimeConstants(n);
 	double posBiasTimeConstant = 1;
-	if(!nh->getParam("AIS_position_bias_time_constant", posBiasTimeConstant)){
+	if(!nh->getParam("AIS_position_bias_time_constant_sec", posBiasTimeConstant)){
 		successfulRead = false;
 	}
 	biasTimeConstants(0) = posBiasTimeConstant;
 	biasTimeConstants(1) = posBiasTimeConstant;
 
-	if(!nh->getParam("AIS_COG_bias_time_constant", biasTimeConstants(2))){
+	if(!nh->getParam("AIS_COG_bias_time_constant_sec", biasTimeConstants(2))){
 		successfulRead = false;
 		biasTimeConstants(2) = 0;
 	}
 
-	if(!nh->getParam("AIS_track_bias_time_constant", biasTimeConstants(3))){
+	if(!nh->getParam("AIS_track_bias_time_constant_sec", biasTimeConstants(3))){
 		successfulRead = false;
 		biasTimeConstants(3) = 0;
 	}
 
-	if(!nh->getParam("AIS_ROT_bias_time_constant", biasTimeConstants(4))){
+	if(!nh->getParam("AIS_ROT_bias_time_constant_sec", biasTimeConstants(4))){
 		successfulRead = false;
 		biasTimeConstants(3) = 0;
 	}
 
-	if(!nh->getParam("AIS_SOG_bias_time_constant", biasTimeConstants(5))){
+	if(!nh->getParam("AIS_SOG_bias_time_constant_sec", biasTimeConstants(5))){
 		successfulRead = false;
 		biasTimeConstants(3) = 0;
 	}
@@ -328,6 +344,7 @@ Eigen::VectorXd aisUser::get_estimated_nav_parameters(){
 	b = Td*b + w;
 	e = b + v;
 	e(5) = max(-X(5), (double)e(5));
+
 
 	// Set artificial measurements:
 	Xm = X + e;

@@ -47,8 +47,9 @@ private:
 	navData USVnavData;
 
 	mutex m;
-	double radarRange;
-	double lidarRange;
+	double updateRate_Hz;
+	double radarRange_m;
+	double lidarRange_m;
 	ros::NodeHandle *nh;
 	ros::Publisher detectedTargetPub;
 	QTimer *DTtimer;
@@ -123,8 +124,8 @@ private:
 	int nk = 19; 		// number of states in Kalman filter
 	int nb = 13;
 	double ha = 2;		// update interval of AIS
-	double hr = 0.1;	// update interval of radar
-	double hl = 0.1;	// update interval of lidar
+	double hr = 1;	// update interval of radar
+	double hl = 1;	// update interval of lidar
 	Eigen::VectorXd Za; 		// AIS measurements
 	Eigen::VectorXd Za_prev; 	// Previous AIS measurements
 	Eigen::VectorXd Xa_bar;

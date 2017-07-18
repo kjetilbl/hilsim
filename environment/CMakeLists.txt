@@ -35,12 +35,6 @@ find_package(catkin REQUIRED COMPONENTS
 	tf
 )
 
-## Declare ROS messages and services
-add_message_files(
-   DIRECTORY
-   msg
-   FILES
-)
 
 ## Generate added messages and services
 generate_messages(DEPENDENCIES std_msgs)

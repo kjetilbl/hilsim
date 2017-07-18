@@ -1,5 +1,6 @@
 #include "satelliteview.h"
 #include <math.h>
+#include <iostream>
 
 #include <QDebug>
 #include <QVBoxLayout>
@@ -93,10 +94,12 @@ void satelliteView::updatePlot()
 }
 
 void satelliteView::markPosition( QMouseEvent *event){
+	static int i = 1;
 	int xPixel = event->pos().x();
 	int yPixel = event->pos().y();
 	double x = svWidget->xAxis->pixelToCoord(xPixel);
 	double y = svWidget->yAxis->pixelToCoord(yPixel);
+	printf("\n\"Iceberg_%i\" : \"RADIUS=15 COORD=%.6f/%.6f\",", i++, x, y);
 	std::lock_guard<std::mutex> lock(m);
 	MPs.push_back(new markedPosition(svWidget, x, y));
 }

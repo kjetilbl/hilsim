@@ -10,7 +10,7 @@
 #include "/opt/ros/kinetic/include/ros/ros.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Float64.h"
-#include "environment/obstacleUpdate.h"
+#include "simulator_messages/obstacleUpdate.h"
 
 
 MainWindow::MainWindow(ros::NodeHandle *nh, QWidget *parent) :
